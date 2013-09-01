@@ -234,6 +234,8 @@ class GeniaReader(object):
                     eid = evt[0]
                     etype,_,trigid = evt[1].partition(':')
                     theme1 = evt[2].split(':')[1]
+                    theme2 = ""
+                    cause = ""
                     if len(evt) > 3:
                         argtype,_,argid = evt[3].partition(':')
                         if argtype == 'Theme2':
@@ -241,10 +243,7 @@ class GeniaReader(object):
                             cause = ""
                         elif argtype == 'Cause':
                             theme2 = ""
-                            cause = argid
-                        else:
-                            theme2 = ""
-                            cause = ""
+                            cause = argid                        
                     events.append((eid, etype, trigid, theme1, theme2, cause))
                     
                     
@@ -477,16 +476,16 @@ if __name__ == "__main__":
     
     source = "E:/corpus/bionlp2011"
     dest = "E:/corpus/bionlp2011/project_data/"
-    doc_id = "PMC-2222968-04-Results-03"
+    doc_id = "PMC-1134658-00-TIAB"
     
     Reader = GeniaReader(source,dest)
     #Reader.run()
-    
+    #'''
     doc = Reader.load_doc("dev", doc_id)
     Reader.check_consistency(doc)
     out_fpath = Reader.dest + '/temp/' + doc_id + '.json'
     Reader.write_to_file(doc, out_fpath)
-    
+    #'''
     # testing
     dependency = False
     parse_tree = False
