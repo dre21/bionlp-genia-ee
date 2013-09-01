@@ -53,14 +53,29 @@ class GeniaReader(object):
     def run(self):
         # read all files from dir
         for cdir in self.CORPUS_DIR:
-            self.load_save_data(cdir)
+            print "reading content of " + cdir + " directory"
+            doc_ids = self.load_save_data(cdir)
+            print str(len(doc_ids)) + " doc have been read"
+            
+            # write doc ids to file
+            fpath = self.dest + '/' + cdir + '_doc_ids.json'
+            self.write_to_file(doc_ids, fpath)
     
-    
+    '''
+    this function returns list of doc_id for a given cdir
+    and do:
+    1. list files under cdir
+    2. load all necessary file for a given doc_id
+    3. check it consistency
+    4. save it as json    
+    '''
     def load_save_data(self, cdir):
                 
         ext = self.TXT_EXT
-            
-        for doc_id in self.get_doc_list(cdir, ext):
+        doc_ids = self.get_doc_list(self.get_full_path(self.ORIGINAL_DIR,cdir), ext)
+          
+        
+        for doc_id in doc_ids:
             # load doc data
             doc = self.load_doc(cdir, doc_id)
             
@@ -70,6 +85,9 @@ class GeniaReader(object):
             # save to file
             fpath = self.dest + '/' + self.DATA_DIR + '/' + doc_id + '.json'
             self.write_to_file(doc, fpath)
+        
+           
+        return doc_ids
     
     '''
     read document data
@@ -172,7 +190,7 @@ class GeniaReader(object):
     return list of file names in cdir directory
     '''
     def get_doc_list(self, cdir, ext_filter):
-        return [d.rstrip(ext_filter) for d in os.listdir(self.cdir) if d.endswith(ext_filter)]
+        return [d.rstrip(ext_filter) for d in os.listdir(cdir) if d.endswith(ext_filter)]
             
     '''
     return text from txt file of given fpath
@@ -462,6 +480,8 @@ if __name__ == "__main__":
     doc_id = "PMC-2222968-04-Results-03"
     
     Reader = GeniaReader(source,dest)
+    #Reader.run()
+    
     doc = Reader.load_doc("dev", doc_id)
     Reader.check_consistency(doc)
     out_fpath = Reader.dest + '/temp/' + doc_id + '.json'
