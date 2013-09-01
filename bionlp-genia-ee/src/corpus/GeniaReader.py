@@ -34,6 +34,9 @@ class GeniaReader(object):
     
     # this folder contains parsed corpus (tree and dependency) and also chunk file
     PARSED_DIR = "parse"    
+    
+    # this folder contain data source for all docs
+    DATA_DIR = "data"
 
     def __init__(self, source, dest):
         '''
@@ -50,11 +53,10 @@ class GeniaReader(object):
     def run(self):
         # read all files from dir
         for cdir in self.CORPUS_DIR:
-            # reading txt a1 and a2 from original dir
-            path = self.get_full_path(self.ORIGINAL_DIR, cdir)
+            self.load_save_data(cdir)
     
     
-    def load_save_data(self, cdir, is_test):
+    def load_save_data(self, cdir):
                 
         ext = self.TXT_EXT
             
@@ -66,7 +68,8 @@ class GeniaReader(object):
             self.check_consistency(doc)
             
             # save to file
-            self.write_to_file(doc, doc_id)
+            fpath = self.dest + '/' + self.DATA_DIR + '/' + doc_id + '.json'
+            self.write_to_file(doc, fpath)
     
     '''
     read document data
@@ -111,8 +114,8 @@ class GeniaReader(object):
     '''
     write to file
     '''
-    def write_to_file(self, doc_to_write, fname):
-        with open(self.dest + '/' + fname + '.json', 'w') as fout:
+    def write_to_file(self, doc_to_write, fpath):
+        with open(fpath, 'w') as fout:
             fout.write(json.dumps(doc_to_write))
     
     '''
@@ -125,13 +128,13 @@ class GeniaReader(object):
         dep = doc["dep"]
         
         # check number of sentence
-        print "number of sentence:", len(chunck), len(tree),len(dep)
+        #print "number of sentence:", len(chunck), len(tree),len(dep)
         if len(chunck) != len(tree) and len(tree) != len(dep):            
             raise ValueError("Chunck, Tree and Dep has different number of sentence")
         
         # check number of line
         for i in range(0,len(chunck)):
-            print i, "number of words: ", chunck[i]["nword"], tree[i]["nword"], dep[i]["nword"]
+            #print i, "number of words: ", chunck[i]["nword"], tree[i]["nword"], dep[i]["nword"]
             if chunck[i]["nword"] != tree[i]["nword"] and tree[i]["nword"] != dep[i]["nword"]:
                 raise ValueError("Different number of word in sentence " + str(i)) 
         
@@ -455,13 +458,14 @@ class ChunkReader:
 if __name__ == "__main__":
     
     source = "E:/corpus/bionlp2011"
-    dest = "E:/Project/bionlp-genia-ee/data"
+    dest = "E:/corpus/bionlp2011/project_data/"
     doc_id = "PMC-2222968-04-Results-03"
     
     Reader = GeniaReader(source,dest)
     doc = Reader.load_doc("dev", doc_id)
     Reader.check_consistency(doc)
-    #Reader.print_doc(doc)
+    out_fpath = Reader.dest + '/temp/' + doc_id + '.json'
+    Reader.write_to_file(doc, out_fpath)
     
     # testing
     dependency = False
