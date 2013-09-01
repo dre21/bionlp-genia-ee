@@ -62,33 +62,42 @@ class GeniaReader(object):
         ext = self.TXT_EXT
             
         for doc_id in self.get_doc_list(cdir, ext):
-            self.load_save_doc(cdir, doc_id, is_test)
+            # load doc data
+            doc = self.load_doc(cdir, doc_id)
             
+            # save to file
+            self.write_to_file(doc, doc_id)
     
     '''
-    read data and save it
+    read document data
+    and return doc representation
     '''
-    def load_save_doc(self, cdir, fname):
+    def load_doc(self, cdir, doc_id):
         triggers = []
         events = []
-                
+        is_test = True
         # path for original file
-        fpath = self.get_full_path(self.ORIGINAL_DIR,cdir) + '/' + fname
+        ori_fpath = self.get_full_path(self.ORIGINAL_DIR,cdir) + '/' + doc_id
         
-        txt = self.get_text(fpath + self.TXT_EXT)        
-        proteins = self.get_protein(fpath + self.PROTEIN_EXT)                
+        txt = self.get_text(ori_fpath + self.TXT_EXT)        
+        proteins = self.get_protein(ori_fpath + self.PROTEIN_EXT)                
         if cdir != 'test':            
-            triggers, events = self.get_trigger_relation(fpath + self.TRIGGER_REL_EXT)
-        
+            triggers, events = self.get_trigger_relation(ori_fpath + self.TRIGGER_REL_EXT)
+            is_test = False
         
         # path for parsed file
-        fpath = self.get_full_path(self.PARSED_DIR,cdir) + '/' + fname
+        parsed_fpath = self.get_full_path(self.PARSED_DIR,cdir) + '/' + doc_id
         
-        chunks = self.get_chunk(fpath + self.CHUNK_EXT)
-        tree = self.get_tree_mcccj(fpath + self.MCCCJ_TREE_EXT)
-        dep = self.get_dependency(fpath + self.MCCCJ_SD_EXT)
+        chunks = self.get_chunk(parsed_fpath + self.CHUNK_EXT)
+        tree = self.get_tree_mcccj(parsed_fpath + self.MCCCJ_TREE_EXT)
+        dep = self.get_dependency(parsed_fpath + self.MCCCJ_SD_EXT)
         
-        doc = {"txt":txt,
+        # create doc representation
+        doc = {"doc_id": doc_id,
+               "test": is_test,
+               "path1": ori_fpath,
+               "path2": parsed_fpath,
+               "txt":txt,
                "protein":proteins,
                "trigger":triggers,
                "event":events,
@@ -96,21 +105,8 @@ class GeniaReader(object):
                "tree":tree,
                "dep":dep}
         
-        print txt
-        for prot in proteins:
-            print prot
-        for trig in triggers:
-            print trig     
-        for e in events:
-            print e
-        for line in chunks:
-            print line   
-        for line in tree:
-            print line
-        for line in dep:
-            print line
-            
-        self.write_to_file(doc, fname)
+        return doc
+                    
     
     '''
     write to file
@@ -118,7 +114,35 @@ class GeniaReader(object):
     def write_to_file(self, doc_to_write, fname):
         with open(self.dest + '/' + fname + '.json', 'w') as fout:
             fout.write(json.dumps(doc_to_write))
-            
+    
+    '''
+    print to screen document representation
+    '''
+    def print_doc(self, doc):  
+        
+        print "doc id: ", doc["doc_id"]
+        print "is test: ", doc["test"]
+        print "ori path: ", doc["path1"]
+        print "parsed path: ", doc["path2"]
+        print doc["txt"]
+        print "Proteins:"
+        for line in doc["protein"]:
+            print line
+        print "Triggers:"
+        for line in doc["trigger"]:
+            print line   
+        print "Events:"  
+        for line in doc["event"]:
+            print line
+        print "Chunks:"
+        for line in doc["chunk"]:
+            print line
+        print "Trees:"   
+        for line in doc["tree"]:
+            print line
+        print "Dependencies:"
+        for line in doc["dep"]:
+            print line
     
     '''
     return list of file names in cdir directory
@@ -414,7 +438,8 @@ if __name__ == "__main__":
     doc_id = "PMC-2222968-04-Results-03"
     
     Reader = GeniaReader(source,dest)
-    Reader.load_doc("dev", doc_id)
+    doc = Reader.load_doc("dev", doc_id)
+    Reader.print_doc(doc)
     
     # testing
     dependency = False
