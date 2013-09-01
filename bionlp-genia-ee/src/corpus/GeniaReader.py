@@ -54,16 +54,16 @@ class GeniaReader(object):
             path = self.get_full_path(self.ORIGINAL_DIR, cdir)
     
     
-    def load_data(self, cdir, is_test):
-        '''
-        list all files then read them
-        '''
-        
+    def load_save_data(self, cdir, is_test):
+                
         ext = self.TXT_EXT
             
         for doc_id in self.get_doc_list(cdir, ext):
             # load doc data
             doc = self.load_doc(cdir, doc_id)
+            
+            # check consistency
+            self.check_consistency(doc)
             
             # save to file
             self.write_to_file(doc, doc_id)
@@ -114,6 +114,27 @@ class GeniaReader(object):
     def write_to_file(self, doc_to_write, fname):
         with open(self.dest + '/' + fname + '.json', 'w') as fout:
             fout.write(json.dumps(doc_to_write))
+    
+    '''
+    check consistency for chunk, tree, and dep data type
+    they must have same number of line and number of word for each line
+    '''
+    def check_consistency(self, doc):
+        chunck = doc["chunk"]
+        tree = doc["tree"]
+        dep = doc["dep"]
+        
+        # check number of sentence
+        print "number of sentence:", len(chunck), len(tree),len(dep)
+        if len(chunck) != len(tree) and len(tree) != len(dep):            
+            raise ValueError("Chunck, Tree and Dep has different number of sentence")
+        
+        # check number of line
+        for i in range(0,len(chunck)):
+            print i, "number of words: ", chunck[i]["nword"], tree[i]["nword"], dep[i]["nword"]
+            if chunck[i]["nword"] != tree[i]["nword"] and tree[i]["nword"] != dep[i]["nword"]:
+                raise ValueError("Different number of word in sentence " + str(i)) 
+        
     
     '''
     print to screen document representation
@@ -439,7 +460,8 @@ if __name__ == "__main__":
     
     Reader = GeniaReader(source,dest)
     doc = Reader.load_doc("dev", doc_id)
-    Reader.print_doc(doc)
+    Reader.check_consistency(doc)
+    #Reader.print_doc(doc)
     
     # testing
     dependency = False
