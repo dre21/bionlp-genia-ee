@@ -6,6 +6,7 @@ Created on Aug 27, 2013
 
 import os, re, json
 from collections import defaultdict
+from ctypes.test.test_array_in_pointer import Value
 
 class GeniaReader(object):
     '''
@@ -41,6 +42,10 @@ class GeniaReader(object):
         self.src = source
         self.dest = dest
         
+        self.Dep = DependencyReader()
+        self.Tree = ParseTreeReader()
+        self.Chunk = ChunkReader()
+        
         
     def run(self):
         # read all files from dir
@@ -57,10 +62,13 @@ class GeniaReader(object):
         ext = self.TXT_EXT
             
         for doc_id in self.get_doc_list(cdir, ext):
-            self.load_doc(cdir, doc_id, is_test)
+            self.load_save_doc(cdir, doc_id, is_test)
             
-          
-    def load_doc(self, cdir, fname):
+    
+    '''
+    read data and save it
+    '''
+    def load_save_doc(self, cdir, fname):
         triggers = []
         events = []
                 
@@ -104,11 +112,13 @@ class GeniaReader(object):
             
         self.write_to_file(doc, fname)
     
-    
+    '''
+    write to file
+    '''
     def write_to_file(self, doc_to_write, fname):
         with open(self.dest + '/' + fname + '.json', 'w') as fout:
             fout.write(json.dumps(doc_to_write))
-        
+            
     
     '''
     return list of file names in cdir directory
@@ -177,34 +187,145 @@ class GeniaReader(object):
         return triggers, events
         
     '''
-    return chunk data for a document
-    chunk data is list of chunk in a sentence
-    ex chunk in a sentence
-    [{'txt': 'XXXX', 'type': 'NP'}, {'txt': 'Inhibits', 'type': 'VP'}, {'txt': 'XXXXXXXX Mediated iTreg Commitment', 'type': 'NP'}]
+    return chunk data
     '''
     def get_chunk(self, fpath):        
-        chunk_data = []
-        with open(fpath, 'r') as fin:
-            for line in fin:
-                line_par = line[1:-3].split('] [')
-                chunks_line = []
-                for par in line_par:                    
-                    chk_type,_,text = par.partition(' ') 
-                    chunks_line.append({"type":chk_type, "txt":text})
-                chunk_data.append(chunks_line)
-        return chunk_data
+        return self.Chunk.read(fpath)
     
     '''
-    tree representation in a sentence, order by word number
-    [['NP', 'NN', 'XXXX'], ['VP', 'VBZ', 'Inhibits'], ['VP', 'NP', 'NN', 'XXXXXXXX'], ..... ]
+    return parse tree data
     '''
     def get_tree_mcccj(self, fpath):
+        return self.Tree.read(fpath)
+    
+    '''
+    return dependency data
+    '''
+    def get_dependency(self, fpath):
+        return self.Dep.read(fpath)
+    
+    '''
+    cdir: dev, train, or test
+    ctype: original or parsed
+    '''
+    def get_full_path(self, ctype, cdir):
+        return self.src + '/' + ctype + '/' + cdir
+
+            
+            
+    
+class DependencyReader:
+          
+    '''
+    return list of dependency by sentence
+    ex dependency in a sentence
+    {
+        root: '2'
+        nword: '6'
+        data: {'2': [('1)', 'nsubj'), ('6)', 'dobj')], '6': [('3)', 'nn'), ('4)', 'amod'), ('5)', 'nn')]}
+    }
+    '''
+    def read(self, fpath):        
+        dep_doc = []
+        with open(fpath, 'r') as fin:
+            dep_line = defaultdict(list)
+            root = []
+            non_root = []
+            n_word = 0
+            for line in fin:
+                if line != "\n":
+                    par = re.split("\\(|\\,\s",line.rstrip(')\n'))
+                    
+                    # find gov and add it as candidate of root
+                    gov = par[1].rsplit('-',1)[1]
+                    root.append(gov)
+                    
+                    # find dep and add it as non root
+                    dep = par[2].rsplit('-',1)[1]
+                    non_root.append(dep)
+                    
+                    # save gov dep representation
+                    dep_line[gov].append((dep,par[0]))
+                    # update total word number
+                    n_word = self.get_nword(n_word, gov, dep)
+                    
+                    
+                else:
+                    # add dep to doc
+                    if len(dep_line) > 0:                       
+                        dep_sentence = {}
+                        dep_sentence["data"] = dict(dep_line)
+                        dep_sentence["root"] = self.check_root(root, non_root)
+                        dep_sentence["nword"] = n_word
+                        dep_doc.append(dep_sentence)
+                    
+                    # reinit temp variable
+                    dep_line = defaultdict(list) 
+                    root = []
+                    non_root = []
+                    n_word = 0
+                
+        return dep_doc
+        
+    
+    '''
+    check root and return a root from list
+    '''
+    def check_root(self, root_list, non_root):
+        root = [x for x in root_list if x not in non_root]
+        root = list(set(root))
+        if len(root) != 1:
+            print root
+            raise ValueError("root value is not single")
+        
+        return root[0]
+        
+    '''
+    update number of word in a sentence
+    total number of word is the largest dep value
+    int current_nword : current total word
+    str gov: word number of gov word
+    str dep: word number of dep word
+    '''
+    def get_nword(self, current_nword, gov, dep):
+        dep_number = int(dep)
+        gov_number = int(gov)
+        if gov_number > current_nword:
+            current_nword = gov_number
+        if dep_number > current_nword:
+            current_nword = dep_number
+        return dep_number
+    
+    def test(self, fpath):
+        dep_data = self.read(fpath)
+        line = 1
+        for dep in dep_data:
+            print "sentence:",line
+            print "nword:", dep["nword"]
+            print "root:", dep["root"]
+            print dep["data"]
+            print
+            line += 1
+      
+
+class ParseTreeReader:
+    
+    '''
+    return tree representation in a sentence, order by word number
+    {
+        nword: 6
+        data: [['NP', 'NN', 'XXXX'], ['VP', 'VBZ', 'Inhibits'], ['VP', 'NP', 'NN', 'XXXXXXXX'], ..... ]
+    }
+    '''
+    def read(self, fpath):
         tree_data = []
         stack = []
         with open(fpath,'r') as fin:
             for line in fin:
                 line_par = line[7:-3].split(' ')
                 tree_line = []
+                tree_sentence = {}
+                nword = 0
                 for par in line_par:
                     if par[0] == '(':
                         # push to stack
@@ -217,39 +338,74 @@ class GeniaReader(object):
                         for _ in xrange(npop):
                             stack.pop()
                         tree_line.append(word_tree)
-                tree_data.append(tree_line)
+                        nword += 1
+                
+                tree_sentence["nword"] = nword
+                tree_sentence["data"] = tree_line
+                tree_data.append(tree_sentence)
                 
                 
         return tree_data
+
+    def test(self, fpath):
+        tree_data = self.read(fpath)
+        line = 1
+        for tree in tree_data:
+            print "sentence:",line
+            print "nword:", tree["nword"]    
+            print tree["data"]
+            print
+            line += 1
+
+
+class ChunkReader:
     
     '''
-    return list of dependency by sentence
-    ex dependency in a sentence
-    {'2': [('1)', 'nsubj'), ('6)', 'dobj')], '6': [('3)', 'nn'), ('4)', 'amod'), ('5)', 'nn')]}
+    return chunk data for a document
+    chunk data is list of chunk in a sentence
+    ex chunk in a sentence
+    {
+        nword: 6
+        nchunk: 3
+        data: [{'txt': 'XXXX', 'type': 'NP'}, {'txt': 'Inhibits', 'type': 'VP'}, {'txt': 'XXXXXXXX Mediated iTreg Commitment', 'type': 'NP'}]
+    }
     '''
-    def get_dependency(self, fpath):
-        dep_data = []
+    def read(self, fpath):
+        chunk_data = []
         with open(fpath, 'r') as fin:
-            dep_line = defaultdict(list)
             for line in fin:
-                if line != "\n":
-                    par = re.split("\\(|\\,\s",line.rstrip('\n'))
-                    gov = par[1].rsplit('-',1)[1]
-                    dep = par[2].rsplit('-',1)[1]
-                    dep_line[gov].append((dep,par[0]))
-                else:
-                    if len(dep_line) > 0:
-                        dep_data.append(dict(dep_line))
-                    dep_line = defaultdict(list) 
-                
-        return dep_data
+                line_par = line[1:-3].split('] [')
+                chunks_line = []
+                chunk_sentence = {}
+                nword = 0
+                for par in line_par:                    
+                    chk_type,_,text = par.partition(' ') 
+                    chunks_line.append({"type":chk_type, "txt":text})
+                    nword += self.get_nword(text)
+                chunk_sentence["nword"] = nword
+                chunk_sentence["nchunk"] = len(chunks_line)
+                chunk_sentence["data"] = chunks_line
+                chunk_data.append(chunk_sentence)
+        return chunk_data
     
     '''
-    cdir: dev, train, or test
-    ctype: original or parsed
+    return number of word in a chunk text
+    words are separated by a space
     '''
-    def get_full_path(self, ctype, cdir):
-        return self.src + '/' + ctype + '/' + cdir
+    def get_nword(self, chunk_text):
+        return chunk_text.count(" ") + 1
+    
+    def test(self, fpath):
+        chunk_data = self.read(fpath)        
+        line = 1
+        for chunks in chunk_data:
+            print "sentence:",line
+            print "nword:", chunks["nword"]
+            print "nchunk:", chunks["nchunk"]       
+            print chunks["data"]
+            print
+            line += 1
+
 
 if __name__ == "__main__":
     
@@ -260,6 +416,25 @@ if __name__ == "__main__":
     Reader = GeniaReader(source,dest)
     Reader.load_doc("dev", doc_id)
     
+    # testing
+    dependency = False
+    parse_tree = False
+    chunk = False
+    
+    if dependency:
+        dep_fpath = "E:/corpus/bionlp2011/parse/dev/" + doc_id + ".txt.ss.mcccjtok.mcccj.basic.sd"
+        Dep = DependencyReader()
+        Dep.test(dep_fpath)
+    
+    if parse_tree:
+        tree_fpath = "E:/corpus/bionlp2011/parse/dev/" + doc_id + ".txt.ss.mcccjtok.mcccj"
+        Tree = ParseTreeReader()
+        Tree.test(tree_fpath)
+    
+    if chunk:
+        chunk_fpath = "E:/corpus/bionlp2011/parse/dev/" + doc_id + ".chk"
+        Chunk = ChunkReader()
+        Chunk.test(chunk_fpath) 
     
     
     
