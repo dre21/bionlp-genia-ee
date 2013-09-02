@@ -6,6 +6,7 @@ Created on Aug 27, 2013
 
 import os, re, json
 from collections import defaultdict
+from tools.PorterStemmer import PorterStemmer
 
 class GeniaReader(object):
     '''
@@ -53,6 +54,7 @@ class GeniaReader(object):
         self.Dep = DependencyReader()
         self.Tree = ParseTreeReader()
         self.Chunk = ChunkReader()
+        self.Stemmer = PorterStemmer()
         
         
     def run(self):
@@ -180,8 +182,11 @@ class GeniaReader(object):
                     word["string"] = string
                     
                 end = start + len(string)  
+                # add offset
                 word["start"] = start
                 word["end"] = end
+                # add stem using porter stemmer
+                word["stem"] = self.Stemmer.stem(string, 0, len(string)-1)
                 search_offset = end                
             
         return sentences
