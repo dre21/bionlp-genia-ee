@@ -7,6 +7,7 @@ Created on Aug 27, 2013
 import os, re, json
 from collections import defaultdict
 from ctypes.test.test_array_in_pointer import Value
+from hmac import new
 
 class GeniaReader(object):
     '''
@@ -35,8 +36,14 @@ class GeniaReader(object):
     # this folder contains parsed corpus (tree and dependency) and also chunk file
     PARSED_DIR = "parse"    
     
+    # this folder contains pre-processed text, all proteins are replaced by placeholder
+    PREPROCESS_DIR = "preprocess"
+    
     # this folder contain data source for all docs
     DATA_DIR = "data"
+    
+    # bracket char coding
+    BRACKET_CHAR = {'-LRB-':'(', '-RRB-':')', '-RSB-':']', '-LSB-':'[', '-LCB-':'{', '-RCB-':'}'}
 
     def __init__(self, source, dest):
         '''
@@ -97,13 +104,14 @@ class GeniaReader(object):
         triggers = []
         events = []
         is_test = True
+        
         # path for original file
         ori_fpath = self.get_full_path(self.ORIGINAL_DIR,cdir) + '/' + doc_id
         
         txt = self.get_text(ori_fpath + self.TXT_EXT)        
         proteins = self.get_protein(ori_fpath + self.PROTEIN_EXT)                
         if cdir != 'test':            
-            triggers, events = self.get_trigger_relation(ori_fpath + self.TRIGGER_REL_EXT)
+            triggers, events, equivs = self.get_trigger_relation(ori_fpath + self.TRIGGER_REL_EXT)
             is_test = False
         
         # path for parsed file
@@ -113,13 +121,20 @@ class GeniaReader(object):
         tree = self.get_tree_mcccj(parsed_fpath + self.MCCCJ_TREE_EXT)
         dep = self.get_dependency(parsed_fpath + self.MCCCJ_SD_EXT)
         
+        # path for preprocess file
+        pre_fpath = self.get_full_path(self.PREPROCESS_DIR, cdir) + '/' + doc_id
+        sentences = self.get_sentences(pre_fpath + self.TXT_EXT)        
+        
+        
         # create doc representation
         doc = {"doc_id": doc_id,
                "test": is_test,
                "path1": ori_fpath,
                "path2": parsed_fpath,
                "txt":txt,
+               "sen": sentences,
                "protein":proteins,
+               "equiv":equivs,
                "trigger":triggers,
                "event":events,
                "chunk":chunks,
@@ -128,6 +143,31 @@ class GeniaReader(object):
         
         return doc
                     
+                    
+    
+    '''
+    update/add offset of word
+    offset is relative position in the abstract
+    '''
+    def update_word_offset(self, txt, sentences):
+        
+        search_offset = 0
+        
+        for sentence in sentences:
+            for word in sentence:
+                string = word["string"]
+                if string in self.BRACKET_CHAR:
+                    string = self.BRACKET_CHAR[string]
+                start = txt.find(string, search_offset)
+                if start == -1:
+                    raise ValueError("string not found")
+                end = start + len(string)  
+                word["start"] = start
+                word["end"] = end
+                search_offset = end                
+            
+        return sentences
+        
     
     '''
     write to file
@@ -167,8 +207,14 @@ class GeniaReader(object):
         print "ori path: ", doc["path1"]
         print "parsed path: ", doc["path2"]
         print doc["txt"]
+        print "Sentences:"
+        for sen in doc["sen"]:
+            print sen
         print "Proteins:"
         for line in doc["protein"]:
+            print line
+        print "Equivs:"
+        for line in doc["equiv"]:
             print line
         print "Triggers:"
         for line in doc["trigger"]:
@@ -214,13 +260,16 @@ class GeniaReader(object):
         return proteins
     
     '''
-    return list of trigger and event tuple
+    return list of trigger, event tuple and equiv tuple
     trigger tuple: (id, trigger type, start idx, end idx, trigger text)
     event tuple: (id, event type, trigger_id, theme1 id, theme2 id, cause id)
+    equiv tuple: (protein1, protein2)
+    e
     '''
     def get_trigger_relation(self, fpath):
         triggers = []
         events = []
+        equivs = []
         with open(fpath, 'r') as fin:
             for line in fin:
                 line = line.rstrip('\n')
@@ -245,11 +294,15 @@ class GeniaReader(object):
                             theme2 = ""
                             cause = argid                        
                     events.append((eid, etype, trigid, theme1, theme2, cause))
+                
+                # process equiv
+                elif line[0] == '*':
+                    equiv = re.split("\\t|\\s",line)
+                    equivs.append(tuple(equiv[2:]))
                     
                     
                     
-                    
-        return triggers, events
+        return triggers, events, equivs
         
     '''
     return chunk data
@@ -262,6 +315,23 @@ class GeniaReader(object):
     '''
     def get_tree_mcccj(self, fpath):
         return self.Tree.read(fpath)
+    
+    '''
+    return sentences of a document
+    get_tree_mcccj must be called first
+    '''
+    def get_sentences(self, preprocess_txt_fpath, check = False):
+        pre_txt = self.get_text(preprocess_txt_fpath)
+        sentences = self.update_word_offset(pre_txt,  self.Tree.sentences)     
+        
+        if check:
+            for sentence in sentences:
+                for word in sentence:
+                    if pre_txt[word["start"]:word["end"]] != word["string"]:
+                        print pre_txt[word["start"]:word["end"]], "=>", word
+                        #raise ValueError("string in txt and word do not match")
+        
+        return sentences
     
     '''
     return dependency data
@@ -378,7 +448,7 @@ class ParseTreeReader:
     def __init__(self):
         # sentences extracted from parse tree
         # format of sentence
-        # [word, pos, start_offset, end_offset, type:null]
+        # {string, pos_tag, star, end, other info, ... ....}
         self.sentences = []
     
     '''
@@ -413,7 +483,7 @@ class ParseTreeReader:
                         nword += 1
                         
                         # add word to sentence
-                        # {word, pos, start_offset, end_offset, other info, ... ....}
+                        # {string, pos_tag, star, end, other info, ... ....}
                         word = {"string":word_tree[-1],"pos_tag":word_tree[-2]}
                         sentence.append(word)
                 
@@ -494,20 +564,19 @@ if __name__ == "__main__":
     
     source = "E:/corpus/bionlp2011"
     dest = "E:/corpus/bionlp2011/project_data/"
+    
     doc_id = "PMC-1134658-00-TIAB"
     
     Reader = GeniaReader(source,dest)
-    #Reader.run()
-    '''
-    doc = Reader.load_doc("dev", doc_id)
-    Reader.check_consistency(doc)
-    out_fpath = Reader.dest + '/temp/' + doc_id + '.json'
-    Reader.write_to_file(doc, out_fpath)
-    '''
+    Reader.run()
+    
+    
     # testing
     dependency = False
-    parse_tree = True
+    parse_tree = False
     chunk = False
+    sentence = False
+    load_doc = False
     
     if dependency:
         dep_fpath = "E:/corpus/bionlp2011/parse/dev/" + doc_id + ".txt.ss.mcccjtok.mcccj.basic.sd"
@@ -524,8 +593,27 @@ if __name__ == "__main__":
         Chunk = ChunkReader()
         Chunk.test(chunk_fpath) 
     
+    if sentence:
+        tree_fpath = "E:/corpus/bionlp2011/parse/dev/" + doc_id + ".txt.ss.mcccjtok.mcccj"
+        protein_fpath = "E:/corpus/bionlp2011/original/dev/" + doc_id + ".a1"
+        pretxt_fpath = "E:/corpus/bionlp2011/preprocess/dev/" + doc_id + ".txt"
+        
+        Reader.get_tree_mcccj(tree_fpath)
+        sentences = Reader.get_sentences(pretxt_fpath, True)
+                
+        for sentence in sentences:
+            print sentence
+        
     
-    
-    
-    
+    if load_doc:
+        
+        cdir = "dev"
+        doc_id = "PMC-2806624-01-INTRODUCTION"
+                
+        doc = Reader.load_doc(cdir, doc_id)
+        Reader.check_consistency(doc)
+        Reader.print_doc(doc)
+        
+        #out_fpath = Reader.dest + '/temp/' + doc_id + '.json'
+        #Reader.write_to_file(doc, out_fpath)
         
