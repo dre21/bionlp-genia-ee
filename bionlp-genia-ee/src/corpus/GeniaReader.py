@@ -375,6 +375,12 @@ class DependencyReader:
 
 class ParseTreeReader:
     
+    def __init__(self):
+        # sentences extracted from parse tree
+        # format of sentence
+        # [word, pos, start_offset, end_offset, type:null]
+        self.sentences = []
+    
     '''
     return tree representation in a sentence, order by word number
     {
@@ -391,6 +397,7 @@ class ParseTreeReader:
                 tree_line = []
                 tree_sentence = {}
                 nword = 0
+                sentence = []
                 for par in line_par:
                     if par[0] == '(':
                         # push to stack
@@ -404,11 +411,18 @@ class ParseTreeReader:
                             stack.pop()
                         tree_line.append(word_tree)
                         nword += 1
+                        
+                        # add word to sentence
+                        # {word, pos, start_offset, end_offset, other info, ... ....}
+                        word = {"string":word_tree[-1],"pos_tag":word_tree[-2]}
+                        sentence.append(word)
                 
                 tree_sentence["nword"] = nword
                 tree_sentence["data"] = tree_line
                 tree_data.append(tree_sentence)
                 
+                # append sentence
+                self.sentences.append(sentence)
                 
         return tree_data
 
@@ -421,6 +435,10 @@ class ParseTreeReader:
             print tree["data"]
             print
             line += 1
+            
+        print "sentences"
+        for sentence in self.sentences:
+            print sentence
 
 
 class ChunkReader:
@@ -480,15 +498,15 @@ if __name__ == "__main__":
     
     Reader = GeniaReader(source,dest)
     #Reader.run()
-    #'''
+    '''
     doc = Reader.load_doc("dev", doc_id)
     Reader.check_consistency(doc)
     out_fpath = Reader.dest + '/temp/' + doc_id + '.json'
     Reader.write_to_file(doc, out_fpath)
-    #'''
+    '''
     # testing
     dependency = False
-    parse_tree = False
+    parse_tree = True
     chunk = False
     
     if dependency:
