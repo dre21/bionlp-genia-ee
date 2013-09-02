@@ -106,8 +106,10 @@ class GeniaReader(object):
     and return doc representation
     '''
     def load_doc(self, cdir, doc_id):
+        # init variable
         triggers = []
         events = []
+        equivs = []
         is_test = True
         
         # path for original file
