@@ -43,7 +43,7 @@ class GeniaReader(object):
     DATA_DIR = "data"
     
     # bracket char coding
-    BRACKET_CHAR = {'-LRB-':'(', '-RRB-':')', '-RSB-':']', '-LSB-':'[', '-LCB-':'{', '-RCB-':'}'}
+    #BRACKET_CHAR = {'-LRB-':'(', '-RRB-':')', '-RSB-':']', '-LSB-':'[', '-LCB-':'{', '-RCB-':'}'}
 
     def __init__(self, source, dest):
         '''
@@ -80,9 +80,14 @@ class GeniaReader(object):
                 
         ext = self.TXT_EXT
         doc_ids = self.get_doc_list(self.get_full_path(self.ORIGINAL_DIR,cdir), ext)
-          
         
-        for doc_id in doc_ids:
+        # there is a document that cannot be parsed by mcccj parser
+        # no event in that document, so we can just skip it
+        if cdir == "train":
+            print "Skip PMID-8632999"
+            doc_ids.remove("PMID-8632999")
+        
+        for doc_id in doc_ids:            
             # load doc data
             doc = self.load_doc(cdir, doc_id)
             
@@ -156,11 +161,24 @@ class GeniaReader(object):
         for sentence in sentences:
             for word in sentence:
                 string = word["string"]
-                if string in self.BRACKET_CHAR:
-                    string = self.BRACKET_CHAR[string]
+                #if string in self.BRACKET_CHAR:
+                #    string = self.BRACKET_CHAR[string]
                 start = txt.find(string, search_offset)
                 if start == -1:
-                    raise ValueError("string not found")
+                    
+                    # try to convert back " into ''
+                    # in parser " are represented as '' so we need to convert back to original char
+                    # but there are some cases that '' is actually '' as in =>  4'',6-Diamidino-2-phenylindole 
+                    string = string.replace("\"","\'\'")
+                    start = txt.find(string, search_offset)
+                    
+                    if start == -1:                        
+                        print string
+                        print sentence
+                        raise ValueError("string not found")
+                    
+                    word["string"] = string
+                    
                 end = start + len(string)  
                 word["start"] = start
                 word["end"] = end
@@ -445,6 +463,9 @@ class DependencyReader:
 
 class ParseTreeReader:
     
+    # bracket char coding
+    BRACKET_CHAR = {'-LRB-':'(', '-RRB-':')', '-RSB-':']', '-LSB-':'[', '-LCB-':'{', '-RCB-':'}', "``":"\"", "\'\'":"\""}
+    
     def __init__(self):
         # sentences extracted from parse tree
         # format of sentence
@@ -479,8 +500,9 @@ class ParseTreeReader:
                     else:
                         # found a leave of tree (word)
                         npop = par.count(')')
+                        string = self.clean_string(par.rstrip(')'))
                         word_tree = list(stack)
-                        word_tree.append(par.rstrip(')'))
+                        word_tree.append(string)
                         for _ in xrange(npop):
                             stack.pop()
                         tree_line.append(word_tree)
@@ -488,7 +510,7 @@ class ParseTreeReader:
                         
                         # add word to sentence
                         # {string, pos_tag, star, end, other info, ... ....}
-                        word = {"string":word_tree[-1],"pos_tag":word_tree[-2]}
+                        word = {"string":string,"pos_tag":word_tree[-2]}
                         sentence.append(word)
                 
                 tree_sentence["nword"] = nword
@@ -499,6 +521,17 @@ class ParseTreeReader:
                 self.sentences.append(sentence)
                 
         return tree_data
+    
+    '''
+    this function remove coded bracket into bracket char
+    ex '-LRB-' => '('
+    '''
+    def clean_string(self, word):
+        for code,char in self.BRACKET_CHAR.iteritems():
+            word = word.replace(code,char)
+        return word
+        
+        
 
     def test(self, fpath):
         tree_data = self.read(fpath)
@@ -516,6 +549,9 @@ class ParseTreeReader:
 
 
 class ChunkReader:
+    
+    # bracket char coding
+    BRACKET_CHAR = {'-LRB-':'(', '-RRB-':')', '-RSB-':']', '-LSB-':'[', '-LCB-':'{', '-RCB-':'}', "``":"\"", "\'\'":"\""}
     
     '''
     return chunk data for a document
@@ -537,13 +573,23 @@ class ChunkReader:
                 nword = 0
                 for par in line_par:                    
                     chk_type,_,text = par.partition(' ') 
-                    chunks_line.append({"type":chk_type, "txt":text})
+                    chunks_line.append({"type":chk_type, "txt":self.clean_string(text)})
                     nword += self.get_nword(text)
                 chunk_sentence["nword"] = nword
                 chunk_sentence["nchunk"] = len(chunks_line)
                 chunk_sentence["data"] = chunks_line
                 chunk_data.append(chunk_sentence)
         return chunk_data
+    
+    '''
+    this function remove coded bracket into bracket char
+    ex '-LRB-' => '('
+    '''
+    def clean_string(self, word):
+        for code,char in self.BRACKET_CHAR.iteritems():
+            word = word.replace(code,char)
+        return word
+        
     
     '''
     return number of word in a chunk text
@@ -569,7 +615,7 @@ if __name__ == "__main__":
     source = "E:/corpus/bionlp2011"
     dest = "E:/corpus/bionlp2011/project_data/"
     
-    doc_id = "PMC-1134658-00-TIAB"
+    doc_id = "PMC-2222968-33-caption-08"
     
     Reader = GeniaReader(source,dest)
     Reader.run()
