@@ -459,8 +459,12 @@ class ParseTreeReader:
     }
     '''
     def read(self, fpath):
+        # re-init sentences
+        self.sentences = []
+        # init variable
         tree_data = []
         stack = []
+        
         with open(fpath,'r') as fin:
             for line in fin:
                 line_par = line[7:-3].split(' ')
