@@ -6,8 +6,6 @@ Created on Aug 27, 2013
 
 import os, re, json
 from collections import defaultdict
-from ctypes.test.test_array_in_pointer import Value
-from hmac import new
 
 class GeniaReader(object):
     '''
