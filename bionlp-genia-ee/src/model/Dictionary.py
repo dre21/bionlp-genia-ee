@@ -176,17 +176,22 @@ class TriggerDictionary(Dictionary):
             self.data = json.loads(f.read())
             
             
-    def count(self, word, ttype):
+    def count(self, word, ttype = ""):
         """
         return number of word occurrence in dictionary
         """   
         if self.data == {}:
             raise ValueError("Dictionary data has not been loaded")
         # get counter
-        cnt = self.data.get(word.lower(), None)
+        ttype_cnt = self.data.get(word.lower(), None)
         retval = 0
-        if cnt != None:
-            retval = cnt.get(ttype,0)
+        if ttype_cnt != None:
+            if ttype != "":
+                retval = ttype_cnt.get(ttype,0)
+            else:
+                # get count for all event type
+                for v in ttype_cnt.itervalues():
+                    retval+=v
         return retval
             
     
@@ -248,8 +253,10 @@ class TriggerDictionary(Dictionary):
                        "binds":"Binding",
                        "up-regulate":"Positive_regulation"}
             for t,ttype in trigger.iteritems():
-                cnt = self.count(t, ttype)
-                print t, ttype, cnt
+                cnt1 = self.count(t)
+                cnt2 = self.count(t, ttype)
+                print t, "All", cnt1
+                print t, ttype, cnt2
                 
                 
         
