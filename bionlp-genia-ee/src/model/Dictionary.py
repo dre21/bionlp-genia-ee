@@ -74,13 +74,13 @@ class WordDictionary(Dictionary):
             raise ValueError("wrong value. choose 'dev', 'train', or 'mix'")
         
         fpath = self.src + '/' + self.DICT_DIR + '/' + corpus_dir + self.WDICT_SUFIX_EXT
-        if os.path.exists(fpath):
-            with open(fpath, 'r') as f:
-                self.data = json.loads(f.read())
-        else:
+        if not os.path.exists(fpath):
             print "Dictionary data is not exist"
             print "Building dictionary data"
-            self.build_dict(corpus_dir)
+            self.build()            
+        
+        with open(fpath, 'r') as f:
+            self.data = json.loads(f.read())
             
     def count(self, word):
         """
@@ -124,7 +124,7 @@ class WordDictionary(Dictionary):
             for sen in sentences:
                 for w in sen:
                     string = w["string"]
-                    if string.isalpha() and len(string) > 1:
+                    if not string.isdigit() and len(string) > 1:
                         string = string.lower()
                         cnt[string] += 1
         
@@ -167,13 +167,14 @@ class TriggerDictionary(Dictionary):
             raise ValueError("wrong value. choose 'dev', 'train', or 'mix'")
         
         fpath = self.src + '/' + self.DICT_DIR + '/' + corpus_dir + self.TDICT_SUFIX_EXT
-        if os.path.exists(fpath):
-            with open(fpath, 'r') as f:
-                self.data = json.loads(f.read())
-        else:
+        if not os.path.exists(fpath):
             print "Trigger dictionary data is not exist"
             print "Now building new trigger dictionary data ..."
-            self.build_dict(corpus_dir)
+            self.build()
+        
+        with open(fpath, 'r') as f:
+            self.data = json.loads(f.read())
+            
             
     def count(self, word, ttype):
         """
@@ -257,7 +258,7 @@ if __name__ == "__main__":
     source = "E:/corpus/bionlp2011/project_data/"
     
     WD = WordDictionary(source)    
-    #WD.test("loading")
+    WD.test("loading")
            
     TD = TriggerDictionary(source)
     TD.test("loading")
