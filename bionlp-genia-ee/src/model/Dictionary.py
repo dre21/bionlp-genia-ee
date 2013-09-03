@@ -4,7 +4,7 @@ Created on Sep 2, 2013
 @author: Andresta
 '''
 
-import json
+import json, os
 from collections import Counter, defaultdict
 
 class Dictionary(object):
@@ -32,6 +32,8 @@ class Dictionary(object):
         Constructor
         """
         self.src = source
+        
+        self.data = {}
     
     def get_doc_ids(self, corpus_dir):
         """
@@ -61,7 +63,32 @@ class WordDictionary(Dictionary):
         '''
         Constructor
         '''
-        super(WordDictionary, self).__init__(source)
+        super(WordDictionary, self).__init__(source)               
+    
+    def load(self, corpus_dir):
+        """
+        Load a dictionary data
+        corpus_dir is dev, train, or mix
+        """
+        if corpus_dir not in self.CORPUS_DIR:
+            raise ValueError("wrong value. choose 'dev', 'train', or 'mix'")
+        
+        fpath = self.src + '/' + self.DICT_DIR + '/' + corpus_dir + self.WDICT_SUFIX_EXT
+        if os.path.exists(fpath):
+            with open(fpath, 'r') as f:
+                self.data = json.loads(f.read())
+        else:
+            print "Dictionary data is not exist"
+            print "Building dictionary data"
+            self.build_dict(corpus_dir)
+            
+    def count(self, word):
+        """
+        return number of word occurrence in dictionary
+        """   
+        if self.data == {}:
+            raise ValueError("Dictionary data has not been loaded")
+        return self.data.get(word.lower(), 0)
         
         
     def build(self):
@@ -114,7 +141,16 @@ class WordDictionary(Dictionary):
             doc = json.loads(f.read())
             
         return doc["sen"]
+    
+    
+    def test(self, test_name):
         
+        if test_name == "loading":
+            self.load("dev")
+            words = ["induction","restimulated","binding","binds","up-regulate"]
+            for w in words:
+                cnt = self.count(w)
+                print w, cnt
        
 class TriggerDictionary(Dictionary):       
     
@@ -122,6 +158,36 @@ class TriggerDictionary(Dictionary):
         
         super(TriggerDictionary,self).__init__(source)
         
+    def load(self, corpus_dir):
+        """
+        Load a trigger dictionary data
+        corpus_dir is dev, train, or mix
+        """
+        if corpus_dir not in self.CORPUS_DIR:
+            raise ValueError("wrong value. choose 'dev', 'train', or 'mix'")
+        
+        fpath = self.src + '/' + self.DICT_DIR + '/' + corpus_dir + self.TDICT_SUFIX_EXT
+        if os.path.exists(fpath):
+            with open(fpath, 'r') as f:
+                self.data = json.loads(f.read())
+        else:
+            print "Trigger dictionary data is not exist"
+            print "Now building new trigger dictionary data ..."
+            self.build_dict(corpus_dir)
+            
+    def count(self, word, ttype):
+        """
+        return number of word occurrence in dictionary
+        """   
+        if self.data == {}:
+            raise ValueError("Dictionary data has not been loaded")
+        # get counter
+        cnt = self.data.get(word.lower(), None)
+        retval = 0
+        if cnt != None:
+            retval = cnt.get(ttype,0)
+        return retval
+            
     
     def build(self):
         """
@@ -150,9 +216,11 @@ class TriggerDictionary(Dictionary):
             for t in triggers:
                 # format of trigger
                 # ["T60", "Negative_regulation", "190", "197", "inhibit"]
-                string = t[4].lower()                
-                ttype = t[1]
-                td[string][ttype] += 1
+                string = t[4].lower()
+                # only process single word trigger      
+                if " " not in string:          
+                    ttype = t[1]
+                    td[string][ttype] += 1
                 
                 
         print "the dictionary contains:", len(td), "trigger words"
@@ -169,20 +237,30 @@ class TriggerDictionary(Dictionary):
             
         return doc["trigger"]
                 
-    def test(self, corpus_dir):
-        self.build_dict(corpus_dir)
-    
-        
+    def test(self, test_name):
+           
+        if test_name == "loading":
+            self.load("dev")
+            trigger = {"induction":"Positive_regulation",
+                       "restimulated":"Regulation",
+                       "binding":"Binding",
+                       "binds":"Binding",
+                       "up-regulate":"Positive_regulation"}
+            for t,ttype in trigger.iteritems():
+                cnt = self.count(t, ttype)
+                print t, ttype, cnt
+                
+                
         
 if __name__ == "__main__":
     
     source = "E:/corpus/bionlp2011/project_data/"
     
-    WD = WordDictionary(source)
-    WD.build()
+    WD = WordDictionary(source)    
+    #WD.test("loading")
            
-    #TD = TriggerDictionary(source)
-    #TD.build()
+    TD = TriggerDictionary(source)
+    TD.test("loading")
         
     
         
