@@ -28,6 +28,9 @@ class Sentence(object):
         # mapping offset to word number in a sentence
         self.offset_map = self.map(sentence_data)
         
+        # list of word number which is marked as trigger candidate
+        self.trigger_candidate = []
+        
     def check_offset(self, offset):
         """
         return true if the given offset is in this sentence range
@@ -43,6 +46,17 @@ class Sentence(object):
             word = words[i]
             retval[word["start"]] = i
         return retval
+    
+    def get_string(self, start_off, nwords):
+        """
+        return nwords strings starting from start offset
+        """
+        string = ""
+        word_num = self.offset_map.get(start_off,-1)        
+        if word_num >= 0:
+            for i in range(word_num, word_num+nwords):                
+                string += self.words[i]["string"] + " "
+        return string.rstrip()
         
     def test(self):
         
@@ -54,6 +68,10 @@ class Sentence(object):
         print "map:"
         for k,v in sorted(self.offset_map.iteritems()):
             print k,v
+        print "Trigger candidate:", self.trigger_candidate
+        
+        #print "get string offset 627 for 2 words"
+        #print self.get_string(627, 2)
             
 if __name__ == "__main__":
     
