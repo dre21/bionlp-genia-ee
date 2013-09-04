@@ -7,10 +7,12 @@ Created on Sep 3, 2013
 from model.Dictionary import WordDictionary, TriggerDictionary
 from model.Sentence import Sentence
 
-class TriggerCandidate(object):
+class SentenceAnalyzer(object):
     """
-    This class will filter out words which are note good candidate of a trigger
-    it reduces number of word to be processed
+    Analyze and construct a sentence object
+    1. Determine trigger candidate of the sentence
+    2. Update type of word in a sentence
+    3. Update score for each word
     """
 
     # list of allowed pos tag for trigger
@@ -18,7 +20,7 @@ class TriggerCandidate(object):
 
     def __init__(self, WDict, TDict):
         """
-        Init TriggerCandidate object
+        Init SentenceAnalyzer object
         it requires Word dictionary and Trigger dictionary
         """
         if not (isinstance(WDict, WordDictionary) and isinstance(TDict,TriggerDictionary)):
@@ -42,9 +44,7 @@ class TriggerCandidate(object):
             
             # assign score
             word["score"] = self.get_score(word)
-                
-                
-            
+                                            
     def filter(self, word):
         """
         return true if the word is filtered out from a candidate trigger, false otherwise        
@@ -65,7 +65,7 @@ class TriggerCandidate(object):
         # Rule 2, filter by word length
         # only words with length greater than 3 are included
         elif len(word["string"]) < 4:
-            remove = True
+            remove = True                   
             
         return remove
         
@@ -144,7 +144,7 @@ if __name__ == "__main__":
     
         
         
-    TC = TriggerCandidate(WD, TD)
+    TC = SentenceAnalyzer(WD, TD)
     TC.test()
         
         
