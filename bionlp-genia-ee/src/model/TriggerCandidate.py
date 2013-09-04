@@ -80,11 +80,55 @@ class TriggerCandidate(object):
             retval = self.tdict.count(string) * 1.0 / w
         return retval
         
+    def update_word_type(self, Sentence, entity_list):
+        """
+        Update word type based on protein or trigger type
+        entity list is either protein or trigger list
+        """
+        
+        # update entity
+        # protein is list format ['T1', 'Protein', '0', '4', 'IL-4']
+        # trigger is list format ['T60', 'Negative_regulation', '190', '197', 'inhibit']
+        for e in entity_list:
+            
+            # skip two words entity, currently only handle 1 word trigger
+            #TODO: handling multi-word trigger
+            if ' ' in e[4]: continue            
+            
+            # check whether offset of protein is in this sentence
+            offset =  int(e[2])            
+            if Sentence.check_offset(offset):                
+                i = Sentence.offset_map[offset]                
+                Sentence.words[i]["type"] = e[1] 
+                       
+        
         
     def test(self):
-        sen = [{'pos_tag': 'IN', 'end': 3995, 'string': 'Because', 'stem': 'Becaus', 'start': 3988, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'IN', 'end': 3998, 'string': 'of', 'stem': 'of', 'start': 3996, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'DT', 'end': 4002, 'string': 'the', 'stem': 'the', 'start': 3999, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'NN', 'end': 4014, 'string': 'involvement', 'stem': 'involv', 'start': 4003, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'IN', 'end': 4017, 'string': 'of', 'stem': 'of', 'start': 4015, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'NN', 'end': 4022, 'string': 'XXXX', 'stem': 'XXXX', 'start': 4018, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'NNS', 'end': 4032, 'string': 'mutations', 'stem': 'mutat', 'start': 4023, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'IN', 'end': 4035, 'string': 'in', 'stem': 'in', 'start': 4033, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'JJ', 'end': 4045, 'string': 'different', 'stem': 'differ', 'start': 4036, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'JJ', 'end': 4056, 'string': 'autoimmune', 'stem': 'autoimmun', 'start': 4046, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'NNS', 'end': 4065, 'string': 'diseases', 'stem': 'diseas', 'start': 4057, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'CC', 'end': 4069, 'string': 'and', 'stem': 'and', 'start': 4066, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'DT', 'end': 4073, 'string': 'the', 'stem': 'the', 'start': 4070, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'JJ', 'end': 4079, 'string': 'known', 'stem': 'known', 'start': 4074, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'NN', 'end': 4091, 'string': 'interaction', 'stem': 'interact', 'start': 4080, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'IN', 'end': 4096, 'string': 'with', 'stem': 'with', 'start': 4092, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'NN', 'end': 4105, 'string': 'XXXXXXXX', 'stem': 'XXXXXXXX', 'start': 4097, 'score': 0.0, 'type': 'null'}, {'pos_tag': ',', 'end': 4106, 'string': ',', 'stem': ',', 'start': 4105, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'PRP', 'end': 4109, 'string': 'we', 'stem': 'we', 'start': 4107, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'VBD', 'end': 4122, 'string': 'investigated', 'stem': 'investig', 'start': 4110, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'DT', 'end': 4126, 'string': 'the', 'stem': 'the', 'start': 4123, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'NN', 'end': 4133, 'string': 'impact', 'stem': 'impact', 'start': 4127, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'IN', 'end': 4136, 'string': 'of', 'stem': 'of', 'start': 4134, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'NN', 'end': 4142, 'string': 'XXXXX', 'stem': 'XXXXX', 'start': 4137, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'CC', 'end': 4146, 'string': 'and', 'stem': 'and', 'start': 4143, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'NN', 'end': 4152, 'string': 'XXXXX', 'stem': 'XXXXX', 'start': 4147, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'IN', 'end': 4155, 'string': 'on', 'stem': 'on', 'start': 4153, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'DT', 'end': 4159, 'string': 'the', 'stem': 'the', 'start': 4156, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'NN', 'end': 4170, 'string': 'expression', 'stem': 'express', 'start': 4160, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'IN', 'end': 4173, 'string': 'of', 'stem': 'of', 'start': 4171, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'NN', 'end': 4179, 'string': 'XXXXX', 'stem': 'XXXXX', 'start': 4174, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'CC', 'end': 4183, 'string': 'and', 'stem': 'and', 'start': 4180, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'RB', 'end': 4196, 'string': 'subsequently', 'stem': 'subsequ', 'start': 4184, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'IN', 'end': 4199, 'string': 'on', 'stem': 'on', 'start': 4197, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'DT', 'end': 4203, 'string': 'the', 'stem': 'the', 'start': 4200, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'NN', 'end': 4215, 'string': 'development', 'stem': 'develop', 'start': 4204, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'CC', 'end': 4219, 'string': 'and', 'stem': 'and', 'start': 4216, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'NN', 'end': 4228, 'string': 'function', 'stem': 'function', 'start': 4220, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'IN', 'end': 4231, 'string': 'of', 'stem': 'of', 'start': 4229, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'PRP', 'end': 4234, 'string': 'iT', 'stem': 'iT', 'start': 4232, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'NN', 'end': 4238, 'string': 'reg', 'stem': 'reg', 'start': 4235, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'NNS', 'end': 4244, 'string': 'cells', 'stem': 'cell', 'start': 4239, 'score': 0.0, 'type': 'null'}, {'pos_tag': '.', 'end': 4245, 'string': '.', 'stem': '.', 'start': 4244, 'score': 0.0, 'type': 'null'}]
-    
-        S = Sentence(sen)        
+        sen = [{'pos_tag': 'PRP', 'end': 149, 'string': 'We', 'stem': 'We', 'start': 147, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'RB', 'end': 159, 'string': 'therefore', 'stem': 'therefor', 'start': 150, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'VBD', 'end': 165, 'string': 'asked', 'stem': 'ask', 'start': 160, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'IN', 'end': 173, 'string': 'whether', 'stem': 'whether', 'start': 166, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'NN', 'end': 178, 'string': 'XXXX', 'stem': 'XXXX', 'start': 174, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'VBZ', 'end': 181, 'string': 'is', 'stem': 'is', 'start': 179, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'JJ', 'end': 186, 'string': 'able', 'stem': 'abl', 'start': 182, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'TO', 'end': 189, 'string': 'to', 'stem': 'to', 'start': 187, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'VB', 'end': 197, 'string': 'inhibit', 'stem': 'inhibit', 'start': 190, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'NN', 'end': 206, 'string': 'XXXXXXXX', 'stem': 'XXXXXXXX', 'start': 198, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'NN', 'end': 216, 'string': 'induction', 'stem': 'induct', 'start': 207, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'IN', 'end': 219, 'string': 'of', 'stem': 'of', 'start': 217, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'NN', 'end': 225, 'string': 'XXXXX', 'stem': 'XXXXX', 'start': 220, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'IN', 'end': 232, 'string': 'during', 'stem': 'dure', 'start': 226, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'DT', 'end': 236, 'string': 'the', 'stem': 'the', 'start': 233, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'NN', 'end': 244, 'string': 'priming', 'stem': 'prime', 'start': 237, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'IN', 'end': 247, 'string': 'of', 'stem': 'of', 'start': 245, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'JJ', 'end': 253, 'string': 'naive', 'stem': 'naiv', 'start': 248, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'NN', 'end': 255, 'string': 'T', 'stem': 'T', 'start': 254, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'NNS', 'end': 261, 'string': 'cells', 'stem': 'cell', 'start': 256, 'score': 0.0, 'type': 'null'}, {'pos_tag': '.', 'end': 262, 'string': '.', 'stem': '.', 'start': 261, 'score': 0.0, 'type': 'null'}]
+        proteins = [['T1', 'Protein', '0', '4', 'IL-4'],
+                    ['T2', 'Protein', '14', '22', 'TGF-beta'],
+                    ['T3', 'Protein', '49', '53', 'IL-4'],
+                    ['T4', 'Protein', '174', '178', 'IL-4'],
+                    ['T5', 'Protein', '198', '206', 'TGF-beta'],
+                    ['T6', 'Protein', '220', '225', 'FOXP3'],
+                    ['T7', 'Protein', '269', '272', 'CD4'],
+                    ['T8', 'Protein', '273', '279', 'CD45RA'],
+                    ['T9', 'Protein', '326', '329', 'CD3'],
+                    ['T10', 'Protein', '330', '334', 'CD28']]
+        
+        triggers = [['T60', 'Negative_regulation', '190', '197', 'inhibit'],
+                    ['T61', 'Positive_regulation', '207', '216', 'induction'],
+                    ['T62', 'Negative_regulation', '417', '426', 'repressed'],
+                    ['T63', 'Positive_regulation', '449', '458', 'induction'],
+                    ['T64', 'Gene_expression', '468', '478', 'expression'],
+                    ['T65', 'Negative_regulation', '565', '572', 'induced'],
+                    ['T66', 'Negative_regulation', '585', '592', 'absence'],
+                    ['T67', 'Positive_regulation', '696', '702', 'induce'],
+                    ['T68', 'Gene_expression', '709', '719', 'expression']]
+        
+        S = Sentence(sen)    
+        self.update_word_type(S, proteins)    
+        self.update_word_type(S, triggers)
         self.set_candidate(S)
         S.test()
         
