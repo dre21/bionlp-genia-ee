@@ -155,8 +155,9 @@ class GeniaReader(object):
     '''
     update/add offset of word
     offset is relative position in the abstract
+    and add stem of word
     '''
-    def update_word_offset(self, txt, sentences):
+    def update_word_info(self, txt, sentences):
         
         search_offset = 0
         
@@ -345,7 +346,7 @@ class GeniaReader(object):
     '''
     def get_sentences(self, preprocess_txt_fpath, check = False):
         pre_txt = self.get_text(preprocess_txt_fpath)
-        sentences = self.update_word_offset(pre_txt,  self.Tree.sentences)     
+        sentences = self.update_word_info(pre_txt,  self.Tree.sentences)     
         
         if check:
             for sentence in sentences:
@@ -515,7 +516,7 @@ class ParseTreeReader:
                         
                         # add word to sentence
                         # {string, pos_tag, star, end, other info, ... ....}
-                        word = {"string":string,"pos_tag":word_tree[-2]}
+                        word = {"string":string,"pos_tag":word_tree[-2], "score":0.0, "type":"null"}
                         sentence.append(word)
                 
                 tree_sentence["nword"] = nword
