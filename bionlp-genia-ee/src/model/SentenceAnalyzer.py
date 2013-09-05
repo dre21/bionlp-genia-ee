@@ -39,15 +39,19 @@ class SentenceAnalyzer(object):
         """
         # create sentence object
         o_sen = Sentence(sentence)
+        
+        # set sentence mapping
+        o_sen.offset_map = self.build_mapping(sentence)
+        
         # update word type with protein & trigger
         self.update_word_type(o_sen, proteins)
         self.update_word_type(o_sen, triggers)
+        
         # set trigger candidate
         self.set_candidate(o_sen)
-        
+                                            
         return o_sen
-        
-    
+            
     def set_candidate(self, Sentence):
         """
         Set list of word number which is marked as trigger candidate
@@ -101,13 +105,13 @@ class SentenceAnalyzer(object):
     def update_word_type(self, Sentence, entity_list):
         """
         Update word type based on protein or trigger type
-        entity list is either protein or trigger list
+        entity list is either protein or trigger list        
         """
-        
+        mapping = {}
         # update entity
-        # protein is list format ['T1', 'Protein', '0', '4', 'IL-4']
-        # trigger is list format ['T60', 'Negative_regulation', '190', '197', 'inhibit']
-        for e in entity_list:
+        # protein is list format 'T1' : ['T1', 'Protein', '0', '4', 'IL-4']
+        # trigger is list format 'T60' : ['T60', 'Negative_regulation', '190', '197', 'inhibit']
+        for e in entity_list.values():
             
             # skip two words entity, currently only handle 1 word trigger
             #TODO: handling multi-word trigger
@@ -118,8 +122,20 @@ class SentenceAnalyzer(object):
             i = Sentence.offset_map.get(offset,-1)
             if i>0: 
                 Sentence.words[i]["type"] = e[1] 
-                       
+                # add mapping
+                mapping[e[0]] = i
         
+        Sentence.entity_map.update(mapping)        
+                       
+    def build_mapping(self, sentence):
+        """
+        return mapping of start offset to word number of a sentence
+        """
+        retval = {}
+        for i in range(0, len(sentence)):
+            word = sentence[i]
+            retval[word["start"]] = i
+        return retval
         
     def test(self):
         sen = [{'pos_tag': 'PRP', 'end': 149, 'string': 'We', 'stem': 'We', 'start': 147, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'RB', 'end': 159, 'string': 'therefore', 'stem': 'therefor', 'start': 150, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'VBD', 'end': 165, 'string': 'asked', 'stem': 'ask', 'start': 160, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'IN', 'end': 173, 'string': 'whether', 'stem': 'whether', 'start': 166, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'NN', 'end': 178, 'string': 'XXXX', 'stem': 'XXXX', 'start': 174, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'VBZ', 'end': 181, 'string': 'is', 'stem': 'is', 'start': 179, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'JJ', 'end': 186, 'string': 'able', 'stem': 'abl', 'start': 182, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'TO', 'end': 189, 'string': 'to', 'stem': 'to', 'start': 187, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'VB', 'end': 197, 'string': 'inhibit', 'stem': 'inhibit', 'start': 190, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'NN', 'end': 206, 'string': 'XXXXXXXX', 'stem': 'XXXXXXXX', 'start': 198, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'NN', 'end': 216, 'string': 'induction', 'stem': 'induct', 'start': 207, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'IN', 'end': 219, 'string': 'of', 'stem': 'of', 'start': 217, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'NN', 'end': 225, 'string': 'XXXXX', 'stem': 'XXXXX', 'start': 220, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'IN', 'end': 232, 'string': 'during', 'stem': 'dure', 'start': 226, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'DT', 'end': 236, 'string': 'the', 'stem': 'the', 'start': 233, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'NN', 'end': 244, 'string': 'priming', 'stem': 'prime', 'start': 237, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'IN', 'end': 247, 'string': 'of', 'stem': 'of', 'start': 245, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'JJ', 'end': 253, 'string': 'naive', 'stem': 'naiv', 'start': 248, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'NN', 'end': 255, 'string': 'T', 'stem': 'T', 'start': 254, 'score': 0.0, 'type': 'null'}, {'pos_tag': 'NNS', 'end': 261, 'string': 'cells', 'stem': 'cell', 'start': 256, 'score': 0.0, 'type': 'null'}, {'pos_tag': '.', 'end': 262, 'string': '.', 'stem': '.', 'start': 261, 'score': 0.0, 'type': 'null'}]
