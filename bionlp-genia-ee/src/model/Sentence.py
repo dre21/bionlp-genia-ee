@@ -34,6 +34,12 @@ class Sentence(object):
         # list of word number which is marked as trigger candidate
         self.trigger_candidate = []
         
+        # list of protein word number
+        self.protein = []
+        
+        # list of trigger word number
+        self.trigger = []
+        
         # dependency
         self.dep = None
         
@@ -76,7 +82,8 @@ class Sentence(object):
         for k,v in (self.entity_map.iteritems()):
             print k,v
         print "Trigger candidate:", self.trigger_candidate
-        
+        print "Protein:", self.protein
+        print "Trigger:", self.trigger
         if self.dep != None:
             print "graph"
             print self.dep.graph

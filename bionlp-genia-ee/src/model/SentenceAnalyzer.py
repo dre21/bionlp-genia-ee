@@ -124,6 +124,11 @@ class SentenceAnalyzer(object):
                 Sentence.words[i]["type"] = e[1] 
                 # add mapping
                 mapping[e[0]] = i
+                
+                if e[1] == "Protein":
+                    Sentence.protein.append(i)
+                else:
+                    Sentence.trigger.append(i)
         
         Sentence.entity_map.update(mapping)        
                        
