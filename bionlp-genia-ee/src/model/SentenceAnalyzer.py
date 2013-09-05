@@ -114,9 +114,9 @@ class SentenceAnalyzer(object):
             if ' ' in e[4]: continue            
             
             # check whether offset of protein is in this sentence
-            offset =  int(e[2])            
-            if Sentence.check_offset(offset):                
-                i = Sentence.offset_map[offset]                
+            offset =  int(e[2])                                    
+            i = Sentence.offset_map.get(offset,-1)
+            if i>0: 
                 Sentence.words[i]["type"] = e[1] 
                        
         
