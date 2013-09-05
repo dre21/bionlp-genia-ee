@@ -237,16 +237,16 @@ class GeniaReader(object):
         for sen in doc["sen"]:
             print sen
         print "Proteins:"
-        for line in doc["protein"]:
+        for line in doc["protein"].values():
             print line
         print "Equivs:"
         for line in doc["equiv"]:
             print line
         print "Triggers:"
-        for line in doc["trigger"]:
+        for line in doc["trigger"].values():
             print line   
         print "Events:"  
-        for line in doc["event"]:
+        for line in doc["event"].values():
             print line
         print "Chunks:"
         for line in doc["chunk"]:
@@ -273,35 +273,39 @@ class GeniaReader(object):
         return txt
             
     '''
-    return list of protein
+    return protein dict
     pretein representation:
-    ['T84', 'Negative_regulation', '2665', '2673', 'decrease']
+    'T84' : ['T84', 'Negative_regulation', '2665', '2673', 'decrease']
     '''
     def get_protein(self, fpath):
-        proteins = []
+        proteins = {}
         with open(fpath, 'r') as fin:
             for line in fin:
                 line = line.rstrip('\n')
-                proteins.append(re.split("\\t|\\s+",line,4))
+                p = re.split("\\t|\\s+",line,4)
+                proteins[p[0]] = p
         return proteins
     
     '''
-    return list of trigger, event tuple and equiv tuple
-    trigger tuple: (id, trigger type, start idx, end idx, trigger text)
-    event tuple: (id, event type, trigger_id, theme1 id, theme2 id, cause id)
+    return trigger dictionary, event dictionary and equiv tuple
+    trigger 
+    id : (id, trigger type, start idx, end idx, trigger text)
+    event tuple
+    id : (id, event type, trigger_id, theme1 id, theme2 id, cause id)
     equiv tuple: (protein1, protein2)
     e
     '''
     def get_trigger_relation(self, fpath):
-        triggers = []
-        events = []
+        triggers = {}
+        events = {}
         equivs = []
         with open(fpath, 'r') as fin:
             for line in fin:
                 line = line.rstrip('\n')
                 # process trigger
                 if line[0] == 'T':
-                    triggers.append(re.split("\\t|\\s+",line,4))
+                    t = re.split("\\t|\\s+",line,4)
+                    triggers[t[0]] = t
                 
                 # process event
                 elif line[0] == 'E':                    
@@ -319,7 +323,7 @@ class GeniaReader(object):
                         elif argtype == 'Cause':
                             theme2 = ""
                             cause = argid                        
-                    events.append((eid, etype, trigid, theme1, theme2, cause))
+                    events[eid] = list((eid, etype, trigid, theme1, theme2, cause))
                 
                 # process equiv
                 elif line[0] == '*':
