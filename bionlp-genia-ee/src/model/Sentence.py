@@ -26,27 +26,31 @@ class Sentence(object):
         self.nwords = len(sentence_data)
                 
         # mapping offset to word number in a sentence
-        self.offset_map = self.map(sentence_data)
+        self.offset_map = {}
+        
+        # mapping entity id to word number in a sentence
+        self.entity_map = {}
         
         # list of word number which is marked as trigger candidate
         self.trigger_candidate = []
+        
+        # dependency
+        self.dep = None
+        
+        # chunk
+        
+        # tree
+        
+        # relation representation
+        self.rel = None 
+                
         
     def check_offset(self, offset):
         """
         return true if the given offset is in this sentence range
         """
         return offset >= self.start_offset and offset <= self.end_offset
-    
-    def map(self, words):
-        """
-        return mapping of start offset to word number
-        """
-        retval = {}
-        for i in range(0, len(words)):
-            word = words[i]
-            retval[word["start"]] = i
-        return retval
-    
+       
     def get_string(self, start_off, nwords):
         """
         return nwords strings starting from start offset
@@ -65,11 +69,23 @@ class Sentence(object):
         print self.nwords, "words:"
         for w in self.words:
             print w
-        print "map:"
+        print "offset map:"
         for k,v in sorted(self.offset_map.iteritems()):
+            print k,v
+        print "entity map:"
+        for k,v in (self.entity_map.iteritems()):
             print k,v
         print "Trigger candidate:", self.trigger_candidate
         
+        if self.dep != None:
+            print "graph"
+            print self.dep.graph
+            print "pair"
+            print self.dep.pair
+        
+        if self.rel != None:
+            print "relation"
+            print self.rel.data
         #print "get string offset 627 for 2 words"
         #print self.get_string(627, 2)
             
