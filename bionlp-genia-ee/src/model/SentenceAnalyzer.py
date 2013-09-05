@@ -29,6 +29,24 @@ class SentenceAnalyzer(object):
         self.wdict = WDict
         self.tdict = TDict
     
+    def analyze(self, sentence, proteins, triggers):
+        """
+        analyze and construct sentence object
+        return sentence object
+        sentence: sentence data in list representation
+        proteins: list of protein
+        trigger: list of trigger        
+        """
+        # create sentence object
+        o_sen = Sentence(sentence)
+        # update word type with protein & trigger
+        self.update_word_type(o_sen, proteins)
+        self.update_word_type(o_sen, triggers)
+        # set trigger candidate
+        self.set_candidate(o_sen)
+        
+        return o_sen
+        
     
     def set_candidate(self, Sentence):
         """
@@ -126,10 +144,7 @@ class SentenceAnalyzer(object):
                     ['T67', 'Positive_regulation', '696', '702', 'induce'],
                     ['T68', 'Gene_expression', '709', '719', 'expression']]
         
-        S = Sentence(sen)    
-        self.update_word_type(S, proteins)    
-        self.update_word_type(S, triggers)
-        self.set_candidate(S)
+        S = self.analyze(sen, proteins, triggers)        
         S.test()
         
 if __name__ == "__main__":
