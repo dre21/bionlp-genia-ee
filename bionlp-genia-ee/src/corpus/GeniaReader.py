@@ -138,6 +138,7 @@ class GeniaReader(object):
                "test": is_test,
                "path1": ori_fpath,
                "path2": parsed_fpath,
+               "nsen": len(tree),
                "txt":txt,
                "sen": sentences,
                "protein":proteins,
@@ -229,7 +230,8 @@ class GeniaReader(object):
         print "doc id: ", doc["doc_id"]
         print "is test: ", doc["test"]
         print "ori path: ", doc["path1"]
-        print "parsed path: ", doc["path2"]
+        print "parsed path: ", doc["path2"]        
+        print "number of sentence:", doc["nsen"]
         print doc["txt"]
         print "Sentences:"
         for sen in doc["sen"]:
