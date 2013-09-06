@@ -4,7 +4,9 @@ Created on Sep 5, 2013
 @author: Andresta
 """
 
-class DependencyFeature(object):
+from features.Feature import Feature
+
+class DependencyFeature(Feature):
     """
     classdocs
     """
@@ -14,13 +16,8 @@ class DependencyFeature(object):
         """
         Constructor
         """
-        self.prefix = prefix
-        
-        self.feature = {}
-        
-    def add(self, feat_name, value):
-        self.feature[self.prefix +'_'+feat_name] = value
-        
+        super(DependencyFeature, self).__init__(prefix)
+                    
     def extract_feature(self, o_sen, trig_wn, arg_wn):
         """
         extract dependency feature between trig_wn and arg_wn in o_sen
@@ -32,20 +29,25 @@ class DependencyFeature(object):
         
         # length from trigger to argument
         upath = o_dep.get_shortest_path(trig_wn, arg_wn, "undirected")
-        self.add("wordlen", len(upath)-1)
+        self.add("word_dist", len(upath)-1)
         
         # direct path from trigger to prot
         dpath = o_dep.get_shortest_path(trig_wn, arg_wn)
         if dpath != []:
             self.add("direct", True)
+            
+        # extract word feature for parent of trigger
+        parent = o_dep.get_parent(trig_wn)
+        if parent > 0:
+            self.extract_word_feature(o_sen.words[parent], "t_parent")
+            
+        # extract word feature for parent of argument
+        parent = o_dep.get_parent(arg_wn)
+        if parent > 0:
+            self.extract_word_feature(o_sen.words[parent], "a_parent")
         
         
+        # extract word feature for parent of argument
         
-    def extract_word_feature(self, word, prefix):
         
-        # pos tag of word
-        self.add(prefix + "_pos_"+ word["pos_tag"], True)
-        
-        # stem of word
-        self.add(prefix + "_pos_"+ word["stem"], True)
         
