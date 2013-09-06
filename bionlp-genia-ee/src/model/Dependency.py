@@ -90,8 +90,8 @@ class Dependency(object):
         if start == end:
             return path
         if not graph.has_key(start):
-            return None
-        shorthest = None
+            return []
+        shorthest = []
         for node in graph[start]:
             if node not in path:
                 newpath = self.get_shortest_path(node, end, graph_type, path)
