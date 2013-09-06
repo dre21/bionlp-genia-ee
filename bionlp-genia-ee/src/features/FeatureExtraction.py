@@ -27,14 +27,14 @@ class FeatureExtraction(object):
     
 
 
-    def __init__(self, source):
+    def __init__(self, source, word_dict, trigger_dict):
         """
         Extracting feature from corpus data
         """
         self.src = source
         
         self.DF = DependencyFeature("dep")
-        self.SF = SentenceFeature("sen")
+        self.SF = SentenceFeature("sen", word_dict, trigger_dict)
     
         
     def extract_tt(self, o_doc):
@@ -91,5 +91,5 @@ if __name__ == "__main__":
     doc = builder.read_raw(doc_id)
     o_doc = builder.build_doc_from_raw(doc)
     
-    FE = FeatureExtraction(source)
+    FE = FeatureExtraction(source, WD, TD)
     FE.extract_tt(o_doc)
