@@ -100,6 +100,27 @@ class Dependency(object):
                         shorthest = newpath
         return shorthest       
                     
+    def get_parent(self, node):
+        """ 
+        get parent of given node
+        return -1 if parent is not found (word is a root)
+        """        
+        if node == self.root:
+            parent = -1
+        else:
+            for k, v in self.graph.iteritems():
+                if node in v:
+                    parent = k
+                    break
+        return parent
+            
+    def get_child(self, node):
+        """
+        return list of children nodes for a given node,
+        empty list if no children
+        """
+        return self.graph.get(node,[])
+                    
     def test(self):
         print "root", self.root
         
@@ -126,5 +147,6 @@ if __name__ == "__main__":
     upath = Dep.get_shortest_path(9, 5, "undirected")
     print "path 9->5", path
     print "undirected path 9->5", upath
-        
+    print "parent 11", Dep.get_parent(11)
+    print "parent 11", Dep.get_parent(3)    
     
