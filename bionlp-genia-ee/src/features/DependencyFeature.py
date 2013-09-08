@@ -47,7 +47,19 @@ class DependencyFeature(Feature):
             self.extract_word_feature(o_sen.words[parent], "a_parent")
         
         
-        # extract word feature for parent of argument
+        # extract word feature for child of trigger
+        children = o_dep.get_child(trig_wn)
+        if children != []:
+            for child in children:
+                self.extract_word_feature(o_sen.words[child], "t_child")
+                
+        # extract word feature for child of argument
+        children = o_dep.get_child(arg_wn)
+        if children != []:
+            for child in children:
+                self.extract_word_feature(o_sen.words[child], "a_child")
+                
+        
         
         
         
