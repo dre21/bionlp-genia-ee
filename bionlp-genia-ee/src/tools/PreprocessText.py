@@ -147,12 +147,12 @@ class PreprocessText(object):
         
         
         # check char before
-        result = re.match("[A-Z0-9]\-", string[:2], flags=re.IGNORECASE)
+        result = re.match("[A-Z0-9\(\)\[\]][\-\+\/]", string[:2], flags=re.IGNORECASE)
         if result:
             new_string = new_string[0:1] + " " + new_string[2:]
         
         # check char after 
-        result = re.match("\-[A-Z0-9]", string[-2:], flags=re.IGNORECASE)
+        result = re.match("[\-\+\/][A-Z0-9\(\)\[\]]", string[-2:], flags=re.IGNORECASE)
         if result:
             new_string = new_string[:-2] + " " + new_string[-1:]
         
