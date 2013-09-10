@@ -59,13 +59,17 @@ class SentenceAnalyzer(object):
         """
         
         for i in range(0,Sentence.nwords):
-            # filter word
+            
             word = Sentence.words[i]
-            if not self.filter(word):
-                Sentence.trigger_candidate.append(i)
             
             # assign score
             word["score"] = self.get_score(word)
+            
+            # filter word
+            if not self.filter(word):
+                Sentence.trigger_candidate.append(i)
+            
+            
                                             
     def filter(self, word):
         """
