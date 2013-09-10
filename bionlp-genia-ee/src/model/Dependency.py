@@ -21,7 +21,7 @@ class Dependency(object):
         if type(dependency_data) != dict:
             raise TypeError("dependency_data must be a dictionary")
         
-        self.root = int(dependency_data["root"])
+        self.root = int(dependency_data["root"]) - 1
         
         # simple dict-list style graph representation    
         # this graph stores directed graph representation  
@@ -58,8 +58,8 @@ class Dependency(object):
         for k,lst in dependency_data.iteritems():
             for v in lst:
                 d = v[0]
-                gov = int(k)
-                dep = int(d)
+                gov = int(k) - 1
+                dep = int(d) - 1
                 # add to graph
                 graph[gov].append(dep)
                 
