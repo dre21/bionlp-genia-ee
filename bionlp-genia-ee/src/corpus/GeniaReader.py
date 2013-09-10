@@ -461,7 +461,7 @@ class DependencyReader:
             current_nword = gov_number
         if dep_number > current_nword:
             current_nword = dep_number
-        return dep_number
+        return current_nword
     
     def test(self, fpath):
         dep_data = self.read(fpath)
