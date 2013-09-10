@@ -527,12 +527,13 @@ class ParseTreeReader:
                         word = {"string":string,"pos_tag":word_tree[-2], "score":0.0, "type":"null"}
                         sentence.append(word)
                 
-                tree_sentence["nword"] = nword
-                tree_sentence["data"] = tree_line
-                tree_data.append(tree_sentence)
-                
-                # append sentence
-                self.sentences.append(sentence)
+                if len(sentence) > 1:
+                    tree_sentence["nword"] = nword
+                    tree_sentence["data"] = tree_line
+                    tree_data.append(tree_sentence)
+                    
+                    # append sentence
+                    self.sentences.append(sentence)
                 
         return tree_data
     
@@ -589,10 +590,11 @@ class ChunkReader:
                     chk_type,_,text = par.partition(' ') 
                     chunks_line.append({"type":chk_type, "txt":self.clean_string(text)})
                     nword += self.get_nword(text)
-                chunk_sentence["nword"] = nword
-                chunk_sentence["nchunk"] = len(chunks_line)
-                chunk_sentence["data"] = chunks_line
-                chunk_data.append(chunk_sentence)
+                if nword > 1:
+                    chunk_sentence["nword"] = nword
+                    chunk_sentence["nchunk"] = len(chunks_line)
+                    chunk_sentence["data"] = chunks_line
+                    chunk_data.append(chunk_sentence)
         return chunk_data
     
     '''
