@@ -212,15 +212,17 @@ class GeniaReader(object):
         
         # check number of sentence
         #print "number of sentence:", len(chunck), len(tree),len(dep)
-        if len(chunck) != len(tree) and len(tree) != len(dep):            
+        if len(chunck) != len(tree) or len(tree) != len(dep):            
             raise ValueError("Chunck, Tree and Dep has different number of sentence")
         
         # check number of line
         for i in range(0,len(chunck)):
             #print i, "number of words: ", chunck[i]["nword"], tree[i]["nword"], dep[i]["nword"]
-            if chunck[i]["nword"] != tree[i]["nword"] and tree[i]["nword"] != dep[i]["nword"]:
-                raise ValueError("Different number of word in sentence " + str(i)) 
-        
+            if chunck[i]["nword"] != tree[i]["nword"] or tree[i]["nword"] != dep[i]["nword"]:                
+                print tree[i]
+                print chunck[i]
+                print dep[i]
+                raise ValueError("Different number of word in sentence " + str(i) + " doc: " + doc["doc_id"])
     
     '''
     print to screen document representation
