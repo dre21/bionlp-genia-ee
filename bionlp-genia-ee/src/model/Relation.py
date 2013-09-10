@@ -56,7 +56,7 @@ class Relation(object):
                 if arg_wn >= 0:
                     self.add_relation(t_wn, arg_wn, "Theme", arg_type)
                 else:
-                    print "inter-sentence relation", e
+                    #print "inter-sentence relation", e
                     self.out_scope.append(e)
                     
                 
@@ -67,7 +67,7 @@ class Relation(object):
                     if arg_wn >= 0:
                         self.add_relation(t_wn, arg_wn, "Binding2", "P")
                     else:
-                        print "inter-sentence relation", e
+                        #print "inter-sentence relation", e
                         self.out_scope.append(e)
                     
                 # process argument 2 for cause, it's optional
@@ -84,7 +84,7 @@ class Relation(object):
                     if arg_wn >= 0:
                         self.add_relation(t_wn, arg_wn, "Cause", arg_type)
                     else:
-                        print "inter-sentence relation", e
+                        #print "inter-sentence relation", e
                         self.out_scope.append(e)
                                                
     def add_relation(self, trigger_wn, arg_wn, arg_name, arg_type):
@@ -97,5 +97,10 @@ class Relation(object):
         """
         self.data.append((trigger_wn, arg_wn, arg_name, arg_type))
     
-    
+    def check_relation(self,trigger_wn, arg_wn, arg_name = "Theme", arg_type = "P"):
+        retval = False
+        for rel in self.data:
+            if tuple([trigger_wn, arg_wn, arg_name, arg_type]) == rel:
+                return True
+        return retval
         
