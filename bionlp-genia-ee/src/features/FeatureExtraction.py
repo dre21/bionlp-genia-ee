@@ -3,8 +3,12 @@ Created on Sep 4, 2013
 
 @author: Andresta
 """
+
+import json, os
 from features.DependencyFeature import DependencyFeature
 from features.SentenceFeature import SentenceFeature
+from model.Dictionary import WordDictionary, TriggerDictionary
+from model.Document import DocumentBuilder
 
 class FeatureExtraction(object):
     """
@@ -16,15 +20,28 @@ class FeatureExtraction(object):
     # this folder contain data source for all docs
     DATA_DIR = "data"
     
+    # this folder contain feature extraction data for all docs
+    FEATURE_DIR = "feature"
+    
     # suffix and extension for feature data
-    DOCID_SUFIX_EXT = '_feat.json'
+    FEATURE_SUFIX_EXT = '_feat.json'
         
     # extension of doc data
     DATA_EXT = ".json"
             
     CORPUS_DIR = ["dev","train","test"]
     
-    
+    # event label
+    EVENT_LABEL = {"None":0,
+                   "Gene_expression":1,
+                   "Transcription":2,
+                   "Protein_catabolism":3,
+                   "Phosphorylation":4,
+                   "Localization":5,
+                   "Binding":6,
+                   "Regulation":7,
+                   "Positive_regulation":8,
+                   "Negative_regulation":9}
 
 
     def __init__(self, source, word_dict, trigger_dict):
@@ -33,29 +50,95 @@ class FeatureExtraction(object):
         """
         self.src = source
         
+                
         self.DF = DependencyFeature("dep")
         self.SF = SentenceFeature("sen", word_dict, trigger_dict)
-    
         
-    def extract_tt(self, o_doc):
+        # statistic
+        self.sample_pos = 0
+        self.sample_neg = 0
+    
+    def reset_statistic(self):
+        self.sample_pos = 0
+        self.sample_neg = 0
+    
+    def write_feature(self, feature_group, doc_id, data):
+        path = self.src + "/" + self.FEATURE_DIR + "/" + feature_group 
+        if not os.path.exists(path):
+            os.makedirs(path)
+        with open(path + "/" + doc_id + self.FEATURE_SUFIX_EXT, 'w') as f:
+            for line in data:                
+                f.write(json.dumps(line) + '\n')
+        
+    def extract_tp(self, o_doc):
         """
-        extract Trigger-Theme pair
+        extract Trigger-Protein theme pair
         target 
         """
         i = 1
-        for i in range(0, len(o_doc.sen)):
-            if i != 2: continue
+        feature_data = []
+        for i in range(0, len(o_doc.sen)):            
+            #if i != 2: continue
             o_sen = o_doc.sen[i]
             tc_list = o_sen.trigger_candidate
             p_list = o_sen.protein
                         
-            for tc in tc_list:
-                for p in p_list:                    
-                    feature = self.get_feature(o_sen, tc, p)
-                    print tc, o_sen.words[tc]["string"], "-", p, o_sen.words[p]["string"]
-                    print feature
-                    print
+            for tc in tc_list:                               
+                for p in p_list:
                     
+                    #print tc, o_sen.words[tc]["string"], "-", p, o_sen.words[p]["string"]                                        
+                    feature = self.get_feature(o_sen, tc, p)                    
+                    info = {"doc":o_doc.doc_id, "sen":i, "t":tc, "tp":p}
+                                        
+                    if not o_doc.is_test:
+                        label = self.get_tp_label(o_sen, tc, p)  
+                        # statistical info
+                        if label == 0:
+                            self.sample_neg += 1
+                        else:
+                            self.sample_pos += 1                      
+                    
+                    feature_data.append([info,label,feature])
+                    
+                    
+                        
+        #self.write_feature("trigger-theme", o_doc.doc_id, feature_data)
+        
+        return feature_data
+    
+    def extract_tt(self, o_doc):
+        """
+        extract Trigger-Trigger theme pair
+        target regulation, positive regulation, and negative regulation
+        """
+        
+        feature_data = []
+        for i in range(0, len(o_doc.sen)):            
+            #if i != 2: continue
+            o_sen = o_doc.sen[i]
+            tc_list = o_sen.trigger_candidate            
+                        
+            for tc in tc_list:      
+                # argument candidate is actually a trigger candidate                         
+                for ac in tc_list:
+                    # no relation to it-self, there are few case but small   
+                    if tc == ac: continue
+                    
+                    #print tc, o_sen.words[tc]["string"], "-", p, o_sen.words[p]["string"]                                        
+                    feature = self.get_feature(o_sen, tc, ac)                    
+                    info = {"doc":o_doc.doc_id, "sen":i, "t" : tc, "tt" : ac}
+                                        
+                    if not o_doc.is_test:
+                        label = self.get_tt_label(o_sen, tc, ac)  
+                        # statistical info
+                        if label == 0:
+                            self.sample_neg += 1
+                        else:
+                            self.sample_pos += 1                      
+                    
+                    feature_data.append([info,label,feature])
+        
+        return feature_data
     
     def get_feature(self, o_sen, trig_wn, arg_wn):
         
@@ -71,15 +154,42 @@ class FeatureExtraction(object):
         
         return feature
         
+    def get_tp_label(self, o_sen, trig_wn, arg_wn):
+        """
+        Label trigger-argument relation with trigger event if there is a relation
+        otherwise 0
+        argument is a protein
+        """
+        label = 0
+        
+        if o_sen.rel.check_relation(trig_wn, arg_wn, "Theme", "P"):
+            label = self.EVENT_LABEL[o_sen.words[trig_wn]["type"]]
+        
+        return label
+    
+    def get_tt_label(self, o_sen, trig_wn, arg_wn):
+        """
+        Label trigger-argument relation with trigger event if there is a relation
+        otherwise 0
+        argument is a another trigger
+        """
+        label = 0
+        
+        if o_sen.rel.check_relation(trig_wn, arg_wn, "Theme", "E"):
+            label = self.EVENT_LABEL[o_sen.words[trig_wn]["type"]]
+        
+        return label
+        
+        
         
     
 if __name__ == "__main__":
     
-    from model.Dictionary import WordDictionary, TriggerDictionary
-    from model.Document import DocumentBuilder
     
-    source = "E:/corpus/bionlp2011/project_data/"
+    
+    source = "E:/corpus/bionlp2011/project_data"
     doc_id = "PMC-2222968-04-Results-03"
+    #doc_id = "PMID-9351352"
     
     WD = WordDictionary(source)    
     WD.load("train")
@@ -92,4 +202,6 @@ if __name__ == "__main__":
     o_doc = builder.build_doc_from_raw(doc)
     
     FE = FeatureExtraction(source, WD, TD)
-    FE.extract_tt(o_doc)
+    feature = FE.extract_tt(o_doc)
+    for f in feature[50:100]:
+        print f
