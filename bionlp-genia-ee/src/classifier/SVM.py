@@ -37,7 +37,7 @@ class SVM(object):
     
     CROSS_VALIDATION = 5
 
-    def __init__(self, source, svm_class, grid_search = True, class_weight = None, scaler_type = 'norm', kernel_list = ["linear"], C = [], gamma = []):
+    def __init__(self, source, prefix, svm_class, grid_search = True, class_weight = None, scaler_type = 'norm', kernel_list = ["linear"], C = [], gamma = []):
         '''
         Constructor
         '''        
@@ -64,11 +64,11 @@ class SVM(object):
         
         self.tuned_params = self.build_param(kernel_list, C, gamma)
          
-        self.set_path(source, svm_class, grid_search)
+        self.set_path(source, prefix, svm_class, grid_search)
     
     
-    def set_path(self, source, svm_class, grid_search):
-        path = source + '/' + self.MODEL_DIR + '/'  
+    def set_path(self, source, prefix, svm_class, grid_search):
+        path = source + '/' + self.MODEL_DIR + '/'+ prefix + '_'
                 
         # set vec path
         self._vec_path = path + 'dict_vectorizer.vec'  

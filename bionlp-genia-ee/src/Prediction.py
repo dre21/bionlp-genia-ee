@@ -56,17 +56,50 @@ class Prediction(object):
         self.doc_builder = DocumentBuilder(self.src, self.wdict, self.tdict)         
         self.extraction = FeatureExtraction(self.src, self.wdict, self.tdict)
         
-    
-    
-    def predict(self, docid_list_fname, scaler_function):
+    def get_feature(self, doc_ids, step):
         """
-        return prediction of given docid_list
+        extract feature and return X, Y for a given step
+        step are either one of these:
+        'tp' => trigger-protein relation
+        'tt' => trigger-trigger relation to predict regulation event with trigger argument  
         """
+        if step not in ["tt","tp"]:
+            raise ValueError("only support step for tt and tp")
+        
         X = []
-        Y = []     
+        Y = []
         info = []
-          
-        dt_start = dt.now()
+        
+        dt_start = dt.now()        
+                      
+        # init feature
+        print "now extracting", len(doc_ids), "docs"
+        for doc_id in doc_ids:             
+            o_doc = self.doc_builder.build(doc_id)
+            if step == 'tp':
+                samples = self.extraction.extract_tp(o_doc)
+            elif step == 'tt':
+                samples = self.extraction.extract_tt(o_doc)
+            
+            for sample in samples:
+                X.append(sample[2])
+                Y.append(sample[1])      
+                info.append(sample[0])             
+        
+        # print statistic
+        pos = self.extraction.sample_pos
+        neg = self.extraction.sample_neg
+        stat = (pos, neg, pos + neg)
+        print stat
+        print "percentege of positif data:", pos * 100.0 / (pos + neg)        
+        print "time to extract feature", dt.now() - dt_start
+        
+        return X,Y, info
+    
+    def get_docid_list(self, docid_list_fname):
+        """
+        return list of file
+        """
         if not isinstance(docid_list_fname, list):
             # get list of doc ids from file
             path = self.src + '/' + docid_list_fname + self.DOCID_SUFFIX_EXT
@@ -76,29 +109,40 @@ class Prediction(object):
                 doc_ids = json.loads(f.read())
         else:
             doc_ids = docid_list_fname
-            
-        # init feature
-        print "now extracting", len(doc_ids), "docs"
-        for doc_id in doc_ids:             
-            o_doc = self.doc_builder.build(doc_id)
-            samples = self.extraction.extract_tp(o_doc)            
-            
-            for sample in samples:
-                X.append(sample[2])
-                Y.append(sample[1])
-                info.append(sample[0])
-            
-        print "number of generated sample data: " + str(len(X))
-        print "time to extract feature", dt.now() - dt_start
-                        
+        
+        return doc_ids
+    
+    def predict_tp(self, docid_list_fname, grid_search):
+        """
+        return prediction of given docid_list
+        """
+        # get list of file
+        doc_ids = self.get_docid_list(docid_list_fname)
+        
+        # get features and target
+        X, Y, info = self.get_feature(doc_ids, 'tp')
         
         # init svm classifier
-        svm = SVM(self.src, "linear", grid_search = True, class_weight = 'auto')
+        svm = SVM(self.src, "trig-prot", "linear", grid_search = grid_search, class_weight = 'auto')
         svm.load()
         
         return svm.predict(X), Y, info
         
+    def predict_tt(self, docid_list_fname, grid_search):
+        """
+        return prediction of given docid_list
+        """
+        # get list of file
+        doc_ids = self.get_docid_list(docid_list_fname)
         
+        # get features and target
+        X, Y, info = self.get_feature(doc_ids, 'tt')
+        
+        # init svm classifier
+        svm = SVM(self.src, "trig-prot", "linear", grid_search = grid_search, class_weight = 'auto')
+        svm.load()
+        
+        return svm.predict(X), Y, info
         
 if __name__ == "__main__":
     
@@ -110,10 +154,24 @@ if __name__ == "__main__":
     doc_ids = "dev"
     
     prediction = Prediction(source, dict_type)
-    Ypred, Ytest, info = prediction.predict(doc_ids, "norm")
     
+    
+    print "Trigger-Protein prediction on dev corpus\n================================"
+    Ypred, Ytest, info = prediction.predict_tp(doc_ids, grid_search = True)    
     result = precision_recall_fscore_support(Ytest, Ypred, labels = [1,2,3,4,5,6,7,8,9])
     
+    print "precision"
+    print result[0]
+    print "recall"
+    print result[1]
+    print "f1-score"
+    print result[2]
+    print "support"
+    print result[3]
+    
+    print "\n\nTrigger-Trigger prediction on dev corpus\n================================"
+    Ypred, Ytest, info = prediction.predict_tt(doc_ids, grid_search = True)
+    result = precision_recall_fscore_support(Ytest, Ypred, labels = [1,2,3,4,5,6,7,8,9])
     print "precision"
     print result[0]
     print "recall"
