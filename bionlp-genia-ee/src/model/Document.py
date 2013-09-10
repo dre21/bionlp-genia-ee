@@ -83,6 +83,11 @@ class DocumentBuilder(object):
         """
         self.sa = SentenceAnalyzer(self.wd, self.td)
         
+    def build(self, doc_id):
+        """
+        return document object
+        """
+        return self.build_doc_from_raw(self.read_raw(doc_id))
     
     def build_doc_from_raw(self, doc):
         """
@@ -99,6 +104,7 @@ class DocumentBuilder(object):
         for i in range(0,doc["nsen"]):
             # create sentence object
             o_sen = self.sa.analyze(doc["sen"][i], doc["protein"],doc["trigger"])      
+            o_sen.number = i
             
             # add dependency to sentence
             o_sen.dep = Dependency(doc["dep"][i])
@@ -115,7 +121,9 @@ class DocumentBuilder(object):
             
             # add sentence object to document object
             o_doc.add_sentence(o_sen)
-                                                               
+                 
+        self.print_relation_error(o_doc)         
+                                                      
         return o_doc
                 
         
@@ -124,13 +132,24 @@ class DocumentBuilder(object):
         with open(fpath, 'r') as f:
             doc = json.loads(f.read())
         return doc
+    
+    def print_relation_error(self, o_doc):
+        """
+        write relation error to file
+        """
+        with open(self.src + '/relation_err.json' ,'a') as f:
+            f.write(o_doc.doc_id + '\n')        
+            for o_sen in o_doc.sen:
+                for rel in o_sen.rel.out_scope:
+                    f.write(json.dumps(rel) + '\n')
+                
         
     def test(self, doc_id):
         
         start = dt.now()
         doc = self.read_raw(doc_id)
         o_doc = self.build_doc_from_raw(doc)
-        #o_doc.test()
+        o_doc.test()
         end = dt.now()
         print "building " + doc_id + " for ", end-start, "seconds"
         
