@@ -57,16 +57,19 @@ class SentenceFeature(Feature):
         # extract word feature for argument
         self.extract_word_feature(o_sen.words[arg_wn], "a")
         
+        # argument type
+        self.add("a_type", o_sen.words[arg_wn]["type"])
+        
         # extract word feature for words around trigger candidate
         if trig_wn - 1 >= 0:
             self.extract_word_feature(o_sen.words[trig_wn-1], "tw-1")
-        if trig_wn + 1 <= nword:
+        if trig_wn + 1 < nword:
             self.extract_word_feature(o_sen.words[trig_wn+1], "tw+1")
             
         # extract word feature for words around protein
         if arg_wn - 1 >= 0:
             self.extract_word_feature(o_sen.words[arg_wn-1], "pw-1")
-        if arg_wn + 1 <= nword:
+        if arg_wn + 1 < nword:
             self.extract_word_feature(o_sen.words[arg_wn+1], "pw+1")             
         
         # probability of trigger on each event
@@ -76,7 +79,7 @@ class SentenceFeature(Feature):
         self.add('score_4', self.get_score(o_sen.words[trig_wn], 'Phosphorylation'))
         self.add('score_5', self.get_score(o_sen.words[trig_wn], 'Localization'))
         self.add('score_6', self.get_score(o_sen.words[trig_wn], 'Binding'))
-        self.add('score_7', self.get_score(o_sen.words[trig_wn], 'Binding'))
+        self.add('score_7', self.get_score(o_sen.words[trig_wn], 'Regulation'))
         self.add('score_8', self.get_score(o_sen.words[trig_wn], 'Positive_regulation'))
         self.add('score_9', self.get_score(o_sen.words[trig_wn], 'Negative_regulation'))
         
