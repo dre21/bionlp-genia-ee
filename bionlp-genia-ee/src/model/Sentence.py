@@ -22,6 +22,7 @@ class Sentence(object):
         self.start_offset = sentence_data[0]["start"]
         self.end_offset = sentence_data[-1]["end"]
         
+        self.number = -1 
         self.words = sentence_data
         self.nwords = len(sentence_data)
                 
