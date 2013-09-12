@@ -117,9 +117,11 @@ class SentenceAnalyzer(object):
         # trigger is list format 'T60' : ['T60', 'Negative_regulation', '190', '197', 'inhibit']
         for e in entity_list.values():
             
-            # skip two words entity, currently only handle 1 word trigger
+            # skip two words trigger, currently only handle 1 word trigger
+            # skip entity type, we ignore entity for task 1
             #TODO: handling multi-word trigger
-            if ' ' in e[4]: continue            
+            if ' ' in e[4] and e[1] != "Protein": continue
+            if e[1] == "Entity": continue            
             
             # check whether offset of protein is in this sentence
             offset =  int(e[2])                                
