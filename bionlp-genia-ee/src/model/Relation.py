@@ -97,6 +97,17 @@ class Relation(object):
         """
         self.data.append((trigger_wn, arg_wn, arg_name, arg_type))
     
+    def get_tp_triger(self):
+        """
+        return list of trigger node (word number) which has trigger-protein relation
+        """
+        trig = []
+        for rel in self.data:            
+            if rel[2] == "Theme" and rel[3] == "P":
+                trig.append(rel[0])
+        return trig
+        
+    
     def check_relation(self,trigger_wn, arg_wn, arg_name = "Theme", arg_type = "P"):
         retval = False
         for rel in self.data:

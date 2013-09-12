@@ -116,11 +116,11 @@ class FeatureExtraction(object):
         for i in range(0, len(o_doc.sen)):            
             #if i != 2: continue
             o_sen = o_doc.sen[i]
-            tc_list = o_sen.trigger_candidate            
-                        
-            for tc in tc_list:      
-                # argument candidate is actually a trigger candidate                         
-                for ac in tc_list:
+            #tc_list = o_sen.trigger_candidate   
+            
+            for tc in o_sen.trigger_candidate:      
+                # argument is a trigger which has relation with protein as argument1                         
+                for ac in o_sen.rel.get_tp_triger():
                     # no relation to it-self, there are few case but small   
                     if tc == ac: continue
                     
