@@ -165,8 +165,8 @@ class PreprocessText(object):
         positions = []
         with open(in_fpath, 'r') as f:
             for line in f:
-                ps = re.split("\\t|\\s+",line,5)
-                positions.append((ps[2],ps[3],ps[4]))
+                ps = re.split("\\t|\\s+",line,4)
+                positions.append((ps[2],ps[3],ps[4].rstrip('\n')))
         return positions
         
     
