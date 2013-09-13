@@ -18,7 +18,7 @@ class PredictionTest(object):
         Constructor
         '''
         source = "E:/corpus/bionlp2011/project_data"
-        dir_name = "test-model-00"
+        dir_name = "test-model-01"
         dict_type = "train"
 
         self.label = ["Gene_expression","Transcription","Protein_catabolism","Phosphorylation","Localization","Binding","Regulation","Positive_regulation","Negative_regulation"]        
@@ -55,7 +55,8 @@ class PredictionTest(object):
         print "Print precision recall and f1 score for each class"
         print "========================================================="
         
-        Ypred, Ytest, info = self.prediction.predict_tt(doc_ids, grid_search = True)
+        self.prediction.set_prediction_docs(doc_ids)
+        Ypred, Ytest, info = self.prediction.predict_tt(grid_search = True)
         result = precision_recall_fscore_support(Ytest, Ypred, labels = [7,8,9])
         
         print self.label[6:9]
@@ -68,8 +69,24 @@ class PredictionTest(object):
         print "support"
         print result[3]
         
+    def test3(self):
+        doc_ids = ["PMID-7747447", "PMID-7749985", "PMID-7759875", "PMID-7759956","PMC-1920263-04-MATERIALS_AND_METHODS-03","PMC-2222968-04-Results-03"]
+
+        print "\n\nTrigger-Protein prediction on 6 docs from dev corpus"
+        print "Print info result"
+        print "========================================================="
+        
+        self.prediction.set_prediction_docs(doc_ids)
+        Ypred, Ytest, info = self.prediction.predict_tt(grid_search = True)
+        
+         
+        
+        for i in range(0, len(Ypred)):
+            if Ypred[i] > 0:
+                print info[i], Ypred[i], Ytest[i]
+        
         
 if __name__ == "__main__":
     
     test = PredictionTest()
-    test.run()
+    test.test3()

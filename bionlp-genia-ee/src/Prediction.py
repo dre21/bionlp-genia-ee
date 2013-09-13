@@ -35,7 +35,9 @@ class Prediction(object):
         self.wdict = None
         self.tdict = None
         self.doc_builder = None
-        self.extraction = None                
+        self.extraction = None      
+        
+        self.docs = {}          
         
         self._set(dict_type)
     
@@ -68,7 +70,7 @@ class Prediction(object):
         
         return path
         
-    def get_feature(self, doc_ids, step):
+    def get_feature(self, step):
         """
         extract feature and return X, Y for a given step
         step are either one of these:
@@ -88,9 +90,9 @@ class Prediction(object):
         self.extraction.reset_statistic()
                       
         # init feature
-        print "now extracting", len(doc_ids), "docs"
-        for doc_id in doc_ids:             
-            o_doc = self.doc_builder.build(doc_id)
+        print "now extracting", len(self.docs), "docs"
+        for doc_id in self.docs.keys():             
+            o_doc = self.docs[doc_id]
             if step == 'tp':
                 samples = self.extraction.extract_tp(o_doc)
             elif step == 'tt':
@@ -111,6 +113,21 @@ class Prediction(object):
         
         return X,Y, info
     
+    def set_prediction_docs(self,docid_list_fname):
+        """
+        build a document to be predicted
+        """
+        dt_start = dt.now()      
+        self.docs = {}
+        # get list of file
+        doc_ids = self.get_docid_list(docid_list_fname)
+        
+        print "now building", len(doc_ids), "docs"
+        for doc_id in doc_ids:
+            self.docs[doc_id] = self.doc_builder.build(doc_id)
+            
+        print "finish built docs in:", dt.now() - dt_start
+    
     def get_docid_list(self, docid_list_fname):
         """
         return list of file
@@ -127,15 +144,17 @@ class Prediction(object):
         
         return doc_ids
     
-    def predict_tp(self, docid_list_fname, grid_search):
+    def predict_tp(self, grid_search = True):
         """
         return prediction of given docid_list
         """
+        if self.docs == {}:
+            raise ValueError("docs have not been created. call set_prediction_docs first!")
         # get list of file
-        doc_ids = self.get_docid_list(docid_list_fname)
+        #doc_ids = self.get_docid_list(docid_list_fname)
         
         # get features and target
-        X, Y, info = self.get_feature(doc_ids, 'tp')
+        X, Y, info = self.get_feature('tp')
         
         # init svm classifier
         svm = SVM(self.path, "trig-prot", "linear", grid_search = grid_search, class_weight = 'auto')
@@ -143,15 +162,17 @@ class Prediction(object):
         
         return svm.predict(X), Y, info
         
-    def predict_tt(self, docid_list_fname, grid_search):
+    def predict_tt(self, grid_search = True):
         """
         return prediction of given docid_list
         """
+        if self.docs == {}:
+            raise ValueError("docs have not been created. call set_prediction_docs first!")
         # get list of file
-        doc_ids = self.get_docid_list(docid_list_fname)
+        #doc_ids = self.get_docid_list(docid_list_fname)
         
         # get features and target
-        X, Y, info = self.get_feature(doc_ids, 'tt')
+        X, Y, info = self.get_feature('tt')
         
         # init svm classifier
         svm = SVM(self.path, "trig-trig", "linear", grid_search = grid_search, class_weight = 'auto')
