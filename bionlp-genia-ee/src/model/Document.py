@@ -33,18 +33,7 @@ class Document(object):
         adding sentence object o_sen to sen list
         """
         self.sen.append(o_sen)
-                   
-        
-    def test(self):
-        
-        print "doc id:", self.doc_id
-        print "is test:", self.is_test
-        
-        for s in self.sen:
-            s.test()
-            print "\n"
-        
-        
+                    
         
 class DocumentBuilder(object):
     """
@@ -141,38 +130,4 @@ class DocumentBuilder(object):
         with open(fpath, 'r') as f:
             doc = json.loads(f.read())
         return doc
-    
-    def print_relation_error(self, o_doc):
-        """
-        write relation error to file
-        """
-        with open(self.src + '/relation_err.json' ,'a') as f:
-            f.write(o_doc.doc_id + '\n')        
-            for o_sen in o_doc.sen:
-                for rel in o_sen.rel.out_scope:
-                    f.write(json.dumps(rel) + '\n')
-                
-        
-    def test(self, doc_id):
-        
-        start = dt.now()
-        doc = self.read_raw(doc_id)
-        o_doc = self.build_doc_from_raw(doc)
-        o_doc.test()
-        end = dt.now()
-        print "building " + doc_id + " for ", end-start, "seconds"
-        
-
-if __name__ == "__main__":
-    
-    source = "E:/corpus/bionlp2011/project_data/"
-    doc_id = "PMC-2222968-04-Results-03"
-    
-    WD = WordDictionary(source)    
-    WD.load("train")
-           
-    TD = TriggerDictionary(source)
-    TD.load("train")
-    
-    builder = DocumentBuilder(source, WD, TD)
-    builder.test(doc_id)
+       
