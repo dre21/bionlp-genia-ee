@@ -154,7 +154,7 @@ class Prediction(object):
         X, Y, info = self.get_feature(doc_ids, 'tt')
         
         # init svm classifier
-        svm = SVM(self.path, "trig-prot", "linear", grid_search = grid_search, class_weight = 'auto')
+        svm = SVM(self.path, "trig-trig", "linear", grid_search = grid_search, class_weight = 'auto')
         svm.load()
         
         return svm.predict(X), Y, info
