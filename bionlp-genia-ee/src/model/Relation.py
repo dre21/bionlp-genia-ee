@@ -10,7 +10,7 @@ class Relation(object):
     '''
 
     
-    def __init__(self, entity_map, events, equiv):
+    def __init__(self):
         '''
         Constructor
         '''
