@@ -9,11 +9,7 @@ from datetime import datetime as dt
 from model.Dictionary import WordDictionary, TriggerDictionary
 from model.Document import DocumentBuilder
 from features.FeatureExtraction import FeatureExtraction
-from classifier.Scaler import Scaler
 from classifier.SVM import SVM
-from sklearn.feature_extraction import DictVectorizer
-from sklearn.svm import LinearSVC
-from sklearn.externals import joblib
 
 
 class Prediction(object):
@@ -23,20 +19,23 @@ class Prediction(object):
     
     # suffix and extension of id file
     DOCID_SUFFIX_EXT = "_doc_ids.json"
+    
+    # directory for saving svm model
+    MODEL_DIR = "/model"
         
 
-    def __init__(self, source, dict_type):
+    def __init__(self, source, dir_name, dict_type):
         '''
         Constructor
         '''
         self.src = source
+        self.path = self.get_path(source, dir_name)
+        
         self.dict_type = dict_type
         self.wdict = None
         self.tdict = None
         self.doc_builder = None
-        self.extraction = None
-        
-        self.vec = DictVectorizer()
+        self.extraction = None                
         
         self._set(dict_type)
     
@@ -55,6 +54,19 @@ class Prediction(object):
         
         self.doc_builder = DocumentBuilder(self.src, self.wdict, self.tdict)         
         self.extraction = FeatureExtraction(self.src, self.wdict, self.tdict)
+        
+        
+    def get_path(self, source, dir_name):
+        """
+        check whether given dir_name is exist
+        raise error if it does not exist
+        return full path of dir_name
+        """
+        path = source + self.MODEL_DIR + '/' + dir_name
+        if not os.path.exists(path):
+            raise ValueError(path + "exist!!, chose anoher dir_name for learning")
+        
+        return path
         
     def get_feature(self, doc_ids, step):
         """
@@ -126,7 +138,7 @@ class Prediction(object):
         X, Y, info = self.get_feature(doc_ids, 'tp')
         
         # init svm classifier
-        svm = SVM(self.src, "trig-prot", "linear", grid_search = grid_search, class_weight = 'auto')
+        svm = SVM(self.path, "trig-prot", "linear", grid_search = grid_search, class_weight = 'auto')
         svm.load()
         
         return svm.predict(X), Y, info
@@ -142,7 +154,7 @@ class Prediction(object):
         X, Y, info = self.get_feature(doc_ids, 'tt')
         
         # init svm classifier
-        svm = SVM(self.src, "trig-prot", "linear", grid_search = grid_search, class_weight = 'auto')
+        svm = SVM(self.path, "trig-prot", "linear", grid_search = grid_search, class_weight = 'auto')
         svm.load()
         
         return svm.predict(X), Y, info

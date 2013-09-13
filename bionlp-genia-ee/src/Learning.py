@@ -9,11 +9,7 @@ from datetime import datetime as dt
 from model.Dictionary import WordDictionary, TriggerDictionary
 from model.Document import DocumentBuilder
 from features.FeatureExtraction import FeatureExtraction
-from classifier.Scaler import Scaler
 from classifier.SVM import SVM
-from sklearn.feature_extraction import DictVectorizer
-from sklearn.svm import LinearSVC
-from sklearn.externals import joblib
 
 class Learning(object):
     '''
@@ -28,24 +24,38 @@ class Learning(object):
     DOCID_SUFFIX_EXT = "_doc_ids.json"
     
     # directory for saving svm model
-    MODEL_DIR = "classifier/model"
+    MODEL_DIR = "/model"
     
-    def __init__(self, source, dict_type):
+    def __init__(self, source, dir_name, dict_type):
         '''
         Constructor
-        '''
+        '''        
         self.src = source
+        self.path = self.set_path(source, dir_name)
+        
         self.dict_type = dict_type
         self.wdict = None
         self.tdict = None
         self.doc_builder = None
         self.extraction = None
                         
-        self._set(dict_type)
-                
+        self._set(dict_type)                                
+    
+    def set_path(self, source, dir_name):
+        """
+        check whether given dir_name is exist
+        raise error if exist, otherwise create new one
+        return full path of dir_name
+        """
+        path = source + self.MODEL_DIR + '/' + dir_name
+        if os.path.exists(path):
+            raise ValueError(path + "exist!!, chose anoher dir_name for learning")
+        else:
+            # create dir_name
+            os.makedirs(path)
+        return path
         
-        self.path = source + '/' + self.MODEL_DIR
-            
+                
     def _set(self, dict_type):
         """
         initialize dictionary type to be used in learning process
@@ -128,11 +138,11 @@ class Learning(object):
         X, Y = self.get_feature(doc_ids, 'tp')
                         
         # init svm classifier
-        svm = SVM(self.src, 'trig-prot','linear', grid_search = grid_search, class_weight = 'auto')        
+        svm = SVM(self.path, 'trig-prot','linear', grid_search = grid_search, class_weight = 'auto')        
         svm.create()
         
         # fit training data
-        svm.fit(X, Y)        
+        svm.learn(X, Y)        
         
     def learn_tt(self, docid_list_fname, grid_search):
         # get list of file
@@ -142,20 +152,19 @@ class Learning(object):
         X, Y = self.get_feature(doc_ids, 'tt')
                         
         # init svm classifier
-        svm = SVM(self.src, 'trig-trig','linear', grid_search = grid_search, class_weight = 'auto')        
+        svm = SVM(self.path, 'trig-trig','linear', grid_search = grid_search, class_weight = 'auto')        
         svm.create()
         
         # fit training data
-        svm.fit(X, Y)      
+        svm.learn(X, Y)      
         
 
 if __name__ == "__main__":
                             
     source = "E:/corpus/bionlp2011/project_data"
     dict_type = "train"
-    doc_ids = ["PMC-2222968-04-Results-03","PMID-1682217", "PMID-8098618", "PMID-8675228", "PMC-1134658-06-Results-05"]
-    doc_ids = "dev"
-    learning = Learning(source, dict_type)
+    doc_ids = "train"
+    learning = Learning(source, "test-model-00", dict_type)
     
     print "Learning Trigger-Protein \n ========================="
     learning.learn_tp(doc_ids, grid_search = True)

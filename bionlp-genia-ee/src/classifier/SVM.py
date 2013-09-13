@@ -21,11 +21,7 @@ class SVM(object):
     classdocs
     '''
 
-    SVM_CLASS = ["svc", "linear"]
-        
-    
-    # directory for saving svm model
-    MODEL_DIR = "classifier/model"
+    SVM_CLASS = ["svc", "linear"]        
     
     DEFAULT_C_VALUES = [0.1,1.0,10,100,100]
     
@@ -37,7 +33,7 @@ class SVM(object):
     
     CROSS_VALIDATION = 5
 
-    def __init__(self, source, prefix, svm_class, grid_search = True, class_weight = None, scaler_type = 'norm', kernel_list = ["linear"], C = [], gamma = []):
+    def __init__(self, path, prefix, svm_class, grid_search = True, class_weight = None, scaler_type = 'norm', kernel_list = ["linear"], C = [], gamma = []):
         '''
         Constructor
         '''        
@@ -56,7 +52,7 @@ class SVM(object):
         
         self._vec = None         
         
-        self._scaler = Scaler(source, scaler_type)                       
+        self._scaler = Scaler(path, scaler_type)                       
         
         self._svm_path = ""
         
@@ -64,11 +60,11 @@ class SVM(object):
         
         self.tuned_params = self.build_param(kernel_list, C, gamma)
          
-        self.set_path(source, prefix, svm_class, grid_search)
+        self.set_path(path, prefix, svm_class, grid_search)
     
     
-    def set_path(self, source, prefix, svm_class, grid_search):
-        path = source + '/' + self.MODEL_DIR + '/'+ prefix + '_'
+    def set_path(self, path, prefix, svm_class, grid_search):
+        path = path + '/'+ prefix + '_'
                 
         # set vec path
         self._vec_path = path + 'dict_vectorizer.vec'  
@@ -126,7 +122,7 @@ class SVM(object):
         self._scaler.create()
         
       
-    def fit(self, Xtrain, Ytrain):
+    def learn(self, Xtrain, Ytrain):
         if self._svm == None:
             raise ValueError("svm class is not initialized, call create() first")
         
@@ -161,9 +157,12 @@ class SVM(object):
         # save vectorizer for used in prediction
         joblib.dump(self._vec, self._vec_path)
                 
-        print "scaling feature"                        
-        # scale feature
-        X = self._scaler.fit_transform(X)
+        print "scaling feature"
+        # fit
+        if fit:
+            self._scaler.fit(X)             
+        # transform
+        X = self._scaler.transform(X)
         print "time for feature conversion & scaling: ", dt.now() - dt_start
         
         return X

@@ -16,13 +16,8 @@ class Scaler(object):
     
     # scaler function that can be used
     SCALER_LIST = ["minmax","stdscale","norm"]
-    
-    
-    # directory for saving scaler object
-    SCALER_DIR = "classifier/scaler"
-            
-
-    def __init__(self, source, funct_name = "norm"):
+        
+    def __init__(self, path, funct_name = "norm"):
         """
         Constructor
         """
@@ -33,7 +28,7 @@ class Scaler(object):
         
         self._funct = None
         
-        self._path = source + '/' + self.SCALER_DIR + '/' + funct_name + '.json' 
+        self._path = path + '/' + funct_name + '.json' 
     
     def get_function(self):
         return self._funct
@@ -57,10 +52,10 @@ class Scaler(object):
         # save to external file
         joblib.dump(self._funct, self._path)
     
-    def fit_transform(self, X):
+    def transform(self, X):
         if self._funct == None:
             raise ValueError("scaler function is not initialized, use create or load function first")
-                            
+                
         # return transformation of X
         return self._funct.transform(X)
     

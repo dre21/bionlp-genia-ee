@@ -18,10 +18,11 @@ class PredictionTest(object):
         Constructor
         '''
         source = "E:/corpus/bionlp2011/project_data"
+        dir_name = "test-model-00"
         dict_type = "train"
 
         self.label = ["Gene_expression","Transcription","Protein_catabolism","Phosphorylation","Localization","Binding","Regulation","Positive_regulation","Negative_regulation"]        
-        self.prediction = Prediction(source, dict_type)
+        self.prediction = Prediction(source, dir_name, dict_type)
     
     def run(self):
         self.test1()
