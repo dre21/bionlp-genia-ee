@@ -71,6 +71,9 @@ class Prediction(object):
         info = []
         
         dt_start = dt.now()        
+        
+        # reset statistic of extraction
+        self.extraction.reset_statistic()
                       
         # init feature
         print "now extracting", len(doc_ids), "docs"
