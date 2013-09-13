@@ -83,13 +83,13 @@ class DocumentBuilder(object):
         """
         self.sa = SentenceAnalyzer(self.wd, self.td)
         
-    def build(self, doc_id):
+    def build(self, doc_id, is_test = False):
         """
         return document object
         """
-        return self.build_doc_from_raw(self.read_raw(doc_id))
+        return self.build_doc_from_raw(self.read_raw(doc_id), is_test)
     
-    def build_doc_from_raw(self, doc):
+    def build_doc_from_raw(self, doc, is_test):
         """
         build a document object from raw data provided by genia reader
         it returns document object
@@ -98,10 +98,21 @@ class DocumentBuilder(object):
         
         # create document object
         o_doc = Document(doc["doc_id"], doc["test"])
+        # force is_test property value by a provided value if document is not from test corpus
+        # to make dev document a test doc for validation purpose
+        if doc["test"] == False:
+            o_doc.is_test = is_test
         
         
         # process document sentence        
         for i in range(0,doc["nsen"]):
+            # remove these property if document is marked as a test doc            
+            if o_doc.is_test:
+                doc["trigger"] = []
+                doc["even"] = []
+                doc["equiv"] = []
+                
+                       
             # create sentence object
             o_sen = self.sa.analyze(doc["sen"][i], doc["protein"],doc["trigger"])      
             o_sen.number = i
@@ -116,13 +127,11 @@ class DocumentBuilder(object):
             # TODO: add tree to sentence
             
             # add relation to sentence
-            o_sen.rel = Relation(o_sen.entity_map, doc["event"], doc["equiv"])
-            
+            if not o_doc.is_test:
+                o_sen.rel = Relation(o_sen.entity_map, doc["event"], doc["equiv"])                       
             
             # add sentence object to document object
-            o_doc.add_sentence(o_sen)
-                 
-        self.print_relation_error(o_doc)         
+            o_doc.add_sentence(o_sen)                         
                                                       
         return o_doc
                 

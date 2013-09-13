@@ -45,7 +45,8 @@ class SentenceAnalyzer(object):
         
         # update word type with protein & trigger
         self.update_word_type(o_sen, proteins)
-        self.update_word_type(o_sen, triggers)
+        if triggers != []:
+            self.update_word_type(o_sen, triggers)
         
         # set trigger candidate
         self.set_candidate(o_sen)
