@@ -14,19 +14,17 @@ class Relation(object):
         '''
         Constructor
         '''
-        if type(entity_map) != dict:
-            raise TypeError("entity_map must be a dictionary")
         
+        # list to store relation 
+		# (8,10,'Theme','E')
         self.data = []
         
         # this is a list to store inter-sentence relation
         # it will not process
         self.out_scope = []
         
-        if entity_map != {}:
-            self.build_relation(entity_map, events, equiv)
         
-    def build_relation(self, entity_map, events, equiv):
+    def build(self, entity_map, events, equiv):
         """
         build a relation from events data
         event is a dictionary form
@@ -34,6 +32,11 @@ class Relation(object):
         entity_map is a dictionary
         'T60' : 8
         """
+		if type(entity_map) != dict:
+            raise TypeError("entity_map must be a dictionary")
+
+		if entity_map == {}: return
+			
         for e in events.itervalues():
             # only process if trigger in entity map
             if e[2] in entity_map.keys():
