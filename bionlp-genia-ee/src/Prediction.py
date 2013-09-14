@@ -209,10 +209,10 @@ class Prediction(object):
         # predict trigger-protein relation
         Ypred, _, info = self.predict_tp(grid_search = True)
         # update document
-        update_doc_info(info, Ypred, "Theme", "P"):
+        update_doc_info(info, Ypred, "Theme", "P")
         
         # predict trigger-trigger relation
         Ypred, _, info = self.predict_tp(grid_search = True)
-        update_doc_info(info, Ypred, "Theme", "E"):
+        update_doc_info(info, Ypred, "Theme", "E")
         
         
