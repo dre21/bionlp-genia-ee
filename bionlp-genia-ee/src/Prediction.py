@@ -125,7 +125,7 @@ class Prediction(object):
         
         return X,Y, info
     
-    def set_prediction_docs(self,docid_list_fname):
+    def set_prediction_docs(self,docid_list_fname, is_test = True):
         """
         build a document to be predicted
         """
@@ -136,7 +136,7 @@ class Prediction(object):
         
         print "now building", len(doc_ids), "docs"
         for doc_id in doc_ids:
-            self.docs[doc_id] = self.doc_builder.build(doc_id)
+            self.docs[doc_id] = self.doc_builder.build(doc_id, is_test)
             
         print "finish built docs in:", dt.now() - dt_start
 

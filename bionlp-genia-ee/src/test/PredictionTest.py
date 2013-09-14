@@ -27,6 +27,32 @@ class PredictionTest(object):
     def run(self):
         self.test1()
         self.test2()
+
+    def print_doc_info(self, o_doc):
+        print "doc id:", o_doc.doc_id
+        print "is test:", o_doc.is_test
+
+        for i in range(0, len(o_doc.sen)):
+            o_sen = o_doc.sen[i]
+            print "sen:", i
+            print "-------------------------------"
+
+            # list of word number which is marked as trigger candidate
+            print "trigger candidate:"
+            print o_sen.trigger_candidate            
+
+            # list of protein word number
+            print "protein:"
+            print o_sen.protein            
+
+            # list of trigger word number
+            print "trigger:"
+            print o_sen.trigger            
+
+            # relation representation
+            print "relation:"
+            if o_sen.rel != None:
+                print o_sen.rel.data
         
     def test1(self):
         doc_ids = "dev"
@@ -35,7 +61,8 @@ class PredictionTest(object):
         print "Print precision recall and f1 score for each class"
         print "========================================================="
         
-        Ypred, Ytest, info = self.prediction.predict_tp(doc_ids, grid_search = True)    
+        self.prediction.set_prediction_docs(doc_ids, is_test = False)
+        Ypred, Ytest, info = self.prediction.predict_tp(grid_search = True)    
         result = precision_recall_fscore_support(Ytest, Ypred, labels = [1,2,3,4,5,6,7,8,9])
         
         print self.label
@@ -55,7 +82,7 @@ class PredictionTest(object):
         print "Print precision recall and f1 score for each class"
         print "========================================================="
         
-        self.prediction.set_prediction_docs(doc_ids)
+        self.prediction.set_prediction_docs(doc_ids, is_test = False)
         Ypred, Ytest, info = self.prediction.predict_tt(grid_search = True)
         result = precision_recall_fscore_support(Ytest, Ypred, labels = [7,8,9])
         
@@ -76,14 +103,16 @@ class PredictionTest(object):
         print "Print info result"
         print "========================================================="
         
-        self.prediction.set_prediction_docs(doc_ids)
-        Ypred, Ytest, info = self.prediction.predict_tt(grid_search = True)
-        
-         
+        self.prediction.set_prediction_docs(doc_ids, is_test = True)
+        Ypred, Ytest, info = self.prediction.predict_tp(grid_search = True)
         
         for i in range(0, len(Ypred)):
-            if Ypred[i] > 0:
+            if Ypred[i] != 0 or Ytest[i] != 0:
                 print info[i], Ypred[i], Ytest[i]
+
+        self.prediction.update_doc_info(info, Ypred, "Theme", "P")
+        
+        self.print_doc_info(self.prediction.docs[PMID-7747447])
         
         
 if __name__ == "__main__":
