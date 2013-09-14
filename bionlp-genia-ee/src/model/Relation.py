@@ -89,6 +89,8 @@ class Relation(object):
                     else:
                         #print "inter-sentence relation", e
                         self.out_scope.append(e)
+                        
+        self.data = list(set(self.data)) 
                                                
     def add_relation(self, trigger_wn, arg_wn, arg_name, arg_type):
         """
@@ -103,6 +105,7 @@ class Relation(object):
     def get_tp_triger(self):
         """
         return list of trigger node (word number) which has trigger-protein relation
+        it's used to get argument candidate of trigger-trigger relation
         """
         trig = []
         for rel in self.data:            
