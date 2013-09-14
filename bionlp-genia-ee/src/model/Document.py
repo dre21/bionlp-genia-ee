@@ -116,10 +116,9 @@ class DocumentBuilder(object):
             # TODO: add tree to sentence
             
             # add relation to sentence
+            o_sen.rel = Relation()
             if not o_doc.is_test:
-                rel = Relation()
-                rel.build(o_sen.entity_map, doc["event"], doc["equiv"])
-                o_sen.rel = rel
+                o_sen.rel.build(o_sen.entity_map, doc["event"], doc["equiv"])
             
             # add sentence object to document object
             o_doc.add_sentence(o_sen)                         
