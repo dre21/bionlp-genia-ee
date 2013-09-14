@@ -70,7 +70,7 @@ class Sentence(object):
                 string += self.words[i]["string"] + " "
         return string.rstrip()
 
-    def update(trig_wn, trig_type, arg_wn, arg_name, arg_type):
+    def update(self, trig_wn, trig_type, arg_wn, arg_name, arg_type):
         # sanity check, whether word numbers are in range
         if trig_wn >= self.nwords or arg_wn >= self.nwords:
             raise ValueError("Word number out of range")
@@ -79,10 +79,10 @@ class Sentence(object):
         self.trigger.append(trig_wn)
         
         # update word type
-        self.words[i]["type"] = trig_type
+        self.words[trig_wn]["type"] = trig_type
         
         # update relation
-        self.rel.data.add_relation(trig_wn, arg_wn, arg_name, arg_type)
+        self.rel.add_relation(trig_wn, arg_wn, arg_name, arg_type)
         
         
     def test(self):

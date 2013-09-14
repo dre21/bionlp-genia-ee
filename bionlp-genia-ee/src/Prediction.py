@@ -114,13 +114,7 @@ class Prediction(object):
                 X.append(sample[2])
                 Y.append(sample[1])      
                 info.append(sample[0])             
-        
-        # print statistic
-        pos = self.extraction.sample_pos
-        neg = self.extraction.sample_neg
-        stat = (pos, neg, pos + neg)
-        print stat
-        print "percentege of positif data:", pos * 100.0 / (pos + neg)        
+                
         print "time to extract feature", dt.now() - dt_start
         
         return X,Y, info
@@ -140,11 +134,14 @@ class Prediction(object):
             
         print "finish built docs in:", dt.now() - dt_start
 
-    def update_doc_info(self, info, target, arg_name, arg_type):
+    def update_doc_info(self, list_info, list_target, arg_name, arg_type):
         """
         update trigger and relation of document
         """
-        for i in range(0,len(info)):
+        for i in range(0,len(list_info)):
+            target = list_target[i]
+            if target < 1: continue
+            info = list_info[i]
             doc_id = info["doc"]
             self.docs[doc_id].update(info['sen'], info['t'], self.EVENT_NAME[target], info['a'], arg_name, arg_type)
 
@@ -204,15 +201,17 @@ class Prediction(object):
     def predict(self, docid_list_fname):
         
         # create document object for prediction
-        self.set_prediction_docs(self,docid_list_fname)
+        self.set_prediction_docs(docid_list_fname)
         
         # predict trigger-protein relation
         Ypred, _, info = self.predict_tp(grid_search = True)
         # update document
-        update_doc_info(info, Ypred, "Theme", "P")
+        self.update_doc_info(info, Ypred, "Theme", "P")
         
         # predict trigger-trigger relation
-        Ypred, _, info = self.predict_tp(grid_search = True)
-        update_doc_info(info, Ypred, "Theme", "E")
+        Ypred, _, info = self.predict_tt(grid_search = True)
+        self.update_doc_info(info, Ypred, "Theme", "E")
+        
+        
         
         
