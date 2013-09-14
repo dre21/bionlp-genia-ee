@@ -30,6 +30,7 @@ class Sentence(object):
         self.offset_map = {}
         
         # mapping entity id to word number in a sentence
+        # it's used when building relation from raw data
         self.entity_map = {}
         
         # list of word number which is marked as trigger candidate
@@ -68,6 +69,21 @@ class Sentence(object):
             for i in range(word_num, word_num+nwords):                
                 string += self.words[i]["string"] + " "
         return string.rstrip()
+
+    def update(trig_wn, trig_type, arg_wn, arg_name, arg_type):
+        # sanity check, whether word numbers are in range
+        if trig_wn >= self.nwords or arg_wn >= self.nwords:
+            raise ValueError("Word number out of range")
+        
+        # add into trigger list
+        self.trigger.append(trig_wn)
+        
+        # update word type
+        self.words[i]["type"] = trig_type
+        
+        # update relation
+        self.rel.data.add_relation(trig_wn, arg_wn, arg_name, arg_type)
+        
         
     def test(self):
         

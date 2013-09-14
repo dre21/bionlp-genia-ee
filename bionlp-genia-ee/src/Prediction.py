@@ -22,6 +22,18 @@ class Prediction(object):
     
     # directory for saving svm model
     MODEL_DIR = "/model"
+
+    # list of event name
+    EVENT_NAME = ["None",
+                  "Gene_expression",
+                  "Transcription",
+                  "Protein_catabolism",
+                  "Phosphorylation",
+                  "Localization",
+                  "Binding",
+                  "Regulation",
+                  "Positive_regulation",
+                  "Negative_regulation"]
         
 
     def __init__(self, source, dir_name, dict_type):
@@ -127,6 +139,15 @@ class Prediction(object):
             self.docs[doc_id] = self.doc_builder.build(doc_id)
             
         print "finish built docs in:", dt.now() - dt_start
+
+    def update_doc_info(self, info, target, arg_name, arg_type):
+        """
+        update trigger and relation of document
+        """
+        for i in range(0,len(info)):
+            doc_id = info["doc"]
+            self.docs[doc_id].update(info['sen'], info['t'], self.EVENT_NAME[target], info['a'], arg_name, arg_type)
+
     
     def get_docid_list(self, docid_list_fname):
         """
@@ -179,4 +200,19 @@ class Prediction(object):
         svm.load()
         
         return svm.predict(X), Y, info
+        
+    def predict(self, docid_list_fname):
+        
+        # create document object for prediction
+        self.set_prediction_docs(self,docid_list_fname)
+        
+        # predict trigger-protein relation
+        Ypred, _, info = self.predict_tp(grid_search = True)
+        # update document
+        update_doc_info(info, Ypred, "Theme", "P"):
+        
+        # predict trigger-trigger relation
+        Ypred, _, info = self.predict_tp(grid_search = True)
+        update_doc_info(info, Ypred, "Theme", "E"):
+        
         

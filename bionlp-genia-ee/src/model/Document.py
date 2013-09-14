@@ -33,6 +33,9 @@ class Document(object):
         adding sentence object o_sen to sen list
         """
         self.sen.append(o_sen)
+
+    def update(self, sen_num, trig_wn, trig_type, arg_wn, arg_name, arg_type):
+        self.sen[sen_num].update(trig_wn, trig_type, arg_wn, arg_name, arg_type)
                     
         
 class DocumentBuilder(object):
