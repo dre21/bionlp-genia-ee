@@ -88,7 +88,7 @@ class FeatureExtraction(object):
                     
                     #print tc, o_sen.words[tc]["string"], "-", p, o_sen.words[p]["string"]                                        
                     feature = self.get_feature(o_sen, tc, p)                    
-                    info = {"doc":o_doc.doc_id, "sen":i, "t":tc, "tp":p}
+                    info = {"doc":o_doc.doc_id, "sen":i, "t":tc, "a":p}
                                         
                     if not o_doc.is_test:
                         label = self.get_tp_label(o_sen, tc, p)  
@@ -126,7 +126,7 @@ class FeatureExtraction(object):
                     
                     #print tc, o_sen.words[tc]["string"], "-", p, o_sen.words[p]["string"]                                        
                     feature = self.get_feature(o_sen, tc, ac)                    
-                    info = {"doc":o_doc.doc_id, "sen":i, "t" : tc, "tt" : ac}
+                    info = {"doc":o_doc.doc_id, "sen":i, "t" : tc, "a" : ac}
                                         
                     if not o_doc.is_test:
                         label = self.get_tt_label(o_sen, tc, ac)  
