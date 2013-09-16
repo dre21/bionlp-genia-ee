@@ -10,6 +10,7 @@ from model.Dictionary import WordDictionary, TriggerDictionary
 from model.Document import DocumentBuilder
 from features.FeatureExtraction import FeatureExtraction
 from classifier.SVM import SVM
+from corpus.GeniaA2Writer import GeniaA2Writer as A2Writter
 
 
 class Prediction(object):
@@ -22,6 +23,9 @@ class Prediction(object):
     
     # directory for saving svm model
     MODEL_DIR = "/model"
+    
+    # directory for saving output a2 file
+    OUT_DIR = "/result"
 
     # list of event name
     EVENT_NAME = ["None",
@@ -41,7 +45,9 @@ class Prediction(object):
         Constructor
         '''
         self.src = source
-        self.path = self.get_path(source, dir_name)
+        self._model_path = '' 
+        self._out_path = ''
+        self.set_path(source, dir_name)
         
         self.dict_type = dict_type
         self.wdict = None
@@ -69,18 +75,26 @@ class Prediction(object):
         self.doc_builder = DocumentBuilder(self.src, self.wdict, self.tdict)         
         self.extraction = FeatureExtraction(self.src, self.wdict, self.tdict)
         
+        self.a2 = A2Writter(self._out_path)
         
-    def get_path(self, source, dir_name):
+    def set_path(self, source, dir_name):
         """
         check whether given dir_name is exist
         raise error if it does not exist
-        return full path of dir_name
+        return full _model_path of dir_name
         """
+        # model path
         path = source + self.MODEL_DIR + '/' + dir_name
         if not os.path.exists(path):
-            raise ValueError(path + "exist!!, chose anoher dir_name for learning")
+            raise ValueError(path + "exist!!, chose another dir_name for learning")        
+        self._model_path = path
         
-        return path
+        # output path
+        path = source + self.OUT_DIR + '/' + dir_name
+        if not os.path.exists(path):
+            os.makedirs(path)        
+        self._out_path = path 
+       
         
     def get_feature(self, step):
         """
@@ -175,7 +189,7 @@ class Prediction(object):
         X, Y, info = self.get_feature('tp')
         
         # init svm classifier
-        svm = SVM(self.path, "trig-prot", "linear", grid_search = grid_search, class_weight = 'auto')
+        svm = SVM(self._model_path, "trig-prot", "linear", grid_search = grid_search, class_weight = 'auto')
         svm.load()
         
         return svm.predict(X), Y, info
@@ -193,7 +207,7 @@ class Prediction(object):
         X, Y, info = self.get_feature('tt')
         
         # init svm classifier
-        svm = SVM(self.path, "trig-trig", "linear", grid_search = grid_search, class_weight = 'auto')
+        svm = SVM(self._model_path, "trig-trig", "linear", grid_search = grid_search, class_weight = 'auto')
         svm.load()
         
         return svm.predict(X), Y, info
@@ -212,6 +226,12 @@ class Prediction(object):
         Ypred, _, info = self.predict_tt(grid_search = True)
         self.update_doc_info(info, Ypred, "Theme", "E")
         
+        # write a2
+        self.write_result()
         
+    def write_result(self):
+        print "now writing", len(self.docs), "docs result to", self._out_path
+        for doc in self.docs.itervalues():
+            self.a2.write(doc)
         
         
