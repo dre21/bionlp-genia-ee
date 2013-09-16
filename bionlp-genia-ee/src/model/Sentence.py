@@ -76,7 +76,8 @@ class Sentence(object):
             raise ValueError("Word number out of range")
         
         # add into trigger list
-        self.trigger.append(trig_wn)
+        if trig_wn not in self.trigger:
+            self.trigger.append(trig_wn)
         
         # update word type
         self.words[trig_wn]["type"] = trig_type

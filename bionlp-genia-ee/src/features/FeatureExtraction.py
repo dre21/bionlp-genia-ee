@@ -112,6 +112,8 @@ class FeatureExtraction(object):
         extract Trigger-Trigger theme pair
         target regulation, positive regulation, and negative regulation
         """
+        # to prevent duplicate pair
+        pair_list = []
         
         feature_data = []
         for i in range(0, len(o_doc.sen)):            
@@ -124,6 +126,9 @@ class FeatureExtraction(object):
                 for ac in o_sen.rel.get_tp_triger():
                     # no relation to it-self, there are few case but small   
                     if tc == ac: continue
+                    pair = str(tc)+'-'+str(ac)
+                    if pair in pair_list: continue
+                    pair_list.append(pair)
                     
                     #print tc, o_sen.words[tc]["string"], "-", p, o_sen.words[p]["string"]                                        
                     feature = self.get_feature(o_sen, tc, ac)                    
