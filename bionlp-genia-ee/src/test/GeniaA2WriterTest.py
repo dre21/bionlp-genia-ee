@@ -23,7 +23,8 @@ class GeniaA2WriterTest(object):
         '''
         Constructor
         '''
-        source = "E:/corpus/bionlp2011/project_data/"        
+        source = "E:/corpus/bionlp2011/project_data/"       
+        out_path = "E:/corpus/bionlp2011/project_test/result/model1" 
         
         WD = WordDictionary(source)    
         WD.load("train")
@@ -32,7 +33,7 @@ class GeniaA2WriterTest(object):
         TD.load("train")
         
         self.builder = DocumentBuilder(source, WD, TD)
-        self.a2writter = GeniaA2Writer('')
+        self.a2writter = GeniaA2Writer(out_path)
     
     def test1(self):
         doc_id = 'PMC-2222968-04-Results-03'
