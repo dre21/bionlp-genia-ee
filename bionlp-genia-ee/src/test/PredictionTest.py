@@ -103,8 +103,8 @@ class PredictionTest(object):
         print "Print info result"
         print "========================================================="
         
-        self.prediction.set_prediction_docs(doc_ids, is_test = True)
-        Ypred, Ytest, info = self.prediction.predict_tp(grid_search = True)
+        self.prediction.set_prediction_docs(doc_ids, is_test = False)
+        Ypred, Ytest, info = self.prediction.predict_tt(grid_search = True)
         
         for i in range(0, len(Ypred)):
             if Ypred[i] > 0 or Ytest[i] > 0:
@@ -112,15 +112,40 @@ class PredictionTest(object):
 
         self.prediction.update_doc_info(info, Ypred, "Theme", "P")
         
-        self.print_doc_info(self.prediction.docs['PMID-7747447'])
+        self.print_doc_info(self.prediction.docs['PMC-2222968-04-Results-03'])
         
     
     def test4(self):
         doc_ids = ["PMID-7747447", "PMID-7749985", "PMID-7759875", "PMID-7759956","PMC-1920263-04-MATERIALS_AND_METHODS-03","PMC-2222968-04-Results-03"]        
-        self.prediction.predict(doc_ids)
         
-        self.print_doc_info(self.prediction.docs['PMID-7747447'])
+        #self.prediction.predict(doc_ids)
         
+        # create document object for prediction
+        self.prediction.set_prediction_docs(doc_ids)
+        
+        
+        
+        # predict trigger-protein relation
+        Ypred, _, info = self.prediction.predict_tp(grid_search = True)
+        # update document
+        self.prediction.update_doc_info(info, Ypred, "Theme", "P")
+        
+        for i in range(0, len(Ypred)):
+            if Ypred[i] > 0:
+                print info[i], Ypred[i]
+        self.print_doc_info(self.prediction.docs['PMC-2222968-04-Results-03'])
+                
+        # predict trigger-trigger relation
+        Ypred, _, info = self.prediction.predict_tt(grid_search = True)
+        self.prediction.update_doc_info(info, Ypred, "Theme", "E")
+                       
+        for i in range(0, len(Ypred)):
+            if Ypred[i] > 0:
+                print info[i], Ypred[i]        
+        self.print_doc_info(self.prediction.docs['PMC-2222968-04-Results-03'])
+        
+        # write a2
+        self.prediction.write_result()
         
 if __name__ == "__main__":
     
