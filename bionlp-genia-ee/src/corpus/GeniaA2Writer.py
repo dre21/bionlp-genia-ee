@@ -27,7 +27,7 @@ class GeniaA2Writer(object):
         
         event_list = self.build_relation(o_doc, mapping_offset)
         
-        path = self._path + '/' + o_doc.doc_id
+        path = self._path + '/' + o_doc.doc_id + self.A2_EXT
         
         
         with open(path,'w') as f:            
