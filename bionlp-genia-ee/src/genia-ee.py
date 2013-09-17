@@ -49,7 +49,7 @@ if __name__ == '__main__':
     dir_name_final = "model-001"
     
     # evaluation
-    learn_train(src, dir_name_eval)
+    learn_train(source, dir_name_eval)
     predict_dev(source, dir_name_eval)
     
     # final prediction
