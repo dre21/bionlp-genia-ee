@@ -17,6 +17,12 @@ class DependencyFeature(Feature):
         Constructor
         """
         super(DependencyFeature, self).__init__(prefix)
+        
+    def list_to_string(self, string_list):
+        string = ""
+        for s in string_list:
+            string += s + '-'
+        return string.rstrip('-') 
                     
     def extract_feature(self, o_sen, trig_wn, arg_wn):
         """
@@ -30,6 +36,10 @@ class DependencyFeature(Feature):
         # length from trigger to argument
         upath = o_dep.get_shortest_path(trig_wn, arg_wn, "undirected")
         self.add("word_dist", len(upath)-1)
+        
+        # edges name from trigger to argument
+        edges = o_dep.get_edges_name(upath)
+        self.add(self.list_to_string(edges), True) 
         
         # direct path from trigger to prot
         dpath = o_dep.get_shortest_path(trig_wn, arg_wn)

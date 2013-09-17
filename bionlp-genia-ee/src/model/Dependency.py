@@ -120,6 +120,19 @@ class Dependency(object):
         empty list if no children
         """
         return self.graph.get(node,[])
+          
+    def get_edges_name(self, path):        
+        if len(path) < 2: return []
+        
+        edges = []
+        for i in range(0, len(path)-1):
+            gov = path[i]
+            dep = path[i+1]
+            pair = tuple(sorted([gov,dep]))
+            edge = self.pair[pair]
+            edges.append(edge)
+        
+        return edges
                     
     def test(self):
         print "root", self.root
@@ -143,10 +156,12 @@ if __name__ == "__main__":
     
     Dep = Dependency(dep_sen)
     Dep.test()    
-    path = Dep.get_shortest_path(9, 5)
-    upath = Dep.get_shortest_path(9, 5, "undirected")
-    print "path 9->5", path
-    print "undirected path 9->5", upath
+    path = Dep.get_shortest_path(8, 4)
+    upath = Dep.get_shortest_path(8, 4, "undirected")
+    print "path 8->4", path
+    print "edges 8->4", Dep.get_edges_name(path)
+    print "undirected path 8->4", upath
+    print "undirected edges 8->4", Dep.get_edges_name(upath)
     print "parent 11", Dep.get_parent(11)
-    print "parent 11", Dep.get_parent(3)    
+    print "parent 3", Dep.get_parent(3)    
     
