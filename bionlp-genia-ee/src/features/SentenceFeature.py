@@ -49,6 +49,9 @@ class SentenceFeature(Feature):
         # argument before trigger
         if arg_wn < trig_wn:
             self.add("a_bef_t", True)
+            
+        # word distance trigger to argument
+        self.add("dis_ta", trig_wn - arg_wn)
         
             
         # extract word feature for trigger
