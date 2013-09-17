@@ -102,9 +102,10 @@ class Prediction(object):
         step are either one of these:
         'tp' => trigger-protein relation
         'tt' => trigger-trigger relation to predict regulation event with trigger argument  
+        'tc' => trigger-theme-cause relation to predict regulation event with theme and cause (binary)
         """
-        if step not in ["tt","tp"]:
-            raise ValueError("only support step for tt and tp")
+        if step not in ['tt','tp','tc']:        
+            raise ValueError("only support step for tt, tp, and tc")
         
         X = []
         Y = []
@@ -123,6 +124,8 @@ class Prediction(object):
                 samples = self.extraction.extract_tp(o_doc)
             elif step == 'tt':
                 samples = self.extraction.extract_tt(o_doc)
+            elif step == 'tc':
+                samples = self.extraction.extract_tc(o_doc)
             
             for sample in samples:
                 X.append(sample[2])
@@ -211,6 +214,22 @@ class Prediction(object):
         svm.load()
         
         return svm.predict(X), Y, info
+    
+    def predict_tc(self, grid_search = True):
+        if self.docs == {}:
+            raise ValueError("docs have not been created. call set_prediction_docs first!")
+        # get list of file
+        #doc_ids = self.get_docid_list(docid_list_fname)
+        
+        # get features and target
+        X, Y, info = self.get_feature('tc')
+        
+        # init svm classifier
+        svm = SVM(self._model_path, "trig-theme-cause", "linear", grid_search = grid_search, class_weight = 'auto')
+        svm.load()
+        
+        return svm.predict(X), Y, info
+        
         
     def predict(self, docid_list_fname):
         
@@ -225,6 +244,10 @@ class Prediction(object):
         # predict trigger-trigger relation
         Ypred, _, info = self.predict_tt(grid_search = True)
         self.update_doc_info(info, Ypred, "Theme", "E")
+        
+        # predict trigger-theme-cause relation
+        Ypred, _, info = self.predict_tc(grid_search = True)
+        
         
         # write a2
         self.write_result()
