@@ -113,6 +113,20 @@ class Relation(object):
                 trig.append(rel[0])
         return trig
         
+    def get_theme(self, trigger_wn):
+        """
+        return argument1 word number list of a given trigger_wn
+        """
+        arg1 = []
+        
+        if type(trigger_wn) != list:
+            trigger_wn = [trigger_wn]
+        
+        for rel in self.data:
+            if rel[0] in trigger_wn and rel[2] == 'Theme':
+                arg1.append(rel[1])
+                
+        return arg1
     
     def check_relation(self,trigger_wn, arg_wn, arg_name = "Theme", arg_type = "P"):
         retval = False
