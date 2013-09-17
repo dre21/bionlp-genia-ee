@@ -16,6 +16,22 @@ def learn_dev_train(src, dir_name):
     learning.learn_tp(docs, grid_search = True)        
     learning.learn_tt(docs, grid_search = True)
 
+def predict_test(src, dir_name):
+    dict_type = 'mix'
+    docs = 'test'
+    
+    prediction = Prediction(src, dir_name, dict_type)
+    
+    prediction.predict(docs)
+
+def learn_train(src, dir_name):
+    dict_type = 'train'
+    docs = 'train'
+    
+    learning = Learning(src, dir_name, dict_type)
+    
+    learning.learn_tp(docs, grid_search = True)        
+    learning.learn_tt(docs, grid_search = True)
 
 def predict_dev(src, dir_name):
     dict_type = 'train'
@@ -29,8 +45,15 @@ def predict_dev(src, dir_name):
 if __name__ == '__main__':
     
     source = "E:/corpus/bionlp2011/project_data"
-    dir_name = "model-001"    
+    dir_name_eval = "test-model-001"    
+    dir_name_final = "model-001"
     
+    # evaluation
+    learn_train(src, dir_name)
+    predict_dev(source, dir_name)
+    
+    # final prediction
     learn_dev_train(source, dir_name)
+    predict_test(source, dir_name)
     
-    #predict_dev(source, dir_name, dict_type)
+    
