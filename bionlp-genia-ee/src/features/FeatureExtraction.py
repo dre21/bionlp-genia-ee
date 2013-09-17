@@ -169,7 +169,10 @@ class FeatureExtraction(object):
         """
         label = 0
         
-        if o_sen.rel.check_relation(trig_wn, arg_wn, "Theme", "P"):
+        cond1 = o_sen.rel.check_relation(trig_wn, arg_wn, "Theme", "P")
+        cond2 = o_sen.rel.check_relation(trig_wn, arg_wn, "Theme2", "P")
+        
+        if cond1 or cond2:
             label = self.EVENT_LABEL[o_sen.words[trig_wn]["type"]]
         
         return label
