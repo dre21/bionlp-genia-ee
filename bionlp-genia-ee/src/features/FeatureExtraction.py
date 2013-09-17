@@ -237,6 +237,15 @@ class FeatureExtraction(object):
         """
         feature = {}
         
+        # add sentence feature
+        self.SF.extract_tac_feature(o_sen, trig_wn, theme_wn, cause_wn)
+        feature.update(self.SF.feature)
+        
+        # add dependency feature
+        self.DF.extract_tac_feature(o_sen, trig_wn, theme_wn, cause_wn)
+        feature.update(self.DF.feature)
+        
+        
         return feature
         
     def get_tp_label(self, o_sen, trig_wn, arg_wn):
