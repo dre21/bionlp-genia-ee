@@ -219,7 +219,7 @@ class TriggerDictionary(Dictionary):
         
         for doc_id in doc_ids:
             triggers = self.get_triggers(doc_id)
-            for t in triggers:
+            for t in triggers.values():
                 # format of trigger
                 # ["T60", "Negative_regulation", "190", "197", "inhibit"]
                 string = t[4].lower()
