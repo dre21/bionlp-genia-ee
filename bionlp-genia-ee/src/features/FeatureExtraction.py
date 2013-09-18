@@ -43,6 +43,8 @@ class FeatureExtraction(object):
                    "Positive_regulation":8,
                    "Negative_regulation":9}
 
+    # filter out feature criteria
+    FF_MAX_DEP_LEN = 5
 
     def __init__(self, source, word_dict, trigger_dict):
         """
@@ -99,7 +101,9 @@ class FeatureExtraction(object):
                         else:
                             self.sample_pos += 1                      
                     
-                    feature_data.append([info,label,feature])
+                    # filter feature                    
+                    if not self.filter_feature(feature):
+                        feature_data.append([info,label,feature])
                     
                     
                         
@@ -143,10 +147,21 @@ class FeatureExtraction(object):
                         else:
                             self.sample_pos += 1                      
                     
-                    feature_data.append([info,label,feature])
+                    # filter feature                    
+                    if not self.filter_feature(feature):
+                        feature_data.append([info,label,feature])
         
         return feature_data
     
+    def filter_feature(self, feature):
+        retval = False
+        
+        # filter dependency len between trigger-arg
+        if feature['dep_word_dist'] > self.FF_MAX_DEP_LEN:
+            retval = True
+        
+        return retval    
+        
     def get_feature(self, o_sen, trig_wn, arg_wn):
         
         feature = {}
