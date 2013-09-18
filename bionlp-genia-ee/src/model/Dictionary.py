@@ -6,6 +6,7 @@ Created on Sep 2, 2013
 
 import json, os
 from collections import Counter, defaultdict
+from tools.PorterStemmer import PorterStemmer
 
 class Dictionary(object):
     # this folder contain data source for all docs
@@ -14,15 +15,15 @@ class Dictionary(object):
     # this folder contain dictionary
     DICT_DIR = "dict"
     
-    # sufix and extension for doc list
+    # suffix and extension for doc list
     DOCID_SUFIX_EXT = '_doc_ids.json'
     
-    # sufix and extension for word dictionary
+    # suffix and extension for word dictionary
     WDICT_SUFIX_EXT = '_word_dict.json'
     
-    # sufix and extension for word dictionary
+    # suffix and extension for word dictionary
     TDICT_SUFIX_EXT = '_trigger_dict.json'
-    
+        
     CORPUS_DIR = ["dev","train","mix"]
     
     DATA_EXT = ".json"
@@ -124,9 +125,12 @@ class WordDictionary(Dictionary):
             for sen in sentences:
                 for w in sen:
                     string = w["string"]
+                    stem = w['stem']
                     if not string.isdigit() and len(string) > 1:
                         string = string.lower()
+                        stem = stem.lower()
                         cnt[string] += 1
+                        cnt[stem] += 1
         
         print "the dictionary contains:", len(cnt), "words"
         
@@ -144,19 +148,32 @@ class WordDictionary(Dictionary):
     
     
     def test(self, test_name):
-        
+        Stemmer = PorterStemmer()
         if test_name == "loading":
+            words = ["induction","inducted","restimulated","binding","binds","up-regulate"]            
             self.load("dev")
-            words = ["induction","restimulated","binding","binds","up-regulate"]
+            
+            print "\n\n----------------------------"
+            print "Using original string"            
             for w in words:
                 cnt = self.count(w)
                 print w, cnt
+            
+            print "\n\n----------------------------"
+            print "Using stem version of string"
+            for w in words:
+                w = Stemmer.stem(w, 0, len(w)-1)
+                cnt = self.count(w)
+                print w, cnt
+                
+            print "\n\n"
        
 class TriggerDictionary(Dictionary):       
     
     def __init__(self, source):
         
         super(TriggerDictionary,self).__init__(source)
+        self.Stemmer = PorterStemmer()
         
     def load(self, corpus_dir):
         """
@@ -222,11 +239,13 @@ class TriggerDictionary(Dictionary):
             for t in triggers.values():
                 # format of trigger
                 # ["T60", "Negative_regulation", "190", "197", "inhibit"]
-                string = t[4].lower()
+                string = t[4].lower()               
+                stem = self.Stemmer.stem(string, 0, len(string)-1)
                 # only process single word trigger      
                 if " " not in string:          
                     ttype = t[1]
                     td[string][ttype] += 1
+                    td[stem][ttype] += 1
                 
                 
         print "the dictionary contains:", len(td), "trigger words"
@@ -245,29 +264,43 @@ class TriggerDictionary(Dictionary):
                 
     def test(self, test_name):
            
-        if test_name == "loading":
-            self.load("dev")
+        if test_name == "loading":            
             trigger = {"induction":"Positive_regulation",
                        "restimulated":"Regulation",
                        "binding":"Binding",
                        "binds":"Binding",
                        "up-regulate":"Positive_regulation"}
+            
+            print "\n\n----------------------------"
+            print "Using original string"
+            self.load("dev")
             for t,ttype in trigger.iteritems():
                 cnt1 = self.count(t)
                 cnt2 = self.count(t, ttype)
                 print t, "All", cnt1
                 print t, ttype, cnt2
                 
+            print "\n\n----------------------------"
+            print "Using stem version of string"
+            for t,ttype in trigger.iteritems():
+                t = self.Stemmer.stem(t, 0, len(t)-1)
+                cnt1 = self.count(t)
+                cnt2 = self.count(t, ttype)
+                print t, "All", cnt1
+                print t, ttype, cnt2
                 
+            print "\n\n"
         
 if __name__ == "__main__":
     
     source = "E:/corpus/bionlp2011/project_data/"
     
     WD = WordDictionary(source)    
+    WD.build()
     WD.test("loading")
            
     TD = TriggerDictionary(source)
+    TD.build()
     TD.test("loading")
         
     
