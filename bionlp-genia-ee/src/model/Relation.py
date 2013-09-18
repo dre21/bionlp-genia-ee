@@ -68,7 +68,7 @@ class Relation(object):
                     arg_wn = entity_map.get(e[4], -1)
                     # add relation for trigger and 2nd binding argument
                     if arg_wn >= 0:
-                        self.add_relation(t_wn, arg_wn, "Binding2", "P")
+                        self.add_relation(t_wn, arg_wn, "Theme2", "P")
                     else:
                         #print "inter-sentence relation", e
                         self.out_scope.append(e)
