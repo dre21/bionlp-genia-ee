@@ -209,9 +209,10 @@ if __name__ == "__main__":
     
     builder = DocumentBuilder(source, WD, TD)            
     doc = builder.read_raw(doc_id)
-    o_doc = builder.build_doc_from_raw(doc)
+    o_doc = builder.build_doc_from_raw(doc, is_test=False)
     
     FE = FeatureExtraction(source, WD, TD)
-    feature = FE.extract_tt(o_doc)
-    for f in feature[50:100]:
-        print f
+    feature = FE.extract_tp(o_doc)
+    for f in feature[0:50]:
+        print f[0]
+        print f[2]
