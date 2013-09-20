@@ -28,14 +28,12 @@ class Feature(object):
         
         # pos tag of word
         self.add(prefix + "_pos_"+ word["pos_tag"], True)
-        
-        
-        # features which are not applicable to protein 
-        if word["type"] != "Protein":
-            # stem of word
-            self.add(prefix + '_str_'+ word['stem'], True)
-        
-            # trigger probability score
-            self.add(prefix + '_tscore', word['score'])
+                
+        # word stem
+        stem = 'PRO' if  word["type"] == "Protein" else word['stem']                    
+        self.add(prefix + '_str_'+ stem, True)
+                
+        # trigger probability score
+        self.add(prefix + '_tscore', word['score'])
             
             
