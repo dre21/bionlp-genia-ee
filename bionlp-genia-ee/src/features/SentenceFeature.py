@@ -69,6 +69,19 @@ class SentenceFeature(Feature):
         if arg_wn + 1 < nword:
             self.extract_word_feature(o_sen.words[arg_wn+1], "pw+1")
         
+    
+    def in_between(self, i, trig_wn, arg_wn):
+        if trig_wn > arg_wn:
+            start = arg_wn
+            end = trig_wn
+        else:
+            start = trig_wn
+            end = arg_wn
+        
+        if i > start and i < end:
+            return True
+        else:
+            return False
           
     def extract_feature_tp(self, o_sen, trig_wn, arg_wn):
         """
@@ -79,6 +92,14 @@ class SentenceFeature(Feature):
         
         # extract common feature
         self._extract_common_feature(o_sen, trig_wn, arg_wn)                
+
+
+        # number of protein between trigger and argument
+        n_prot = 0
+        for p in o_sen.protein:
+            if self.in_between(p, trig_wn, arg_wn):
+                n_prot += 1
+        self.add('n_prot', n_prot)
 
         # probability of trigger on each event
         self.add('score_1', self.get_score(o_sen.words[trig_wn], 'Gene_expression'))

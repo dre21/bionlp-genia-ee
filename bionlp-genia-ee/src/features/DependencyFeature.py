@@ -73,16 +73,6 @@ class DependencyFeature(Feature):
         
         self._extract_common_feature(o_sen, trig_wn, arg_wn)
         
-        o_dep = o_sen.dep
-        
-        # number of protein between trig_wn and arg_wn
-        upath = o_dep.get_shortest_path(trig_wn, arg_wn, "undirected")
-        proteins = o_sen.protein
-        n_prot = 0 
-        for p in upath[1:-1]:
-            if p in proteins: n_prot+=1
-        self.add('n_pro', n_prot)
-        
         
     def extract_feature_tt(self, o_sen, trig_wn, arg_wn):
         """
