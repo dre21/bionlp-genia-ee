@@ -86,7 +86,7 @@ class Prediction(object):
         # model path
         path = source + self.MODEL_DIR + '/' + dir_name
         if not os.path.exists(path):
-            raise ValueError(path + "exist!!, chose another dir_name for learning")        
+            raise ValueError(path + "does not exist!!, chose another dir_name for prediction")        
         self._model_path = path
         
         # output path
