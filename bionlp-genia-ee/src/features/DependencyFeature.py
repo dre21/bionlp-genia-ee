@@ -24,13 +24,8 @@ class DependencyFeature(Feature):
             string += s + '-'
         return string.rstrip('-') 
                     
-    def extract_feature(self, o_sen, trig_wn, arg_wn):
-        """
-        extract dependency feature between trig_wn and arg_wn in o_sen
-        """       
-        # reset feature
-        self.feature = {}
-        
+    def _extract_common_feature(self, o_sen, trig_wn, arg_wn):
+                
         o_dep = o_sen.dep
         
         # length from trigger to argument
@@ -69,7 +64,51 @@ class DependencyFeature(Feature):
             for child in children:
                 self.extract_word_feature(o_sen.words[child], "a_child")
                 
+    def extract_feature_tp(self, o_sen, trig_wn, arg_wn):
+        """
+        extract dependency feature between trig_wn and arg_wn in o_sen
+        """       
+        # reset feature
+        self.feature = {}
+        
+        self._extract_common_feature(o_sen, trig_wn, arg_wn)
+        
+        o_dep = o_sen.dep
+        
+        # number of protein between trig_wn and arg_wn
+        upath = o_dep.get_shortest_path(trig_wn, arg_wn, "undirected")
+        proteins = o_sen.protein
+        n_prot = 0 
+        for p in upath[1:-1]:
+            if p in proteins: n_prot+=1
+        self.add('n_pro', n_prot)
         
         
+    def extract_feature_tt(self, o_sen, trig_wn, arg_wn):
+        """
+        extract dependency feature between trig_wn and arg_wn in o_sen
+        """       
+        # reset feature
+        self.feature = {}
+        
+        self._extract_common_feature(o_sen, trig_wn, arg_wn)
+        
+        o_dep = o_sen.dep
+        
+        # number of trigger candidate between trig_wn and arg_wn
+        upath = o_dep.get_shortest_path(trig_wn, arg_wn, "undirected")
+        tc = o_sen.trigger_candidate
+        n_tc = 0 
+        for t in upath[1:-1]:
+            if t in tc: n_tc+=1
+        self.add('n_tc', n_tc)
         
         
+    
+    
+    
+    
+    
+    
+    
+    

@@ -176,7 +176,7 @@ class FeatureExtraction(object):
         feature.update(self.SF.feature)
         
         # add dependency feature
-        self.DF.extract_feature(o_sen, trig_wn, arg_wn)
+        self.DF.extract_feature_tp(o_sen, trig_wn, arg_wn)
         feature.update(self.DF.feature)
         
         return feature
@@ -190,7 +190,7 @@ class FeatureExtraction(object):
         feature.update(self.SF.feature)
         
         # add dependency feature
-        self.DF.extract_feature(o_sen, trig_wn, arg_wn)
+        self.DF.extract_feature_tt(o_sen, trig_wn, arg_wn)
         feature.update(self.DF.feature)
         
         return feature
