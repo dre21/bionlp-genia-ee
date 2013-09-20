@@ -24,16 +24,12 @@ class SentenceFeature(Feature):
                 
         self.wdict = WDict
         self.tdict = TDict
-          
-    def extract_feature(self, o_sen, trig_wn, arg_wn):
-        """
-        extract sentence feature 
-        """       
-        # reset feature
-        self.feature = {}
-                
+        
+    def _extract_common_feature(self, o_sen, trig_wn, arg_wn):
+       
         nword = o_sen.nwords        
         
+        ''' ------ position ------ '''
         # trigger first or last in sen
         if trig_wn == 0:
             self.add("tfirst", True)
@@ -53,15 +49,13 @@ class SentenceFeature(Feature):
         # word distance trigger to argument
         self.add("dis_ta", trig_wn - arg_wn)
         
-            
+        
+        ''' ------ word feature ------ '''
         # extract word feature for trigger
         self.extract_word_feature(o_sen.words[trig_wn], "t")
         
         # extract word feature for argument
         self.extract_word_feature(o_sen.words[arg_wn], "a")
-        
-        # argument type
-        self.add("a_type", o_sen.words[arg_wn]["type"])
         
         # extract word feature for words around trigger candidate
         if trig_wn - 1 >= 0:
@@ -73,8 +67,19 @@ class SentenceFeature(Feature):
         if arg_wn - 1 >= 0:
             self.extract_word_feature(o_sen.words[arg_wn-1], "pw-1")
         if arg_wn + 1 < nword:
-            self.extract_word_feature(o_sen.words[arg_wn+1], "pw+1")             
+            self.extract_word_feature(o_sen.words[arg_wn+1], "pw+1")
         
+          
+    def extract_feature_tp(self, o_sen, trig_wn, arg_wn):
+        """
+        extract sentence feature 
+        """       
+        # reset feature
+        self.feature = {}
+        
+        # extract common feature
+        self._extract_common_feature(o_sen, trig_wn, arg_wn)                
+
         # probability of trigger on each event
         self.add('score_1', self.get_score(o_sen.words[trig_wn], 'Gene_expression'))
         self.add('score_2', self.get_score(o_sen.words[trig_wn], 'Transcription'))
@@ -86,6 +91,28 @@ class SentenceFeature(Feature):
         self.add('score_8', self.get_score(o_sen.words[trig_wn], 'Positive_regulation'))
         self.add('score_9', self.get_score(o_sen.words[trig_wn], 'Negative_regulation'))
         
+    
+    def extract_feature_tt(self, o_sen, trig_wn, arg_wn):
+        """
+        extract sentence feature 
+        """       
+        # reset feature
+        self.feature = {}
+        
+        # extract common feature
+        self._extract_common_feature(o_sen, trig_wn, arg_wn)
+        
+        # argument type
+        arg_type = o_sen.words[arg_wn]["type"]
+        self.add("a_type", arg_type)
+        
+        # probability of argument event
+        self.add('arg_prob', self.get_score(o_sen.words[trig_wn], arg_type))
+                
+        # probability of trigger on each event
+        self.add('score_7', self.get_score(o_sen.words[trig_wn], 'Regulation'))
+        self.add('score_8', self.get_score(o_sen.words[trig_wn], 'Positive_regulation'))
+        self.add('score_9', self.get_score(o_sen.words[trig_wn], 'Negative_regulation'))
         
     def get_score(self, word, event_type):
         """

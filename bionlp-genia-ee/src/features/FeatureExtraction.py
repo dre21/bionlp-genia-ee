@@ -89,7 +89,7 @@ class FeatureExtraction(object):
                 for p in p_list:
                     
                     #print tc, o_sen.words[tc]["string"], "-", p, o_sen.words[p]["string"]                                        
-                    feature = self.get_feature(o_sen, tc, p)                    
+                    feature = self.get_feature_tp(o_sen, tc, p)                    
                     info = {"doc":o_doc.doc_id, "sen":i, "t":tc, "a":p}
                     
                     label = -1
@@ -116,18 +116,22 @@ class FeatureExtraction(object):
         extract Trigger-Trigger theme pair
         target regulation, positive regulation, and negative regulation
         """
-        # to prevent duplicate pair
-        pair_list = []
-        
+                        
         feature_data = []
-        for i in range(0, len(o_doc.sen)):            
+        for i in range(0, len(o_doc.sen)):       
+            # to prevent duplicate pair
+            pair_list = []     
+            
             #if i != 2: continue
             o_sen = o_doc.sen[i]
-            #tc_list = o_sen.trigger_candidate   
             
-            for tc in o_sen.trigger_candidate:      
+            ac_list = o_sen.rel.get_tp_triger()
+            tc_list = [t for t in o_sen.trigger_candidate if t not in ac_list] 
+            
+          
+            for tc in tc_list:      
                 # argument is a trigger which has relation with protein as argument1                         
-                for ac in o_sen.rel.get_tp_triger():
+                for ac in ac_list:
                     # no relation to it-self, there are few case but small   
                     if tc == ac: continue
                     pair = str(tc)+'-'+str(ac)
@@ -135,9 +139,10 @@ class FeatureExtraction(object):
                     pair_list.append(pair)
                     
                     #print tc, o_sen.words[tc]["string"], "-", p, o_sen.words[p]["string"]                                        
-                    feature = self.get_feature(o_sen, tc, ac)                    
+                    feature = self.get_feature_tt(o_sen, tc, ac)                    
                     info = {"doc":o_doc.doc_id, "sen":i, "t" : tc, "a" : ac}
-                           
+                    
+                   
                     label = -1             
                     if not o_doc.is_test:
                         label = self.get_tt_label(o_sen, tc, ac)  
@@ -162,12 +167,26 @@ class FeatureExtraction(object):
         
         return retval    
         
-    def get_feature(self, o_sen, trig_wn, arg_wn):
+    def get_feature_tp(self, o_sen, trig_wn, arg_wn):
         
         feature = {}
         
         # add sentence feature
-        self.SF.extract_feature(o_sen, trig_wn, arg_wn)
+        self.SF.extract_feature_tp(o_sen, trig_wn, arg_wn)
+        feature.update(self.SF.feature)
+        
+        # add dependency feature
+        self.DF.extract_feature(o_sen, trig_wn, arg_wn)
+        feature.update(self.DF.feature)
+        
+        return feature
+    
+    def get_feature_tt(self, o_sen, trig_wn, arg_wn):
+        
+        feature = {}
+        
+        # add sentence feature
+        self.SF.extract_feature_tt(o_sen, trig_wn, arg_wn)
         feature.update(self.SF.feature)
         
         # add dependency feature
@@ -227,7 +246,7 @@ if __name__ == "__main__":
     o_doc = builder.build_doc_from_raw(doc, is_test=False)
     
     FE = FeatureExtraction(source, WD, TD)
-    feature = FE.extract_tp(o_doc)
-    for f in feature[0:50]:
-        print f[0]
-        print f[2]
+    FE.extract_tt(o_doc)
+    #for f in feature[0:50]:
+    #    print f[0]
+    #    print f[2]

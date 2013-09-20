@@ -74,15 +74,15 @@ def print_matrix(Ytest, Ypred, labels = None):
 if __name__ == '__main__':
     
     source = "E:/corpus/bionlp2011/project_data"
-    dir_name_eval = "test-model-007"    
-    dir_name_final = "model-007"
+    dir_name_eval = "test-model-008a"    
+    dir_name_final = "model-008a"
     
     # evaluation
     learn_train(source, dir_name_eval)
     predict_dev(source, dir_name_eval)
     
     # final prediction
-    learn_dev_train(source, dir_name_final)
-    predict_test(source, dir_name_final)
+    #learn_dev_train(source, dir_name_final)
+    #predict_test(source, dir_name_final)
     
     
