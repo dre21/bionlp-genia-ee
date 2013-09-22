@@ -36,6 +36,20 @@ class Document(object):
 
     def update(self, sen_num, trig_wn, trig_type, arg_wn, arg_name, arg_type):
         self.sen[sen_num].update(trig_wn, trig_type, arg_wn, arg_name, arg_type)
+        
+    def update_relation(self, rel_type, sen_num, trig_wn, arg_wn):
+        """
+        only update relation
+        rel_type: ['cause', 'theme2']
+        trigger-argument-cause ==> add cause relation
+        binding-argument1-argument2 ==> update relation from theme to theme2
+        """
+        if rel_type == 'cause':
+            self.sen[sen_num].update_cause(trig_wn, arg_wn)
+        elif rel_type == 'theme2':
+            pass
+        else:
+            raise ValueError("")        
                     
         
 class DocumentBuilder(object):

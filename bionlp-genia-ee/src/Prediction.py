@@ -161,6 +161,17 @@ class Prediction(object):
             info = list_info[i]
             doc_id = info["doc"]
             self.docs[doc_id].update(info['sen'], info['t'], self.EVENT_NAME[target], info['a'], arg_name, arg_type)
+            
+    def update_doc_relation(self, rel_type, list_info, list_target):
+        """
+        update only relation of document
+        """
+        for i in range(0,len(list_info)):
+            target = list_target[i]
+            if target == 1:
+                info = list_info[i]
+                doc_id = info["doc"]
+                self.docs[doc_id].update_relation(rel_type, info['sen'], info['t'], info['c'])
 
     
     def get_docid_list(self, docid_list_fname):
@@ -247,7 +258,7 @@ class Prediction(object):
         
         # predict trigger-theme-cause relation
         Ypred, _, info = self.predict_tc(grid_search = True)
-        
+        self.update_doc_relation('cause', info, Ypred)
         
         # write a2
         self.write_result()

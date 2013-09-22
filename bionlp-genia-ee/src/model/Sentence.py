@@ -85,6 +85,21 @@ class Sentence(object):
         # update relation
         self.rel.add_relation(trig_wn, arg_wn, arg_name, arg_type)
         
+    def update_cause(self, trig_wn, cause_wn):
+        # sanity check, whether word numbers are in range
+        if trig_wn >= self.nwords or cause_wn >= self.nwords:
+            raise ValueError("Word number out of range")
+        
+        word_type = self.words[cause_wn]["type"]
+        if word_type == 'null':
+            raise ValueError("Word type cannot be null. Word type for cause is either 'Protein' or Trigger type")
+        elif word_type == 'Protein':
+            arg_type = 'P'
+        else:
+            arg_type = 'E'
+        
+        # update relation
+        self.rel.add_relation(trig_wn, cause_wn, 'Cause', arg_type)       
         
     def test(self):
         
