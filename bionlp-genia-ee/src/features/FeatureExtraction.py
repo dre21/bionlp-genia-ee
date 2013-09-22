@@ -42,6 +42,9 @@ class FeatureExtraction(object):
                    "Regulation":7,
                    "Positive_regulation":8,
                    "Negative_regulation":9}
+    
+    # regulation list
+    REGULATION_EVENT = ['Regulation','Positive_regulation','Negative_regulation']
 
     # filter out feature criteria
     FF_MAX_DEP_LEN = 5
@@ -180,6 +183,72 @@ class FeatureExtraction(object):
         feature.update(self.DF.feature)
         
         return feature
+        
+    def extract_tc(self, o_doc):
+        """
+        Extract feature for trigger-cause relation
+        trigger type is Regulation, Positive regulation or Negative regulation
+        """
+        # to prevent duplicate pair
+        pair_list = []
+        
+        feature_data = []
+        
+        for i in range(0, len(o_doc.sen)):            
+            # get sentence
+            o_sen = o_doc.sen[i]            
+            
+            # trigger candidates are trigger with regulation event
+            tc_list = list(o_sen.trigger_candidate)
+            for wn in o_sen.trigger_candidate:
+                if o_sen.words[wn]["type"] not in self.REGULATION_EVENT:                    
+                    tc_list.remove(wn)
+            
+            # list of protein that have been used, these will be exclude from cause candidate
+            prot_used = o_sen.rel.get_theme(o_sen.rel.get_tp_triger())
+            pc_list = [p for p in o_sen.protein if p not in prot_used]
+            
+            # list of trigger that have been used by tt, these will be exclude from cause candidate
+            trig_used = o_sen.rel.get_theme(tc_list)
+            tp_list = [t for t in o_sen.rel.get_tp_triger() if t not in trig_used]
+                                                                                                                                
+            # cause candidates are protein and trigger which has relation with protein as argument1 
+            cc_list = set(pc_list + tp_list + tc_list)
+            
+                        
+            
+            # for each tc
+            for tc in tc_list:                
+                # for each arg1 of tc 
+                for ac in o_sen.rel.get_theme(tc):
+                    # for each cause candidate                                     
+                    for cc in cc_list:
+                        
+                        # no relation to it-self   
+                        if tc == cc: continue
+                        # no same relation to theme and cause
+                        if ac == cc: continue
+                        # if ac and cc already have connection each other
+                        if o_sen.rel.check_relation(cc, tc, "Theme", "E"): continue
+                        
+                                                
+                        
+                        feature = self.get_feature_tac(o_sen, tc, ac, cc)                    
+                        info = {'doc':o_doc.doc_id, 'sen':i, 't':tc, 'a':ac, 'c':cc}
+                                                       
+                        label = 0             
+                        if not o_doc.is_test:
+                            label = self.get_tac_label(o_sen, tc, ac, cc)  
+                            # statistical info
+                            if label == 0:
+                                self.sample_neg += 1
+                            else:
+                                self.sample_pos += 1                      
+                        
+                        feature_data.append([info,label,feature])
+                                                     
+        
+        return feature_data
     
     def get_feature_tt(self, o_sen, trig_wn, arg_wn):
         
@@ -192,6 +261,24 @@ class FeatureExtraction(object):
         # add dependency feature
         self.DF.extract_feature_tt(o_sen, trig_wn, arg_wn)
         feature.update(self.DF.feature)
+        
+        return feature
+        
+    def get_feature_tac(self, o_sen, trig_wn, theme_wn, cause_wn):
+        """
+        get feature for trigger-theme-cause relation
+        input are trigger, theme, and cause word number
+        """
+        feature = {}
+        
+        # add sentence feature
+        self.SF.extract_tac_feature(o_sen, trig_wn, theme_wn, cause_wn)
+        feature.update(self.SF.feature)
+        
+        # add dependency feature
+        self.DF.extract_tac_feature(o_sen, trig_wn, theme_wn, cause_wn)
+        feature.update(self.DF.feature)
+        
         
         return feature
         
@@ -224,7 +311,21 @@ class FeatureExtraction(object):
         
         return label
         
+    def get_tac_label(self, o_sen, trig_wn, arg_wn, cause_wn):
+        """
+        binary label whether there is relation for trigger-theme1-cause
+        """ 
+        label = 0
         
+        cond1 = o_sen.rel.check_relation(trig_wn, arg_wn, "Theme", "P")
+        cond2 = o_sen.rel.check_relation(trig_wn, arg_wn, "Theme", "E")
+        cond3 = o_sen.rel.check_relation(trig_wn, cause_wn, "Cause", "P")
+        cond4 = o_sen.rel.check_relation(trig_wn, cause_wn, "Cause", "E")
+        
+        if (cond1 or cond2) and (cond3 or cond4):
+            label = 1
+        
+        return label
         
     
 if __name__ == "__main__":
@@ -243,10 +344,12 @@ if __name__ == "__main__":
     
     builder = DocumentBuilder(source, WD, TD)            
     doc = builder.read_raw(doc_id)
+
     o_doc = builder.build_doc_from_raw(doc, is_test=False)
     
     FE = FeatureExtraction(source, WD, TD)
-    FE.extract_tt(o_doc)
-    #for f in feature[0:50]:
-    #    print f[0]
-    #    print f[2]
+    feature = FE.extract_tt(o_doc)
+    for f in feature[0:50]:
+        print f[0]
+        print f[2]
+

@@ -135,6 +135,45 @@ class SentenceFeature(Feature):
         self.add('score_8', self.get_score(o_sen.words[trig_wn], 'Positive_regulation'))
         self.add('score_9', self.get_score(o_sen.words[trig_wn], 'Negative_regulation'))
         
+    def extract_tac_feature(self, o_sen, trig_wn, theme_wn, cause_wn):
+        """
+        extract sentence feature for trigger-theme-cause relation
+        """
+        
+        # reset feature
+        self.feature = {}
+        
+        # theme before trigger
+        if theme_wn < trig_wn:
+            self.add("a_bef_t", True)
+            
+        # cause before trigger
+        if cause_wn < trig_wn:
+            self.add("c_bef_t", True)
+        
+        # extract word feature for trigger
+        self.extract_word_feature(o_sen.words[trig_wn], "t")
+        
+        # extract word feature for theme
+        self.extract_word_feature(o_sen.words[theme_wn], "a")
+        
+        # extract word feature for cause
+        self.extract_word_feature(o_sen.words[cause_wn], "c")
+        
+        # type of theme
+        self.add("a_type", o_sen.words[theme_wn]["type"])
+        
+        # type of cause
+        self.add("c_type", o_sen.words[cause_wn]["type"])
+        
+        # word distance trigger to theme
+        self.add("dis_ta", trig_wn - theme_wn)
+        
+        # word distance trigger to cause
+        self.add("dis_tc", trig_wn - cause_wn)
+        
+        
+    
     def get_score(self, word, event_type):
         """
         calculate the probability score of trigger candidate for given event_type

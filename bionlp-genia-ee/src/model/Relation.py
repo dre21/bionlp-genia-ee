@@ -100,7 +100,10 @@ class Relation(object):
         arg_name: "Theme", "Binding2", "Cause"
         arg_type: "P", or "E"
         """
-        self.data.append((trigger_wn, arg_wn, arg_name, arg_type))
+        rel_tuple = (trigger_wn, arg_wn, arg_name, arg_type)
+        # check duplicate
+        if rel_tuple not in self.data:
+            self.data.append(rel_tuple)
     
     def get_tp_triger(self):
         """
@@ -113,6 +116,20 @@ class Relation(object):
                 trig.append(rel[0])
         return trig
         
+    def get_theme(self, trigger_wn):
+        """
+        return argument1 word number list of a given trigger_wn
+        """
+        arg1 = []
+        
+        if type(trigger_wn) != list:
+            trigger_wn = [trigger_wn]
+        
+        for rel in self.data:
+            if rel[0] in trigger_wn and rel[2] == 'Theme':
+                arg1.append(rel[1])
+                
+        return arg1
     
     def check_relation(self,trigger_wn, arg_wn, arg_name = "Theme", arg_type = "P"):
         retval = False

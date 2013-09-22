@@ -94,9 +94,10 @@ class Learning(object):
         step are either one of these:
         'tp' => trigger-protein relation
         'tt' => trigger-trigger relation to predict regulation event with trigger argument  
+        'tc' => trigger-theme-cause relation to predict regulation event with theme and cause (binary)
         """
-        if step not in ["tt","tp"]:
-            raise ValueError("only support step for tt and tp")
+        if step not in ['tt','tp','tc']:
+            raise ValueError("only support step for tt, tp, and tc")
         
         X = []
         Y = []
@@ -114,6 +115,8 @@ class Learning(object):
                 samples = self.extraction.extract_tp(o_doc)
             elif step == 'tt':
                 samples = self.extraction.extract_tt(o_doc)
+            elif step == 'tc':
+                samples = self.extraction.extract_tc(o_doc)
             
             for sample in samples:
                 X.append(sample[2])
@@ -157,6 +160,21 @@ class Learning(object):
         
         # fit training data
         svm.learn(X, Y)      
+        
+        
+    def learn_tc(self, docid_list_fname, grid_search):
+        # get list of file
+        doc_ids = self.get_docid_list(docid_list_fname)
+        
+        # get features and target
+        X, Y = self.get_feature(doc_ids, 'tc')
+        
+        # init svm classifier
+        svm = SVM(self.path, 'trig-theme-cause','linear', grid_search = grid_search, class_weight = 'auto')        
+        svm.create()
+        
+        # fit training data
+        svm.learn(X, Y) 
         
 
 if __name__ == "__main__":
