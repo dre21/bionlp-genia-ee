@@ -135,7 +135,7 @@ class SentenceFeature(Feature):
         self.add('score_8', self.get_score(o_sen.words[trig_wn], 'Positive_regulation'))
         self.add('score_9', self.get_score(o_sen.words[trig_wn], 'Negative_regulation'))
         
-    def extract_tac_feature(self, o_sen, trig_wn, theme_wn, cause_wn):
+    def extract_feature_tac(self, o_sen, trig_wn, theme_wn, cause_wn):
         """
         extract sentence feature for trigger-theme-cause relation
         """

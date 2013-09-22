@@ -170,19 +170,7 @@ class FeatureExtraction(object):
         
         return retval    
         
-    def get_feature_tp(self, o_sen, trig_wn, arg_wn):
-        
-        feature = {}
-        
-        # add sentence feature
-        self.SF.extract_feature_tp(o_sen, trig_wn, arg_wn)
-        feature.update(self.SF.feature)
-        
-        # add dependency feature
-        self.DF.extract_feature_tp(o_sen, trig_wn, arg_wn)
-        feature.update(self.DF.feature)
-        
-        return feature
+    
         
     def extract_tc(self, o_doc):
         """
@@ -245,10 +233,26 @@ class FeatureExtraction(object):
                             else:
                                 self.sample_pos += 1                      
                         
-                        feature_data.append([info,label,feature])
+                        # filter feature                    
+                        if not self.filter_feature(feature):
+                            feature_data.append([info,label,feature])
                                                      
         
         return feature_data
+    
+    def get_feature_tp(self, o_sen, trig_wn, arg_wn):
+        
+        feature = {}
+        
+        # add sentence feature
+        self.SF.extract_feature_tp(o_sen, trig_wn, arg_wn)
+        feature.update(self.SF.feature)
+        
+        # add dependency feature
+        self.DF.extract_feature_tp(o_sen, trig_wn, arg_wn)
+        feature.update(self.DF.feature)
+        
+        return feature
     
     def get_feature_tt(self, o_sen, trig_wn, arg_wn):
         
@@ -272,11 +276,11 @@ class FeatureExtraction(object):
         feature = {}
         
         # add sentence feature
-        self.SF.extract_tac_feature(o_sen, trig_wn, theme_wn, cause_wn)
+        self.SF.extract_feature_tac(o_sen, trig_wn, theme_wn, cause_wn)
         feature.update(self.SF.feature)
         
         # add dependency feature
-        self.DF.extract_tac_feature(o_sen, trig_wn, theme_wn, cause_wn)
+        self.DF.extract_feature_tac(o_sen, trig_wn, theme_wn, cause_wn)
         feature.update(self.DF.feature)
         
         

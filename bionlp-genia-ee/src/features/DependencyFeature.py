@@ -73,7 +73,26 @@ class DependencyFeature(Feature):
         
         self._extract_common_feature(o_sen, trig_wn, arg_wn)
     
-    def extract_tac_feature(self, o_sen, trig_wn, theme_wn, cause_wn):
+    def extract_feature_tt(self, o_sen, trig_wn, arg_wn):
+        """
+        extract dependency feature between trig_wn and arg_wn in o_sen
+        """       
+        # reset feature
+        self.feature = {}
+        
+        self._extract_common_feature(o_sen, trig_wn, arg_wn)
+        
+        o_dep = o_sen.dep
+        
+        # number of trigger candidate between trig_wn and arg_wn
+        upath = o_dep.get_shortest_path(trig_wn, arg_wn, "undirected")
+        tc = o_sen.trigger_candidate
+        n_tc = 0 
+        for t in upath[1:-1]:
+            if t in tc: n_tc+=1
+        self.add('n_tc', n_tc)
+    
+    def extract_feature_tac(self, o_sen, trig_wn, theme_wn, cause_wn):
         """
         extract dependency feature for trigger-theme-cause relation
         """
@@ -89,7 +108,8 @@ class DependencyFeature(Feature):
         
         upath = o_dep.get_shortest_path(trig_wn, cause_wn, "undirected")
         # dependency distance trigger to cause
-        self.add("dis_tc", len(upath)-1)
+        # use key 'word_dist' to be processed by filter
+        self.add("word_dist", len(upath)-1)
         
         
         # path from trigger to theme
@@ -114,24 +134,7 @@ class DependencyFeature(Feature):
         
         
      
-    def extract_feature_tt(self, o_sen, trig_wn, arg_wn):
-        """
-        extract dependency feature between trig_wn and arg_wn in o_sen
-        """       
-        # reset feature
-        self.feature = {}
-        
-        self._extract_common_feature(o_sen, trig_wn, arg_wn)
-        
-        o_dep = o_sen.dep
-        
-        # number of trigger candidate between trig_wn and arg_wn
-        upath = o_dep.get_shortest_path(trig_wn, arg_wn, "undirected")
-        tc = o_sen.trigger_candidate
-        n_tc = 0 
-        for t in upath[1:-1]:
-            if t in tc: n_tc+=1
-        self.add('n_tc', n_tc)
+    
         
         
     
