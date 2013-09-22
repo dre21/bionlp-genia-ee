@@ -100,7 +100,10 @@ class Relation(object):
         arg_name: "Theme", "Binding2", "Cause"
         arg_type: "P", or "E"
         """
-        self.data.append((trigger_wn, arg_wn, arg_name, arg_type))
+        rel_tuple = (trigger_wn, arg_wn, arg_name, arg_type)
+        # check duplicate
+        if rel_tuple not in self.data:
+            self.data.append(rel_tuple)
     
     def get_tp_triger(self):
         """
