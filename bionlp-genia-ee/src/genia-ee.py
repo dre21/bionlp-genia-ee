@@ -18,6 +18,7 @@ def learn_dev_train(src, dir_name):
     learning.learn_tp(docs, grid_search = True)        
     learning.learn_tt(docs, grid_search = True)
     learning.learn_tc(docs, grid_search = True)
+    learning.learn_t2(docs, grid_search = True)
 
 def predict_test(src, dir_name):
     dict_type = 'mix'
@@ -36,6 +37,7 @@ def learn_train(src, dir_name):
     learning.learn_tp(docs, grid_search = True)        
     learning.learn_tt(docs, grid_search = True)
     learning.learn_tc(docs, grid_search = True)
+    learning.learn_t2(docs, grid_search = True)
 
 def predict_dev(src, dir_name):
     dict_type = 'train'
@@ -63,6 +65,13 @@ def predict_dev(src, dir_name):
     print "Trigger-Argument-Cause prediction"
     print_matrix(Ytest, Ypred, [1])
     
+    # validation score for t2
+    validation.set_prediction_docs(docs, is_test = False)
+    Ypred,Ytest,_ = validation.predict_t2(grid_search = True)
+    print "Trigger-Theme1-Theme2 prediction"
+    print_matrix(Ytest, Ypred, [1])
+    
+    
     """ ----- make a prediction for dev corpus  ----- """
     prediction = Prediction(src, dir_name, dict_type)    
     prediction.predict(docs)
@@ -81,8 +90,8 @@ def print_matrix(Ytest, Ypred, labels = None):
 if __name__ == '__main__':
     
     source = "E:/corpus/bionlp2011/project_data"
-    dir_name_eval = "test-model-010"    
-    dir_name_final = "model-010"
+    dir_name_eval = "test-model-011"    
+    dir_name_final = "model-011"
     
     # evaluation
     learn_train(source, dir_name_eval)
