@@ -25,7 +25,7 @@ class SVMTest(object):
         self.dict_type = "train"
 
     
-    def learn(self, tp = True, tt = True, tc = True):
+    def learn(self, tp = True, tt = True, tc = True, t2 = True):
         
         learning_docs = 'train'
         
@@ -43,6 +43,9 @@ class SVMTest(object):
             
         if tc:
             learning.learn_tc(learning_docs, grid_search = True)
+            
+        if t2:
+            learning.learn_t2(learning_docs, grid_search = True)
             
     
     def check_tp(self):
@@ -87,6 +90,20 @@ class SVMTest(object):
         print "\n\n====================================================================================="
         print "Cause prediction"
         self.print_matrix(Ytest, Ypred, [1])
+        
+    def check_t2(self):
+               
+        valid_docs = 'dev'
+                
+        # validation
+        validation = Prediction(self.src, self.dir_name, self.dict_type)
+        validation.set_prediction_docs(valid_docs, is_test = False)
+        Ypred,Ytest,_ = validation.predict_t2(grid_search = True)
+        
+        # print result
+        print "\n\n====================================================================================="
+        print "Theme2 prediction"
+        self.print_matrix(Ytest, Ypred, [1])
     
     def delete_dir(self, folder):
         if not os.path.exists(folder): return
@@ -110,7 +127,17 @@ if __name__ == "__main__":
     
     source = "E:/corpus/bionlp2011/project_data"
     test = SVMTest(source)
-    test.learn()
-    test.check_tp()
-    test.check_tt()
-    test.check_tc()
+    tp = False
+    tt = False
+    tc = False
+    t2 = True
+    
+    test.learn(tp , tt, tc, t2)
+    if tp:
+        test.check_tp()
+    if tt:
+        test.check_tt()
+    if tc:
+        test.check_tc()
+    if t2:
+        test.check_t2()
