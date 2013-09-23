@@ -240,6 +240,51 @@ class FeatureExtraction(object):
         
         return feature_data
     
+
+    def extract_t2(self, o_doc):
+        """
+        extract feature for binding theme-theme2 relation
+        trigger type is only binding
+        """
+        feature_data = []
+        
+        for i in range(0, len(o_doc.sen)):            
+            # get sentence
+            o_sen = o_doc.sen[i]          
+                                                
+            # trigger candidates are trigger with binding event
+            tc_list = list(o_sen.trigger_candidate)
+            for wn in o_sen.trigger_candidate:
+                if o_sen.words[wn]["type"] != 'Binding':                    
+                    tc_list.remove(wn)
+                    
+            # get arguments for all binding event
+            ac_list = o_sen.rel.get_theme(tc_list)
+            
+            for tc in tc_list:
+                for ac1 in ac_list:
+                    for ac2 in ac_list:
+                        
+                        if ac1 == ac2: continue
+                        
+                        feature = self.get_feature_t2(o_sen, tc, ac1, ac2)                    
+                        info = {'doc':o_doc.doc_id, 'sen':i, 't':tc, 'a1':ac1, 'a2':ac2}
+                        
+                        label = 0
+                        if not o_doc.is_test:
+                            label = self.get_t2_label(o_sen, tc, ac1, ac2)
+                            # statistical info
+                            if label == 0:
+                                self.sample_neg += 1
+                            else:
+                                self.sample_pos += 1     
+                        
+                        # filter feature                    
+                        if not self.filter_feature(feature):
+                            feature_data.append([info,label,feature])
+                          
+        return feature_data      
+    
     def get_feature_tp(self, o_sen, trig_wn, arg_wn):
         
         feature = {}
@@ -286,6 +331,24 @@ class FeatureExtraction(object):
         
         return feature
         
+    def get_feature_t2(self, o_sen, trig_wn, theme1_wn, theme2_wn):
+        """
+        get feature for binding trigger-theme1-theme2 relation
+        input are trigger, theme1, and theme2 word number
+        """
+        feature = {}
+        
+        # add sentence feature
+        self.SF.extract_feature_t2(o_sen, trig_wn, theme1_wn, theme2_wn)
+        feature.update(self.SF.feature)
+        
+        # add dependency feature
+        self.DF.extract_feature_t2(o_sen, trig_wn, theme1_wn, theme2_wn)
+        feature.update(self.DF.feature)
+        
+        return feature
+        
+        
     def get_tp_label(self, o_sen, trig_wn, arg_wn):
         """
         Label trigger-argument relation with trigger event if there is a relation
@@ -331,13 +394,25 @@ class FeatureExtraction(object):
         
         return label
         
+    def get_t2_label(self, o_sen, trig_wn, arg1_wn, arg2_wn):
+        """
+        binary label whether there is relation for trigger-theme1-theme2
+        """ 
+        label = 0
+        
+        cond1 = o_sen.rel.check_relation(trig_wn, arg1_wn, "Theme", "P")
+        cond2 = o_sen.rel.check_relation(trig_wn, arg2_wn, "Theme2", "P")
+        if cond1 and cond2:
+            label = 1
+            
+        return label
     
 if __name__ == "__main__":
     
     
     
     source = "E:/corpus/bionlp2011/project_data"
-    doc_id = "PMC-2222968-04-Results-03"
+    doc_id = "PMC-1920263-13-RESULTS-05"
     #doc_id = "PMID-9351352"
     
     WD = WordDictionary(source)    
@@ -352,8 +427,8 @@ if __name__ == "__main__":
     o_doc = builder.build_doc_from_raw(doc, is_test=False)
     
     FE = FeatureExtraction(source, WD, TD)
-    feature = FE.extract_tt(o_doc)
+    feature = FE.extract_t2(o_doc)
     for f in feature[0:50]:
         print f[0]
         print f[2]
-
+    

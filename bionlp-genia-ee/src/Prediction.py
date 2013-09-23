@@ -103,9 +103,10 @@ class Prediction(object):
         'tp' => trigger-protein relation
         'tt' => trigger-trigger relation to predict regulation event with trigger argument  
         'tc' => trigger-theme-cause relation to predict regulation event with theme and cause (binary)
+        't2' => trigger-theme1-theme2 relation to predict theme2 in binding (binary)
         """
-        if step not in ['tt','tp','tc']:        
-            raise ValueError("only support step for tt, tp, and tc")
+        if step not in ['tt','tp','tc','t2']:
+            raise ValueError("only support step for tt, tp, tc and t2")
         
         X = []
         Y = []
@@ -126,6 +127,8 @@ class Prediction(object):
                 samples = self.extraction.extract_tt(o_doc)
             elif step == 'tc':
                 samples = self.extraction.extract_tc(o_doc)
+            elif step == 't2':
+                samples = self.extraction.extract_t2(o_doc)
             
             for sample in samples:
                 X.append(sample[2])
@@ -171,7 +174,12 @@ class Prediction(object):
             if target == 1:
                 info = list_info[i]
                 doc_id = info["doc"]
-                self.docs[doc_id].update_relation(rel_type, info['sen'], info['t'], info['c'])
+                
+                if rel_type == 'cause':
+                    arg = info['c']
+                else:
+                    arg = info['a2']
+                self.docs[doc_id].update_relation(rel_type, info['sen'], info['t'], arg)
 
     
     def get_docid_list(self, docid_list_fname):
@@ -240,7 +248,19 @@ class Prediction(object):
         svm.load()
         
         return svm.predict(X), Y, info
+    
+    def predict_t2(self, grid_search = True):
+        if self.docs == {}:
+            raise ValueError("docs have not been created. call set_prediction_docs first!")
+
+        # get features and target
+        X, Y, info = self.get_feature('t2')
         
+        # init svm classifier
+        svm = SVM(self._model_path, "trig-theme1-2", "linear", grid_search = grid_search, class_weight = 'auto')
+        svm.load()
+        
+        return svm.predict(X), Y, info
         
     def predict(self, docid_list_fname):
         
@@ -259,6 +279,10 @@ class Prediction(object):
         # predict trigger-theme-cause relation
         Ypred, _, info = self.predict_tc(grid_search = True)
         self.update_doc_relation('cause', info, Ypred)
+        
+        # predict theme2 relation
+        Ypred, _, info = self.predict_t2(grid_search = True)
+        self.update_doc_relation('theme2', info, Ypred)
         
         # write a2
         self.write_result()

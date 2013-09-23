@@ -101,6 +101,18 @@ class Sentence(object):
         # update relation
         self.rel.add_relation(trig_wn, cause_wn, 'Cause', arg_type)       
         
+    def update_theme2(self, trig_wn, theme2_wn):
+        # sanity check, whether word numbers are in range
+        if trig_wn >= self.nwords or theme2_wn >= self.nwords:
+            raise ValueError("Word number out of range")
+        
+        # delete entry on relation list, this entry must be on the relation list
+        rel_tuple = (trig_wn,theme2_wn,'Theme','P')
+        self.rel.data.remove(rel_tuple)
+        
+        # add theme2 entry
+        self.rel.add_relation(trig_wn, theme2_wn, 'Theme2', 'P')
+        
     def test(self):
         
         print "start offset:", self.start_offset

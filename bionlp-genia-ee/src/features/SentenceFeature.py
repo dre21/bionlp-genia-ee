@@ -25,49 +25,49 @@ class SentenceFeature(Feature):
         self.wdict = WDict
         self.tdict = TDict
         
-    def _extract_common_feature(self, o_sen, trig_wn, arg_wn):
+    def _extract_common_feature(self, o_sen, trig_wn, arg_wn, prefix = ''):
        
         nword = o_sen.nwords        
         
         ''' ------ position ------ '''
         # trigger first or last in sen
         if trig_wn == 0:
-            self.add("tfirst", True)
+            self.add(prefix+"tfirst", True)
         if trig_wn == nword:
-            self.add("tlast", True)
+            self.add(prefix+"tlast", True)
             
         # arg first or last in sen
         if arg_wn == 0:
-            self.add("afirst", True)
+            self.add(prefix+"afirst", True)
         if arg_wn == nword:
-            self.add("alast", True)
+            self.add(prefix+"alast", True)
             
         # argument before trigger
         if arg_wn < trig_wn:
-            self.add("a_bef_t", True)
+            self.add(prefix+"a_bef_t", True)
             
         # word distance trigger to argument
-        self.add("dis_ta", trig_wn - arg_wn)
+        self.add(prefix+"dis_ta", trig_wn - arg_wn)
         
         
         ''' ------ word feature ------ '''
         # extract word feature for trigger
-        self.extract_word_feature(o_sen.words[trig_wn], "t")
+        self.extract_word_feature(o_sen.words[trig_wn], prefix+"t")
         
         # extract word feature for argument
-        self.extract_word_feature(o_sen.words[arg_wn], "a")
+        self.extract_word_feature(o_sen.words[arg_wn], prefix+"a")
         
         # extract word feature for words around trigger candidate
         if trig_wn - 1 >= 0:
-            self.extract_word_feature(o_sen.words[trig_wn-1], "tw-1")
+            self.extract_word_feature(o_sen.words[trig_wn-1], prefix+"tw-1")
         if trig_wn + 1 < nword:
-            self.extract_word_feature(o_sen.words[trig_wn+1], "tw+1")
+            self.extract_word_feature(o_sen.words[trig_wn+1], prefix+"tw+1")
             
         # extract word feature for words around protein
         if arg_wn - 1 >= 0:
-            self.extract_word_feature(o_sen.words[arg_wn-1], "pw-1")
+            self.extract_word_feature(o_sen.words[arg_wn-1], prefix+"pw-1")
         if arg_wn + 1 < nword:
-            self.extract_word_feature(o_sen.words[arg_wn+1], "pw+1")
+            self.extract_word_feature(o_sen.words[arg_wn+1], prefix+"pw+1")
         
     
     def in_between(self, i, trig_wn, arg_wn):
@@ -171,6 +171,28 @@ class SentenceFeature(Feature):
         
         # word distance trigger to cause
         self.add("dis_tc", trig_wn - cause_wn)
+        
+    def extract_feature_t2(self, o_sen, trig_wn, theme1_wn, theme2_wn):
+        """
+        extract sentence feature for trigger-theme1-theme2 relation
+        """
+        # reset feature
+        self.feature = {}
+        
+        # extract common feature trigger-theme1
+        self._extract_common_feature(o_sen, trig_wn, theme1_wn, prefix='t1_')
+        
+        # extract common feature trigger-theme2
+        self._extract_common_feature(o_sen, trig_wn, theme2_wn, prefix='t2_')
+        
+        # position of theme1 relative to trigger, is it left of trigger?
+        self.add('t1_l', theme1_wn < trig_wn)
+        # position of theme2 relative to trigger, is it left of trigger?
+        self.add('t2_l', theme2_wn < trig_wn)
+        
+        # distance between themes
+        self.add('dis_t-t',abs(theme2_wn - theme1_wn))
+        
         
         
     

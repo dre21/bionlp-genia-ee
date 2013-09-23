@@ -24,45 +24,45 @@ class DependencyFeature(Feature):
             string += s + '-'
         return string.rstrip('-') 
                     
-    def _extract_common_feature(self, o_sen, trig_wn, arg_wn):
+    def _extract_common_feature(self, o_sen, trig_wn, arg_wn, prefix = ''):
                 
         o_dep = o_sen.dep
         
         # length from trigger to argument
         upath = o_dep.get_shortest_path(trig_wn, arg_wn, "undirected")
-        self.add("word_dist", len(upath)-1)
+        self.add(prefix+"word_dist", len(upath)-1)
         
         # edges name from trigger to argument
         edges = o_dep.get_edges_name(upath)
-        self.add(self.list_to_string(edges), True) 
+        self.add(prefix+self.list_to_string(edges), True) 
         
         # direct path from trigger to prot
         dpath = o_dep.get_shortest_path(trig_wn, arg_wn)
         if dpath != []:
-            self.add("direct", True)
+            self.add(prefix+"direct", True)
             
         # extract word feature for parent of trigger
         parent = o_dep.get_parent(trig_wn)
         if parent > 0:
-            self.extract_word_feature(o_sen.words[parent], "t_parent")
+            self.extract_word_feature(o_sen.words[parent], prefix+"t_parent")
             
         # extract word feature for parent of argument
         parent = o_dep.get_parent(arg_wn)
         if parent > 0:
-            self.extract_word_feature(o_sen.words[parent], "a_parent")
+            self.extract_word_feature(o_sen.words[parent], prefix+"a_parent")
         
         
         # extract word feature for child of trigger
         children = o_dep.get_child(trig_wn)
         if children != []:
             for child in children:
-                self.extract_word_feature(o_sen.words[child], "t_child")
+                self.extract_word_feature(o_sen.words[child], prefix+"t_child")
                 
         # extract word feature for child of argument
         children = o_dep.get_child(arg_wn)
         if children != []:
             for child in children:
-                self.extract_word_feature(o_sen.words[child], "a_child")
+                self.extract_word_feature(o_sen.words[child], prefix+"a_child")
                 
     def extract_feature_tp(self, o_sen, trig_wn, arg_wn):
         """
@@ -133,11 +133,31 @@ class DependencyFeature(Feature):
             self.add("path_ca", True)
         
         
-     
-    
+    def extract_feature_t2(self, o_sen, trig_wn, theme1_wn, theme2_wn):
+        """
+        extract dependency feature for trigger-theme1-theme2 relation
+        """
+        # reset feature
+        self.feature = {}
+         
+        # extract common feature trigger-theme1
+        self._extract_common_feature(o_sen, trig_wn, theme1_wn, prefix='t1_')
+        
+        # extract common feature trigger-theme2
+        self._extract_common_feature(o_sen, trig_wn, theme2_wn, prefix='t2_')
         
         
-    
+        o_dep = o_sen.dep
+        
+        # average length from trigger to theme1-theme2
+        # use key "word_dist" to be worked with filter
+        upath1 = o_dep.get_shortest_path(trig_wn, theme1_wn, "undirected")
+        upath2 = o_dep.get_shortest_path(trig_wn, theme1_wn, "undirected")
+        avg = (len(upath1) + len(upath2) - 2) * 1.0 / 2
+        self.add("word_dist", avg)
+        
+        
+        
     
     
     
