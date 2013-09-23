@@ -203,6 +203,8 @@ class GeniaA2Writer(object):
                                                 
                 # process theme2
                 theme2_id = e.get('theme2','')
+                if theme2_id != '':
+                    theme2_id = mapping_offset[theme2_id]
                     
                 # process cause                
                 cause_type = e.get('cause-type','')
