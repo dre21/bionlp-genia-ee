@@ -101,7 +101,7 @@ class SentenceAnalyzer(object):
         calculate the probability score for trigger candidate
         """
         retval = 0.0
-        string = word["string"]
+        string = word["stem"]
         w = self.wdict.count(string)
         if w != 0:
             retval = self.tdict.count(string) * 1.0 / w
