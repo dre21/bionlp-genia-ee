@@ -47,7 +47,7 @@ class Document(object):
         if rel_type == 'cause':
             self.sen[sen_num].update_cause(trig_wn, arg_wn)
         elif rel_type == 'theme2':
-            pass
+            self.sen[sen_num].update_theme2(trig_wn, arg_wn)
         else:
             raise ValueError("")        
                     
