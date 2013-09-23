@@ -143,22 +143,11 @@ class SentenceFeature(Feature):
         # reset feature
         self.feature = {}
         
-        # theme before trigger
-        if theme_wn < trig_wn:
-            self.add("a_bef_t", True)
-            
-        # cause before trigger
-        if cause_wn < trig_wn:
-            self.add("c_bef_t", True)
+        # extract common feature for trigger-theme
+        self._extract_common_feature(o_sen, trig_wn, theme_wn, prefix='th_')
         
-        # extract word feature for trigger
-        self.extract_word_feature(o_sen.words[trig_wn], "t")
-        
-        # extract word feature for theme
-        self.extract_word_feature(o_sen.words[theme_wn], "a")
-        
-        # extract word feature for cause
-        self.extract_word_feature(o_sen.words[cause_wn], "c")
+        # extract common feature for trigger-cause
+        self._extract_common_feature(o_sen, trig_wn, cause_wn, prefix='ca_')                      
         
         # type of theme
         self.add("a_type", o_sen.words[theme_wn]["type"])
@@ -166,11 +155,9 @@ class SentenceFeature(Feature):
         # type of cause
         self.add("c_type", o_sen.words[cause_wn]["type"])
         
-        # word distance trigger to theme
-        self.add("dis_ta", trig_wn - theme_wn)
+        # type of trigger
+        self.add("t_type", o_sen.words[trig_wn]["type"])
         
-        # word distance trigger to cause
-        self.add("dis_tc", trig_wn - cause_wn)
         
     def extract_feature_t2(self, o_sen, trig_wn, theme1_wn, theme2_wn):
         """

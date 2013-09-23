@@ -102,35 +102,48 @@ class DependencyFeature(Feature):
         o_dep = o_sen.dep
         
         
-        # dependency distance trigger to theme
-        upath = o_dep.get_shortest_path(trig_wn, theme_wn, "undirected")
-        self.add("dis_ta", len(upath)-1)
+        # extract common feature trigger-theme
+        self._extract_common_feature(o_sen, trig_wn, theme_wn, prefix='t_')
         
-        upath = o_dep.get_shortest_path(trig_wn, cause_wn, "undirected")
-        # dependency distance trigger to cause
-        # use key 'word_dist' to be processed by filter
-        self.add("word_dist", len(upath)-1)
-        
-        
-        # path from trigger to theme
-        dpath = o_dep.get_shortest_path(trig_wn, theme_wn)
-        if dpath != []:
-            self.add("path_ta", True)
-        
-        # path from trigger to cause    
-        dpath = o_dep.get_shortest_path(trig_wn, cause_wn)
-        if dpath != []:
-            self.add("path_tc", True)
-            
-        # path from theme to cause    
+        # extract common feature trigger-cause
+        self._extract_common_feature(o_sen, trig_wn, cause_wn, prefix='c_')
+                
+        # average length from trigger to theme and cause
+        # use key "word_dist" to be worked with filter
+        upath1 = o_dep.get_shortest_path(trig_wn, theme_wn, "undirected")
+        upath2 = o_dep.get_shortest_path(trig_wn, cause_wn, "undirected")
+        avg = (len(upath1) + len(upath2) - 2) * 1.0 / 2
+        self.add("word_dist", avg)
+                                            
+        # cause theme distance
+        upath = o_dep.get_shortest_path(theme_wn, cause_wn, "undirected")
+        self.add('tc_dist', len(upath)-1)
+                                                            
+        # direct path from theme to cause    
         dpath = o_dep.get_shortest_path(theme_wn, cause_wn)
         if dpath != []:
             self.add("path_ac", True)
             
-        # path from cause to theme    
+        # direct path from cause to theme    
         dpath = o_dep.get_shortest_path(cause_wn, theme_wn)
         if dpath != []:
             self.add("path_ca", True)
+        
+        
+        # number of trigger candidate between theme and cause
+        tc = o_sen.trigger_candidate
+        n_tc = 0 
+        for t in upath[1:-1]:
+            if t in tc: n_tc+=1
+        self.add('n_tc', n_tc)
+        
+        # number of protein between theme and cause
+        prots = o_sen.protein
+        n_prot = 0
+        for p in upath[1:-1]:
+            if p in prots: n_prot+=1
+        self.add('n_pr', n_prot)
+        
         
         
     def extract_feature_t2(self, o_sen, trig_wn, theme1_wn, theme2_wn):
