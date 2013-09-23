@@ -35,6 +35,7 @@ def learn_train(src, dir_name):
     
     learning.learn_tp(docs, grid_search = True)        
     learning.learn_tt(docs, grid_search = True)
+    learning.learn_tc(docs, grid_search = True)
 
 def predict_dev(src, dir_name):
     dict_type = 'train'
