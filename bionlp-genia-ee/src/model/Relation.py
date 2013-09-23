@@ -126,7 +126,7 @@ class Relation(object):
             trigger_wn = [trigger_wn]
         
         for rel in self.data:
-            if rel[0] in trigger_wn and rel[2] == 'Theme':
+            if rel[0] in trigger_wn and rel[2][0:5] == 'Theme':
                 arg1.append(rel[1])
                 
         return arg1
