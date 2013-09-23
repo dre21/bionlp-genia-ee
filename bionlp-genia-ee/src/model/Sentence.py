@@ -46,6 +46,7 @@ class Sentence(object):
         self.dep = None
         
         # chunk
+        self.chunk = None
         
         # tree
         

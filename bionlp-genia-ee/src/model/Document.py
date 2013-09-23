@@ -10,6 +10,7 @@ from model.Dictionary import TriggerDictionary, WordDictionary
 from model.SentenceAnalyzer import SentenceAnalyzer 
 from model.Dependency import Dependency
 from model.Relation import Relation
+from model.Chunk import Chunk
 
 class Document(object):
     """
@@ -127,7 +128,7 @@ class DocumentBuilder(object):
             o_sen.dep = Dependency(doc["dep"][i])
                   
             # add chunk to sentence
-            # TODO: add chunk to sentence
+            #o_sen.chunk = Chunk(doc['chunk'][i])
             
             # add tree to sentence
             # TODO: add tree to sentence
