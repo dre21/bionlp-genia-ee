@@ -137,4 +137,13 @@ class Relation(object):
             if tuple([trigger_wn, arg_wn, arg_name, arg_type]) == rel:
                 return True
         return retval
+    
+    def delete_relation(self, trigger_wn, arg_wn, arg_name = "Theme", arg_type = "P"):
+                
+        if self.check_relation(trigger_wn, arg_wn, arg_name, arg_type):
+            rel_tuple = (trigger_wn, arg_wn, arg_name, arg_type)
+            self.data.remove(rel_tuple)
+            return True
         
+        return False
+    

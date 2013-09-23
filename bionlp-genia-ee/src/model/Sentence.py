@@ -106,9 +106,8 @@ class Sentence(object):
         if trig_wn >= self.nwords or theme2_wn >= self.nwords:
             raise ValueError("Word number out of range")
         
-        # delete entry on relation list, this entry must be on the relation list
-        rel_tuple = (trig_wn,theme2_wn,'Theme','P')
-        self.rel.data.remove(rel_tuple)
+        # delete entry on relation list        
+        self.rel.delete_relation(trig_wn, theme2_wn, 'Theme', 'P')
         
         # add theme2 entry
         self.rel.add_relation(trig_wn, theme2_wn, 'Theme2', 'P')
