@@ -317,6 +317,10 @@ class FeatureExtraction(object):
         self.DF.extract_feature_tt(o_sen, trig_wn, arg_wn)
         feature.update(self.DF.feature)
         
+        # add chunk feature
+        self.CF.extract_feature_tt(o_sen, trig_wn, arg_wn)
+        feature.update(self.CF.feature)
+        
         return feature
         
     def get_feature_tac(self, o_sen, trig_wn, theme_wn, cause_wn):

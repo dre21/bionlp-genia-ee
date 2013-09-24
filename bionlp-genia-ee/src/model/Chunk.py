@@ -63,3 +63,10 @@ class Chunk(object):
         """
         return self.chunk_type[self.chunk_map[wn]]
     
+    def get_word_number(self, chunk_number):
+        word_num = []
+        for wrd, chk in self.chunk_map.iteritems():
+            if chunk_number == chk:
+                word_num.append(wrd)
+        return word_num
+    
