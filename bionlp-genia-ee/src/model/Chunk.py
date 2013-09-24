@@ -19,7 +19,7 @@ class Chunk(object):
         
         
         # word number - chunk number mapping
-        self._chunk_map = {}
+        self.chunk_map = {}
                 
         # list of chunck type
         self.chunk_type = []
@@ -34,13 +34,25 @@ class Chunk(object):
             self.chunk_type.append(c['type'])
             
             for _ in c['txt'].split(' '):
-                self._chunk_map[word_num] = chunk_num
+                self.chunk_map[word_num] = chunk_num
                 word_num+=1
             chunk_num+=1
             
         # checking
-        if len(self._chunk_map) != self.n_word:
+        if len(self.chunk_map) != self.n_word:
             raise ValueError("Number of word are not the same!")
                 
-                
-            
+    def same_chunk(self, wn1, wn2):
+        """
+        check whether both word number are in the same chunk
+        """
+        if self.chunk_map[wn1] == self.chunk_map[wn2]:
+            return True
+        else:
+            return False   
+        
+    def distance(self, wn1, wn2):
+        """
+        return distance in number of chunk between word number 1 and 2
+        """
+        return abs(self.chunk_map[wn1] - self.chunk_map[wn2])

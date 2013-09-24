@@ -128,7 +128,7 @@ class DocumentBuilder(object):
             o_sen.dep = Dependency(doc["dep"][i])
                   
             # add chunk to sentence
-            #o_sen.chunk = Chunk(doc['chunk'][i])
+            o_sen.chunk = Chunk(doc['chunk'][i])
             
             # add tree to sentence
             # TODO: add tree to sentence

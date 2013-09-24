@@ -75,9 +75,11 @@ class DocumentBuilderTest(object):
             # dependency
             print "dependency"
             print o_sen.dep.graph
-            print o_sen.dep.pair
-            
+            print o_sen.dep.pair            
             # chunk
+            print "chunk"
+            print o_sen.chunk.chunk_map
+            print o_sen.chunk.chunk_type
             
             # tree
             
