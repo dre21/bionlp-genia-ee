@@ -165,7 +165,7 @@ class DependencyFeature(Feature):
         # average length from trigger to theme1-theme2
         # use key "word_dist" to be worked with filter
         upath1 = o_dep.get_shortest_path(trig_wn, theme1_wn, "undirected")
-        upath2 = o_dep.get_shortest_path(trig_wn, theme1_wn, "undirected")
+        upath2 = o_dep.get_shortest_path(trig_wn, theme2_wn, "undirected")
         avg = (len(upath1) + len(upath2) - 2) * 1.0 / 2
         self.add("word_dist", avg)
         

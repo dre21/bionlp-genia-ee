@@ -248,6 +248,11 @@ class FeatureExtraction(object):
         """
         feature_data = []
         
+        # store pair of theme1-theme2 that have been executed
+        # to prevent duplicate extraction
+        # ex trigger-arg1-arg2  8-7-6 is equal to 8-6-7, only execute once
+        pair = []
+        
         for i in range(0, len(o_doc.sen)):            
             # get sentence
             o_sen = o_doc.sen[i]          
@@ -264,9 +269,14 @@ class FeatureExtraction(object):
             for tc in tc_list:
                 for ac1 in ac_list:
                     for ac2 in ac_list:
-                        
+
                         if ac1 == ac2: continue
-                        
+                        # binding relation trigger-theme must be exist
+                        if not o_sen.rel.check_pair(tc, ac1): continue                        
+                        if str(tc)+'-'+str(ac2)+'-'+str(ac1) in pair: continue
+                        # flip position                        
+                        pair.append(str(tc)+'-'+str(ac1)+'-'+str(ac2))
+                                                
                         feature = self.get_feature_t2(o_sen, tc, ac1, ac2)                    
                         info = {'doc':o_doc.doc_id, 'sen':i, 't':tc, 'a1':ac1, 'a2':ac2}
                         
@@ -280,7 +290,7 @@ class FeatureExtraction(object):
                                 self.sample_pos += 1     
                         
                         # filter feature                    
-                        if not self.filter_feature(feature):
+                        if not self.filter_feature(feature):                        
                             feature_data.append([info,label,feature])
                           
         return feature_data      
@@ -402,7 +412,9 @@ class FeatureExtraction(object):
         
         cond1 = o_sen.rel.check_relation(trig_wn, arg1_wn, "Theme", "P")
         cond2 = o_sen.rel.check_relation(trig_wn, arg2_wn, "Theme2", "P")
-        if cond1 and cond2:
+        cond3 = o_sen.rel.check_relation(trig_wn, arg1_wn, "Theme2", "P")
+        cond4 = o_sen.rel.check_relation(trig_wn, arg2_wn, "Theme", "P")
+        if (cond1 and cond2) or (cond3 and cond4):
             label = 1
             
         return label
