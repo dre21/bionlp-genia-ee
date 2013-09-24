@@ -125,21 +125,25 @@ class GeniaA2Writer(object):
             #print trig_id, n_evt
             event_cnt[trig_id] = n_evt
         
+        '''
         print '\nevent_arg1_pair'
         for k,v in event_arg1_pair.iteritems():
             print k,v
         print '\nevent_arg2_pair'
         for k,v in event_arg2_pair.iteritems():
             print k,v
-        
+        '''
+            
         # build event dict
         events = {}
         for trig_id, trig_type in sorted(event_name.iteritems()):
+            '''
             print '\nTrigID - TrigType'
             print trig_id, trig_type
+            '''
             events[trig_id] = []
             for arg1 in event_arg1_pair[trig_id]:    
-                print 'arg1:',arg1
+                '''print 'arg1:',arg1'''
                 # if there is no second argument      
                 if event_arg2_pair[trig_id] == []:
                     
@@ -189,7 +193,7 @@ class GeniaA2Writer(object):
                 val = 'E' + str(event_num)
                 event_num_map[key] = val 
                 event_num += 1
-
+        '''
         print '\nEvents'
         for k,v in sorted(events.iteritems()):
             print k,v
@@ -197,7 +201,7 @@ class GeniaA2Writer(object):
         print '\nEvent_num_map'
         for k,v in sorted(event_num_map.iteritems()):
             print k,v
-        
+        '''
                 
         # construct final event list
         event_list = []
