@@ -138,6 +138,15 @@ class Relation(object):
                 return True
         return retval
     
+    def check_pair(self, trigger_wn, arg_wn):
+        retval = False
+        for rel in self.data:
+            cond1 = trigger_wn + arg_wn == rel[0] + rel[1]
+            cond2 = abs(trigger_wn - arg_wn) == abs(rel[0] - rel[1])
+            if cond1 and cond2: retval = True
+        return retval
+    
+    
     def delete_relation(self, trigger_wn, arg_wn, arg_name = "Theme", arg_type = "P"):
                 
         if self.check_relation(trigger_wn, arg_wn, arg_name, arg_type):
