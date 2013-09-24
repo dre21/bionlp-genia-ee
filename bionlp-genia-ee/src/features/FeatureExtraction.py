@@ -7,6 +7,7 @@ Created on Sep 4, 2013
 import json, os
 from features.DependencyFeature import DependencyFeature
 from features.SentenceFeature import SentenceFeature
+from features.ChunkFeature import ChunkFeature
 from model.Dictionary import WordDictionary, TriggerDictionary
 from model.Document import DocumentBuilder
 
@@ -55,9 +56,10 @@ class FeatureExtraction(object):
         """
         self.src = source
         
-                
+        # feature extraction
         self.DF = DependencyFeature("dep")
         self.SF = SentenceFeature("sen", word_dict, trigger_dict)
+        self.CF = ChunkFeature('chk')
         
         # statistic
         self.sample_pos = 0
@@ -296,6 +298,10 @@ class FeatureExtraction(object):
         # add dependency feature
         self.DF.extract_feature_tp(o_sen, trig_wn, arg_wn)
         feature.update(self.DF.feature)
+        
+        # add chunk feature
+        self.CF.extract_feature_tp(o_sen, trig_wn, arg_wn)
+        feature.update(self.CF.feature)
         
         return feature
     

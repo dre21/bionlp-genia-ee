@@ -51,8 +51,15 @@ class Chunk(object):
         else:
             return False   
         
-    def distance(self, wn1, wn2):
+    def distance(self, wn1, wn2):    
         """
         return distance in number of chunk between word number 1 and 2
         """
         return abs(self.chunk_map[wn1] - self.chunk_map[wn2])
+    
+    def get_type(self, wn):
+        """
+        return chunk type of given word number
+        """
+        return self.chunk_type[self.chunk_map[wn]]
+    
