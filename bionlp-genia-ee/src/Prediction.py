@@ -262,7 +262,7 @@ class Prediction(object):
         
         return svm.predict(X), Y, info
         
-    def predict(self, docid_list_fname):
+    def predict(self, docid_list_fname, write_result = True):
         
         # create document object for prediction
         self.set_prediction_docs(docid_list_fname)
@@ -285,7 +285,8 @@ class Prediction(object):
         self.update_doc_relation('theme2', info, Ypred)
         
         # write a2
-        self.write_result()
+        if write_result:
+            self.write_result()
         
     def write_result(self):
         print "now writing", len(self.docs), "docs result to", self._out_path

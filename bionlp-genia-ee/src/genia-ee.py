@@ -90,8 +90,8 @@ def print_matrix(Ytest, Ypred, labels = None):
 if __name__ == '__main__':
     
     source = "E:/corpus/bionlp2011/project_data"
-    dir_name_eval = "test-model-012"    
-    dir_name_final = "model-012"
+    dir_name_eval = "test-model-015"    
+    dir_name_final = "model-015"
     
     # evaluation
     learn_train(source, dir_name_eval)
