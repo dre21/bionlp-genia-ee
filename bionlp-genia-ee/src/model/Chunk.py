@@ -24,6 +24,9 @@ class Chunk(object):
         # list of chunck type
         self.chunk_type = []
         
+        # dict of word number that belongs to prep chunk
+        self.prep_chunk = {}
+        
         self._process_chunk_data(chunk_data['data'])
         
     def _process_chunk_data(self, chunks):
@@ -33,7 +36,12 @@ class Chunk(object):
             # append chunk type
             self.chunk_type.append(c['type'])
             
-            for _ in c['txt'].split(' '):
+            word_list = c['txt'].split(' ')
+            
+            if c['type'] == 'PP':                
+                self.prep_chunk[chunk_num] = word_num                
+            
+            for _ in word_list:
                 self.chunk_map[word_num] = chunk_num
                 word_num+=1
             chunk_num+=1

@@ -348,6 +348,10 @@ class FeatureExtraction(object):
         self.DF.extract_feature_tac(o_sen, trig_wn, theme_wn, cause_wn)
         feature.update(self.DF.feature)
         
+        # add chunk feature
+        self.CF.extract_feature_tac(o_sen, trig_wn, theme_wn, cause_wn)
+        feature.update(self.CF.feature)
+        
         
         return feature
         
@@ -365,6 +369,10 @@ class FeatureExtraction(object):
         # add dependency feature
         self.DF.extract_feature_t2(o_sen, trig_wn, theme1_wn, theme2_wn)
         feature.update(self.DF.feature)
+        
+        # add chunk feature
+        self.CF.extract_feature_t2(o_sen, trig_wn, theme1_wn, theme2_wn)
+        feature.update(self.CF.feature)
         
         return feature
         
