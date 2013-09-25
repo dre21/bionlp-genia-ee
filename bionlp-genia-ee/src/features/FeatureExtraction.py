@@ -84,7 +84,7 @@ class FeatureExtraction(object):
         retval = False
         
         # filter dependency len between trigger-arg
-        if feature['dep_word_dist'] > self.FF_MAX_DEP_DIST:
+        if feature.get('dep_dist',0) > self.FF_MAX_DEP_DIST:
             retval = True
                 
         elif feature.get('chk_dist',0) > self.FF_MAX_CHK_DIST:
