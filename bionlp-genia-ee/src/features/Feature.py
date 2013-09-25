@@ -35,9 +35,9 @@ class Feature(object):
         self.add(prefix + '_stem_'+ stem, True)
         
         # string after pruning '-' and '/'
-        string = 'PRO' if  word["type"] == "Protein" else word['string']
-        string = re.sub('\-|\/','',string)
-        self.add(prefix + '_str_'+ stem, True)
+        #string = 'PRO' if  word["type"] == "Protein" else word['string']
+        #string = re.sub('\-|\/','',string)
+        #self.add(prefix + '_str_'+ stem, True)
                 
         # trigger probability score
         self.add(prefix + '_tscore', word['score'])
