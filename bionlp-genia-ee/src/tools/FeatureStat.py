@@ -24,6 +24,15 @@ builder = DocumentBuilder(source, WD, TD)
 edge_cnt = Counter()
 len_cnt = Counter()
 
+# counter for chunk
+cdist_cnt = Counter()
+nprep_cnt = Counter()
+
+# file name
+dep_fname = "dep_stat.csv" 
+chk_fname = "chk_stat.csv" 
+
+
 def get_doc_list(cdir):
     with open(os.path.join(source,cdir+'_doc_ids.json'),'r') as f:
         doc_ids = json.loads(f.read())
@@ -45,8 +54,8 @@ def list_to_string(string_list):
         string += s + '-'
     return string.rstrip('-')   
 
-def extract_doc(o_doc):
-            
+def extract_doc(o_doc, dependency = False, chunk = False):
+                
     for i in range(0, len(o_doc.sen)):            
         
         o_sen = o_doc.sen[i]
@@ -62,49 +71,100 @@ def extract_doc(o_doc):
                 
                 trig_type = o_sen.words[tc]['type']
                 arg_type = o_sen.words[ac]['type']
-                
+                                
                 """ Dependency """
-                o_dep = o_sen.dep       
-                # length from trigger to argument
-                upath = o_dep.get_shortest_path(tc, ac, "undirected")
-                # edge name                       
-                edges = list_to_string(o_dep.get_edges_name(upath))                        
-                # direct path from trigger to prot                
-                dpath = o_dep.get_shortest_path(tc, ac)
-                direct = 'T' if dpath != [] else 'F'
-                str_len = str(len(upath)-1)
+                if dependency:
+                    o_dep = o_sen.dep       
+                    # length from trigger to argument
+                    upath = o_dep.get_shortest_path(tc, ac, "undirected")
+                    # edge name                       
+                    edges = list_to_string(o_dep.get_edges_name(upath))                        
+                    # direct path from trigger to prot                
+                    dpath = o_dep.get_shortest_path(tc, ac)
+                    direct = 'T' if dpath != [] else 'F'
+                    str_len = str(len(upath)-1)
+                    
+                    write_tsv(dep_fname, [o_doc.doc_id, str(i), str(tc), str(ac), trig_type, arg_type, rel_type, edges, str_len, direct])
+                    
+                    edge_cnt[edges] += 1
+                    len_cnt[str_len] += 1
+                    #print i, tc, ac, trig_type, arg_type, rel_type, len(upath)-1, edges, direct
                 
-                #write_csv("dep_stat.csv", [o_doc.doc_id, str(i), str(tc), str(ac), trig_type, arg_type, rel_type, edges, str_len, direct])
                 
-                edge_cnt[edges] += 1
-                len_cnt[str_len] += 1
-                #print i, tc, ac, trig_type, arg_type, rel_type, len(upath)-1, edges, direct
+                """ Chunk """
+                if chunk:
+                    o_chunk = o_sen.chunk
+                    
+                    # length from trigger to argument
+                    clen = o_chunk.distance(tc, ac)
+                    
+                    # chunk type for trigger and protein in the same chunk
+                    chk_type = ''
+                    if clen == 0:
+                        chk_type = o_chunk.get_type(tc)
+                    
+                    # preposition
+                    trig_chk_num = o_chunk.chunk_map[tc]
+                    arg_chk_num = o_chunk.chunk_map[ac]
+                    preps = ''
+                    n_prep = 0
+                    for chk_num in range(trig_chk_num+1, arg_chk_num):
+                        prep = o_chunk.prep_chunk.get(chk_num,'')
+                        if prep != '':
+                            preps += prep + ','
+                            n_prep += 1
+                    preps = preps.rstrip(',')
+                    
+                    # write data
+                    write_tsv(chk_fname, [o_doc.doc_id, str(i), str(tc), str(ac), trig_type, arg_type, rel_type, str(clen), chk_type, preps, str(n_prep)])
+                    
+                    # statistic
+                    cdist_cnt[clen] += 1
+                    nprep_cnt[n_prep] += 1
+                    
+                    
 
-def write_csv(fname, list_string):
+def write_tsv(fname, list_string):
     with open(os.path.join(source,'stat',fname),'a') as f:
-        f.write(','.join(list_string) + '\n')
+        f.write('\t'.join(list_string) + '\n')
 
-
-if __name__ == '__main__':
-    
-    dep_fname = "dep_stat.csv"
-    
-    # delete previous stat
-    dep_path = os.path.join(source,'stat',dep_fname)
+def delete_stat(fname):
+    dep_path = os.path.join(source,'stat',fname)
     if os.path.exists(dep_path):
         os.unlink(dep_path)
+        
+if __name__ == '__main__':
+        
+        
+    dependency = False
+    chunk = True
+    
+    # delete existing stat
+    if dependency:
+        delete_stat(dep_fname)        
+    if chunk:
+        delete_stat(chk_fname)
     
     doc_ids = get_doc_list('mix')
     for d in doc_ids:
         print 'extracting',d 
-        extract_doc(build_doc(d))
-        
-    print "Edge Counter"
-    for e in edge_cnt.most_common(80):
-        print e
-        
-    print "\n\nLen Counter"
-    for e in len_cnt.most_common(20):
-        print e
-        
+        extract_doc(build_doc(d), dependency, chunk)
+    
+    if dependency:
+        print "Edge Counter"
+        for e in edge_cnt.most_common(80):
+            print e
+            
+        print "\n\nLen Counter"
+        for e in len_cnt.most_common(20):
+            print e
+            
+    if chunk:
+        print "Chunk distance Counter"
+        for e in cdist_cnt.most_common(30):
+            print e
+            
+        print "\n\nNumber Preposition Counter"
+        for e in nprep_cnt.most_common(20):
+            print e
         
