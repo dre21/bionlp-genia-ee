@@ -39,7 +39,7 @@ class Chunk(object):
             word_list = c['txt'].split(' ')
             
             if c['type'] == 'PP':                
-                self.prep_chunk[chunk_num] = word_num                
+                self.prep_chunk[chunk_num] = c['txt']                
             
             for _ in word_list:
                 self.chunk_map[word_num] = chunk_num
