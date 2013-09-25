@@ -3,6 +3,7 @@ Created on Sep 6, 2013
 
 @author: Andresta
 """
+import re
 
 class Feature(object):
     """
@@ -31,6 +32,11 @@ class Feature(object):
                 
         # word stem
         stem = 'PRO' if  word["type"] == "Protein" else word['stem']                    
+        self.add(prefix + '_stem_'+ stem, True)
+        
+        # string after pruning '-' and '/'
+        string = 'PRO' if  word["type"] == "Protein" else word['string']
+        string = re.sub('\-|\/','',string)
         self.add(prefix + '_str_'+ stem, True)
                 
         # trigger probability score

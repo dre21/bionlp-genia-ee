@@ -52,6 +52,8 @@ class FeatureExtraction(object):
     
     FF_MAX_CHK_DIST = 10
     
+    FF_MAX_WORD_DIST = 15
+    
 
     def __init__(self, source, word_dict, trigger_dict):
         """
@@ -88,6 +90,9 @@ class FeatureExtraction(object):
             retval = True
                 
         elif feature.get('chk_dist',0) > self.FF_MAX_CHK_DIST:
+            retval = True
+            
+        elif feature.get('sen_dist',0) > self.FF_MAX_WORD_DIST:
             retval = True
         
         return retval  

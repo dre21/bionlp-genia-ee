@@ -47,7 +47,7 @@ class SentenceFeature(Feature):
             self.add(prefix+"a_bef_t", True)
             
         # word distance trigger to argument
-        self.add(prefix+"dis_ta", trig_wn - arg_wn)
+        self.add(prefix+"dist", trig_wn - arg_wn)
         
         
         ''' ------ word feature ------ '''
@@ -158,6 +158,12 @@ class SentenceFeature(Feature):
         # type of trigger
         self.add("t_type", o_sen.words[trig_wn]["type"])
         
+        # position of theme and cause
+        self.add('c_pos_bef', cause_wn < theme_wn)
+        
+        # distance between theme and cause
+        self.add('dis_ac',abs(theme_wn - cause_wn))
+        
         
     def extract_feature_t2(self, o_sen, trig_wn, theme1_wn, theme2_wn):
         """
@@ -172,10 +178,11 @@ class SentenceFeature(Feature):
         # extract common feature trigger-theme2
         self._extract_common_feature(o_sen, trig_wn, theme2_wn, prefix='t2_')
         
+        # redundant
         # position of theme1 relative to trigger, is it left of trigger?
-        self.add('t1_l', theme1_wn < trig_wn)
+        #self.add('t1_l', theme1_wn < trig_wn)
         # position of theme2 relative to trigger, is it left of trigger?
-        self.add('t2_l', theme2_wn < trig_wn)
+        #self.add('t2_l', theme2_wn < trig_wn)
         
         # distance between themes
         self.add('dis_t-t',abs(theme2_wn - theme1_wn))
