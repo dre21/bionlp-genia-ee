@@ -48,7 +48,10 @@ class FeatureExtraction(object):
     REGULATION_EVENT = ['Regulation','Positive_regulation','Negative_regulation']
 
     # filter out feature criteria
-    FF_MAX_DEP_LEN = 5
+    FF_MAX_DEP_DIST = 5
+    
+    FF_MAX_CHK_DIST = 10
+    
 
     def __init__(self, source, word_dict, trigger_dict):
         """
@@ -76,6 +79,18 @@ class FeatureExtraction(object):
         with open(path + "/" + doc_id + self.FEATURE_SUFIX_EXT, 'w') as f:
             for line in data:                
                 f.write(json.dumps(line) + '\n')
+      
+    def filter_feature(self, feature):
+        retval = False
+        
+        # filter dependency len between trigger-arg
+        if feature['dep_word_dist'] > self.FF_MAX_DEP_DIST:
+            retval = True
+                
+        elif feature.get('chk_dist',0) > self.FF_MAX_CHK_DIST:
+            retval = True
+        
+        return retval  
         
     def extract_tp(self, o_doc):
         """
@@ -161,19 +176,8 @@ class FeatureExtraction(object):
                     if not self.filter_feature(feature):
                         feature_data.append([info,label,feature])
         
-        return feature_data
-    
-    def filter_feature(self, feature):
-        retval = False
-        
-        # filter dependency len between trigger-arg
-        if feature['dep_word_dist'] > self.FF_MAX_DEP_LEN:
-            retval = True
-        
-        return retval    
-        
-    
-        
+        return feature_data                  
+                
     def extract_tc(self, o_doc):
         """
         Extract feature for trigger-cause relation
@@ -242,7 +246,6 @@ class FeatureExtraction(object):
         
         return feature_data
     
-
     def extract_t2(self, o_doc):
         """
         extract feature for binding theme-theme2 relation
@@ -296,6 +299,7 @@ class FeatureExtraction(object):
                             feature_data.append([info,label,feature])
                           
         return feature_data      
+    
     
     def get_feature_tp(self, o_sen, trig_wn, arg_wn):
         
