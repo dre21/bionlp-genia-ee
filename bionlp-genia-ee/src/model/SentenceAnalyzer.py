@@ -94,6 +94,10 @@ class SentenceAnalyzer(object):
         elif len(word["string"]) < 4:
             remove = True                   
             
+        # Rule 3, filter by score
+        elif word['score'] < 0.1:
+            remove = True
+            
         return remove
         
     def get_score(self, word):
