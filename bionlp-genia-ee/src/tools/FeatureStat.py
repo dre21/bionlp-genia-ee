@@ -13,10 +13,10 @@ from collections import Counter
 source = "E:/corpus/bionlp2011/project_data"
 
 WD = WordDictionary(source)    
-WD.load("train")
+WD.load("mix")
        
 TD = TriggerDictionary(source)
-TD.load("train")
+TD.load("mix")
 
 builder = DocumentBuilder(source, WD, TD)
 
@@ -28,9 +28,15 @@ len_cnt = Counter()
 cdist_cnt = Counter()
 nprep_cnt = Counter()
 
+# counter for sentence
+wdist_cnt = Counter()
+wpos_cnt = Counter()
+
+
 # file name
 dep_fname = "dep_stat.csv" 
-chk_fname = "chk_stat.csv" 
+chk_fname = "chk_stat.csv"
+sen_fname = "sen_stat.csv"  
 
 
 def get_doc_list(cdir):
@@ -54,7 +60,7 @@ def list_to_string(string_list):
         string += s + '-'
     return string.rstrip('-')   
 
-def extract_doc(o_doc, dependency = False, chunk = False):
+def extract_doc(o_doc, dependency = False, chunk = False, sen = False):
                 
     for i in range(0, len(o_doc.sen)):            
         
@@ -122,6 +128,27 @@ def extract_doc(o_doc, dependency = False, chunk = False):
                     cdist_cnt[clen] += 1
                     nprep_cnt[n_prep] += 1
                     
+                """ Sentence """
+                if sen:
+                    
+                    tword = o_sen.words[tc]
+                    
+                    # distance between trigger and argument
+                    dist = abs(tc - ac)
+                    
+                    # pos tag
+                    pos = tword['pos_tag']
+                    
+                    # score
+                    score = tword['score']
+                    
+                    # write data
+                    #write_tsv(sen_fname, [o_doc.doc_id, str(i), str(tc), str(ac), tword['string'], trig_type, arg_type, rel_type, str(dist), pos, str(score)])
+                    
+                    # statistic
+                    wdist_cnt[dist] += 1
+                    wpos_cnt[pos] += 1
+                    
                     
 
 def write_tsv(fname, list_string):
@@ -137,18 +164,21 @@ if __name__ == '__main__':
         
         
     dependency = False
-    chunk = True
+    chunk = False
+    sen = True
     
     # delete existing stat
     if dependency:
         delete_stat(dep_fname)        
     if chunk:
         delete_stat(chk_fname)
+    if sen:
+        delete_stat(sen_fname)
     
     doc_ids = get_doc_list('mix')
     for d in doc_ids:
         print 'extracting',d 
-        extract_doc(build_doc(d), dependency, chunk)
+        extract_doc(build_doc(d), dependency, chunk, sen)
     
     if dependency:
         print "Edge Counter"
@@ -168,3 +198,13 @@ if __name__ == '__main__':
         for e in nprep_cnt.most_common(20):
             print e
         
+    if sen:
+        print "Word distance Counter"
+        for e in wdist_cnt.most_common(30):
+            print e
+            
+        print "\n\nPos tag Counter"
+        for e in wpos_cnt.most_common(20):
+            print e
+        
+            
