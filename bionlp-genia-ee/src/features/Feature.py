@@ -31,7 +31,7 @@ class Feature(object):
         self.add(prefix + "_pos_"+ word["pos_tag"], True)
                 
         # word stem
-        stem = 'PRO' if  word["type"] == "Protein" else word['stem']                    
+        stem = 'PRO' if  word["type"] == "Protein" else word['string']                    
         self.add(prefix + '_stem_'+ stem, True)
         
         # string after pruning '-' and '/'
