@@ -87,14 +87,16 @@ class SVM(object):
         
         
         if "linear" in kernels:
-            param = {'C': C}
-            params.append(param)
+            param1 = {'C': C}
+            if self._svm_class != 'linear':
+                param1['kernel'] = ['linear']
+            params.append(param1)
     
         # only for non linear svm
         if self._svm_class != "linear":
             if "rbf" in kernels:
-                param = {'kernel' : ['rbf'], 'C': C, 'gamma': gamma}
-                params.append(param)
+                param2 = {'kernel' : ['rbf'], 'C': C, 'gamma': gamma}
+                params.append(param2)
         
         if params == []:
             raise ValueError("no param has been set. change kernels and svm class accordingly to generate correct param")
