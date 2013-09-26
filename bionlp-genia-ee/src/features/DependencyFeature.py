@@ -32,6 +32,13 @@ class DependencyFeature(Feature):
         upath = o_dep.get_shortest_path(trig_wn, arg_wn, "undirected")
         self.add(prefix+"dist", len(upath)-1)
         
+        # number of trigger candidate between trigger and theme
+        tc = o_sen.trigger_candidate
+        n_tc = 0 
+        for t in upath[1:-1]:
+            if t in tc: n_tc+=1
+        self.add('n_tc', n_tc)
+        
         # edges name from trigger to argument
         edges = o_dep.get_edges_name(upath)
         self.add(prefix+self.list_to_string(edges), True) 
@@ -82,15 +89,6 @@ class DependencyFeature(Feature):
         
         self._extract_common_feature(o_sen, trig_wn, arg_wn)
         
-        o_dep = o_sen.dep
-        
-        # number of trigger candidate between trig_wn and arg_wn
-        upath = o_dep.get_shortest_path(trig_wn, arg_wn, "undirected")
-        tc = o_sen.trigger_candidate
-        n_tc = 0 
-        for t in upath[1:-1]:
-            if t in tc: n_tc+=1
-        self.add('n_tc', n_tc)
     
     def extract_feature_tac(self, o_sen, trig_wn, theme_wn, cause_wn):
         """
@@ -109,32 +107,27 @@ class DependencyFeature(Feature):
         self._extract_common_feature(o_sen, trig_wn, cause_wn, prefix='c_')
                 
         # average length from trigger to theme and cause        
-        #upath1 = o_dep.get_shortest_path(trig_wn, theme_wn, "undirected")
-        #upath2 = o_dep.get_shortest_path(trig_wn, cause_wn, "undirected")
-        #avg = (len(upath1) + len(upath2) - 2) * 1.0 / 2
-        #self.add("word_dist", avg)
+        upath1 = o_dep.get_shortest_path(trig_wn, theme_wn, "undirected")
+        upath2 = o_dep.get_shortest_path(trig_wn, cause_wn, "undirected")
+        avg = (len(upath1) + len(upath2) - 2) * 1.0 / 2
+        self.add("avg_dist", avg)
                                             
         # cause theme distance
         upath = o_dep.get_shortest_path(theme_wn, cause_wn, "undirected")
         self.add('tc_dist', len(upath)-1)
                                                             
         # direct path from theme to cause    
-        #dpath = o_dep.get_shortest_path(theme_wn, cause_wn)
-        #if dpath != []:
-        #    self.add("path_ac", True)
+        dpath = o_dep.get_shortest_path(theme_wn, cause_wn)
+        if dpath != []:
+            self.add("path_ac", True)
             
         # direct path from cause to theme    
-        #dpath = o_dep.get_shortest_path(cause_wn, theme_wn)
-        #if dpath != []:
-        #    self.add("path_ca", True)
+        dpath = o_dep.get_shortest_path(cause_wn, theme_wn)
+        if dpath != []:
+            self.add("path_ca", True)
         
         
-        # number of trigger candidate between theme and cause
-        tc = o_sen.trigger_candidate
-        n_tc = 0 
-        for t in upath[1:-1]:
-            if t in tc: n_tc+=1
-        self.add('n_tc', n_tc)
+        
         
         # number of protein between theme and cause
         #prots = o_sen.protein
@@ -163,10 +156,10 @@ class DependencyFeature(Feature):
         
         # average length from trigger to theme1-theme2
         # use key "word_dist" to be worked with filter
-        #upath1 = o_dep.get_shortest_path(trig_wn, theme1_wn, "undirected")
-        #upath2 = o_dep.get_shortest_path(trig_wn, theme2_wn, "undirected")
-        #avg = (len(upath1) + len(upath2) - 2) * 1.0 / 2
-        #self.add("word_dist", avg)
+        upath1 = o_dep.get_shortest_path(trig_wn, theme1_wn, "undirected")
+        upath2 = o_dep.get_shortest_path(trig_wn, theme2_wn, "undirected")
+        avg = (len(upath1) + len(upath2) - 2) * 1.0 / 2
+        self.add("avg_dist", avg)
         
         # cause distance between theme
         upath = o_dep.get_shortest_path(theme1_wn, theme2_wn, "undirected")
