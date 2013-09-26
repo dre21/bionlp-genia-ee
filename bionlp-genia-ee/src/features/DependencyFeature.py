@@ -117,14 +117,14 @@ class DependencyFeature(Feature):
         self.add('tc_dist', len(upath)-1)
                                                             
         # direct path from theme to cause    
-        #dpath = o_dep.get_shortest_path(theme_wn, cause_wn)
-        #if dpath != []:
-        #    self.add("path_ac", True)
+        dpath = o_dep.get_shortest_path(theme_wn, cause_wn)
+        if dpath != []:
+            self.add("path_ac", True)
             
         # direct path from cause to theme    
-        #dpath = o_dep.get_shortest_path(cause_wn, theme_wn)
-        #if dpath != []:
-        #    self.add("path_ca", True)
+        dpath = o_dep.get_shortest_path(cause_wn, theme_wn)
+        if dpath != []:
+            self.add("path_ca", True)
         
         
         
