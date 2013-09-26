@@ -50,6 +50,9 @@ class PreprocessText(object):
             # split word
             new_txt = self.split_word(new_txt, self.SPLIT_WORD_LIST)
             
+            # replace all '/' char with space
+            new_txt = new_txt.replace('/', ' ')
+            
             # write to external file
             if len(txt) == len(new_txt):
                 self.write_text(new_txt, doc)
@@ -204,8 +207,8 @@ if __name__ == '__main__':
     
     log.basicConfig(level=log.DEBUG)
     
-    in_dir = "E:/Project/bionlp-genia-ee/data/original/dev"
-    out_dir = "E:/Project/bionlp-genia-ee/data/preprocess/dev"        
+    in_dir = "E:/corpus/bionlp2011/original/train"
+    out_dir = "E:/corpus/bionlp2011/preprocess/train"        
     
     splitter = PreprocessText(in_dir,out_dir)
     splitter.run()   
