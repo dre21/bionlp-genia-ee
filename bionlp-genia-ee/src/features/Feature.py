@@ -25,7 +25,7 @@ class Feature(object):
         self.feature[self.prefix +'_'+feat_name] = value
         
         
-    def extract_word_feature(self, word, prefix):
+    def extract_word_feature(self, word, prefix, score = True):
         
         # pos tag of word
         self.add(prefix + "_pos_"+ word["pos_tag"], True)
@@ -40,6 +40,7 @@ class Feature(object):
         #self.add(prefix + '_str_'+ stem, True)
                 
         # trigger probability score
-        self.add(prefix + '_tscore', word['score'])
+        if score:
+            self.add(prefix + '_tscore', word['score'])
             
             

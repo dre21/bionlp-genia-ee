@@ -92,8 +92,8 @@ class FeatureExtraction(object):
         elif feature.get('chk_dist',0) > self.FF_MAX_CHK_DIST:
             retval = True
             
-        elif feature.get('sen_dist',0) > self.FF_MAX_WORD_DIST:
-            retval = True
+        #elif feature.get('sen_dist',0) > self.FF_MAX_WORD_DIST:
+        #    retval = True
         
         return retval  
         
