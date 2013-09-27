@@ -31,23 +31,18 @@ class SentenceFeature(Feature):
         
         ''' ------ position ------ '''
         # trigger first or last in sen
-        if trig_wn == 0:
-            self.add(prefix+"tfirst", True)
-        if trig_wn == nword:
-            self.add(prefix+"tlast", True)
+        self.add(prefix+"tfirst", trig_wn == 0)        
+        self.add(prefix+"tlast", trig_wn == nword)
             
         # arg first or last in sen
-        if arg_wn == 0:
-            self.add(prefix+"afirst", True)
-        if arg_wn == nword:
-            self.add(prefix+"alast", True)
+        self.add(prefix+"afirst", arg_wn == 0)
+        self.add(prefix+"alast", arg_wn == nword)
             
         # argument before trigger
-        if arg_wn < trig_wn:
-            self.add(prefix+"a_bef_t", True)
+        self.add(prefix+"a_bef_t", arg_wn < trig_wn)
             
         # word distance trigger to argument
-        self.add(prefix+"dist", trig_wn - arg_wn)
+        self.add(prefix+"dist", abs(trig_wn - arg_wn))
         
         
         ''' ------ word feature ------ '''
