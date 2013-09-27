@@ -70,7 +70,7 @@ class Relation(object):
                 if e[4] != '':
                     args = self.get_equiv_protein(e[4], equiv)      
                     for arg in args:  
-                        arg_wn = entity_map.get(args, -1)
+                        arg_wn = entity_map.get(arg, -1)
                         # add relation for trigger and 2nd binding argument
                         if arg_wn >= 0:
                             self.add_relation(t_wn, arg_wn, "Theme2", "P")
