@@ -64,8 +64,8 @@ class SentenceAnalyzer(object):
             word = Sentence.words[i]
             
             # assign score
-            word["score"] = self.get_score(word)
-            
+            word["score"] = self.get_score(word['string'])
+            word['score-2'] = self.get_score(word['stem'])
             # filter word
             if not self.filter(word):
                 Sentence.trigger_candidate.append(i)
@@ -106,10 +106,10 @@ class SentenceAnalyzer(object):
         """
         retval = 0.0
         #stem = word["stem"]
-        string = word["string"]
-        w = self.wdict.count(string)
+        #string = word["string"]
+        w = self.wdict.count(word)
         if w != 0:
-            retval = self.tdict.count(string) * 1.0 / w
+            retval = self.tdict.count(word) * 1.0 / w
         return retval
         
     def update_word_type(self, Sentence, entity_list):
