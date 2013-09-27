@@ -123,7 +123,9 @@ class WordDictionary(Dictionary):
         for doc_id in doc_ids:
             sentences = self.get_sentences(doc_id)
             for sen in sentences:
-                for w in sen:
+                nwords = len(sen)
+                for i in range(0,nwords):
+                    w = sen[i]
                     string = w["string"]
                     stem = w['stem']
                     if not string.isdigit() and len(string) > 1:
@@ -131,6 +133,18 @@ class WordDictionary(Dictionary):
                         stem = stem.lower()
                         cnt[string] += 1
                         cnt[stem] += 1
+                        
+                    # adding bigram to dict
+                    if i+1 < nwords:
+                        w2 = sen[i+1]
+                        string2 = w2["string"].lower()
+                        cnt[string +' '+ string2] += 1
+                        
+                    # adding trigram to dict
+                    if i+2 < nwords:
+                        w3 = sen[i+2]
+                        string3 = w3["string"].lower()
+                        cnt[string +' '+ string2 +' '+ string3] += 1
         
         print "the dictionary contains:", len(cnt), "words"
         
@@ -150,7 +164,7 @@ class WordDictionary(Dictionary):
     def test(self, test_name):
         Stemmer = PorterStemmer()
         if test_name == "loading":
-            words = ["induction","inducted","restimulated","binding","binds","up-regulate"]            
+            words = ["induction","inducted","restimulated","binding","binds","up-regulate","mRNA expression","binding activity"]            
             self.load("dev")
             
             print "\n\n----------------------------"
@@ -239,12 +253,12 @@ class TriggerDictionary(Dictionary):
             for t in triggers.values():
                 # format of trigger
                 # ["T60", "Negative_regulation", "190", "197", "inhibit"]
-                string = t[4].lower()               
-                stem = self.Stemmer.stem(string, 0, len(string)-1)
-                # only process single word trigger      
+                string = t[4].lower()                               
+                ttype = t[1]
+                td[string][ttype] += 1
+                # only process single word trigger for steming      
                 if " " not in string:          
-                    ttype = t[1]
-                    td[string][ttype] += 1
+                    stem = self.Stemmer.stem(string, 0, len(string)-1)                    
                     td[stem][ttype] += 1
                 
                 
@@ -269,7 +283,8 @@ class TriggerDictionary(Dictionary):
                        "restimulated":"Regulation",
                        "binding":"Binding",
                        "binds":"Binding",
-                       "up-regulate":"Positive_regulation"}
+                       "mRNA expression":"Transcription",
+                       "binding activity":"Binding"}
             
             print "\n\n----------------------------"
             print "Using original string"
