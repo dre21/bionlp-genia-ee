@@ -23,7 +23,7 @@ class GeniaA2Writer(object):
     def write(self, o_doc):
         # relation 
         # (27, 35, 'Theme', 'P'), (6, 5, 'Theme', 'E')
-        print "writing:", o_doc.doc_id
+        #print "writing:", o_doc.doc_id
         
         trigger_list, mapping_offset = self.build_trigger(o_doc)
         
