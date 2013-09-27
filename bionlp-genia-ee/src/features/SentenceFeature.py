@@ -95,6 +95,9 @@ class SentenceFeature(Feature):
             if self.in_between(p, trig_wn, arg_wn):
                 n_prot += 1
         self.add('n_prot', n_prot)
+        
+        # is adjacent
+        self.add("adj", abs(trig_wn - arg_wn) == 1)
 
         # probability of trigger on each event
         self.add('score_1', self.get_score(o_sen.words[trig_wn], 'Gene_expression'))
@@ -117,6 +120,9 @@ class SentenceFeature(Feature):
         
         # extract common feature
         self._extract_common_feature(o_sen, trig_wn, arg_wn)
+        
+        # is adjacent
+        self.add("adj", abs(trig_wn - arg_wn) == 1)
         
         # argument type
         arg_type = o_sen.words[arg_wn]["type"]
