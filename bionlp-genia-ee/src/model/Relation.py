@@ -31,6 +31,8 @@ class Relation(object):
         'E1' : ['E1', 'Negative_regulation', 'T60', 'E2', '', 'T4']
         entity_map is a dictionary
         'T60' : 8
+        equiv is list of tuple
+        [('T1','T2'),('T5','T6')]
         """
         if type(entity_map) != dict:
             raise TypeError("entity_map must be a dictionary")
@@ -43,54 +45,66 @@ class Relation(object):
                 # get word number for trigger
                 t_wn = entity_map[e[2]]
                 
-                # process argument, it's mandatory                
-                arg = e[3]                
-                arg_type = "P"
-                if arg[0] == 'E':
-                    # arg 1 is trigger of other event
-                    arg = events[arg][2]
-                    arg_type = "E"
-                # get word number for argument
-                # word number may not be found in trigger entity
-                # because inter sentence relation, need co-reference to solve this
-                arg_wn = entity_map.get(arg, -1)
-                
-                # add relation for trigger and first argument
-                if arg_wn >= 0:
-                    self.add_relation(t_wn, arg_wn, "Theme", arg_type)
-                else:
-                    #print "inter-sentence relation", e
-                    self.out_scope.append(e)
+                # process argument, it's mandatory        
+                args = self.get_equiv_protein(e[3], equiv)                      
+                for arg in args:                  
+                    arg_type = "P"
+                    if arg[0] == 'E':
+                        # arg 1 is trigger of other event
+                        arg = events[arg][2]
+                        arg_type = "E"
+                    # get word number for argument
+                    # word number may not be found in trigger entity
+                    # because inter sentence relation, need co-reference to solve this
+                    arg_wn = entity_map.get(arg, -1)
                     
-                
-                # process argument 2 for binding, it's optional
-                if e[4] != '':
-                    arg_wn = entity_map.get(e[4], -1)
-                    # add relation for trigger and 2nd binding argument
+                    # add relation for trigger and first argument
                     if arg_wn >= 0:
-                        self.add_relation(t_wn, arg_wn, "Theme2", "P")
+                        self.add_relation(t_wn, arg_wn, "Theme", arg_type)
                     else:
                         #print "inter-sentence relation", e
                         self.out_scope.append(e)
+                    
+                
+                # process argument 2 for binding, it's optional                
+                if e[4] != '':
+                    args = self.get_equiv_protein(e[4], equiv)      
+                    for arg in args:  
+                        arg_wn = entity_map.get(args, -1)
+                        # add relation for trigger and 2nd binding argument
+                        if arg_wn >= 0:
+                            self.add_relation(t_wn, arg_wn, "Theme2", "P")
+                        else:
+                            #print "inter-sentence relation", e
+                            self.out_scope.append(e)
                     
                 # process argument 2 for cause, it's optional
                 if e[5] != '':
-                    arg = e[5]                
-                    arg_type = "P"
-                    if arg[0] == 'E':
-                        # arg is trigger of other event
-                        arg = events[arg][2]
-                        arg_type = "E"
-                    
-                    arg_wn = entity_map.get(arg, -1)                
-                    # add relation for trigger and cause argument
-                    if arg_wn >= 0:
-                        self.add_relation(t_wn, arg_wn, "Cause", arg_type)
-                    else:
-                        #print "inter-sentence relation", e
-                        self.out_scope.append(e)
+                    args = self.get_equiv_protein(e[5], equiv)      
+                    for arg in args:                                    
+                        arg_type = "P"
+                        if arg[0] == 'E':
+                            # arg is trigger of other event
+                            arg = events[arg][2]
+                            arg_type = "E"
+                        
+                        arg_wn = entity_map.get(arg, -1)                
+                        # add relation for trigger and cause argument
+                        if arg_wn >= 0:
+                            self.add_relation(t_wn, arg_wn, "Cause", arg_type)
+                        else:
+                            #print "inter-sentence relation", e
+                            self.out_scope.append(e)
                         
         self.data = list(set(self.data)) 
+               
+    def get_equiv_protein(self, arg, equiv_list):
+        proteins = [arg]
+        for equiv in equiv_list:
+            if arg in equiv:
+                proteins = list(equiv)
+                break
+        return proteins
                                                
     def add_relation(self, trigger_wn, arg_wn, arg_name, arg_type):
         """
