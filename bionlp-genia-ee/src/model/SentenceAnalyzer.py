@@ -49,7 +49,7 @@ class SentenceAnalyzer(object):
             self.update_word_type(o_sen, triggers)
         
         # set trigger candidate
-        self.set_candidate(o_sen)
+        self.set_candidate_multi(o_sen)
                                             
         return o_sen
             
@@ -70,7 +70,70 @@ class SentenceAnalyzer(object):
             if not self.filter(word):
                 Sentence.trigger_candidate.append(i)
             
+    def set_candidate_multi(self, Sentence):
+        """
+        Set list of word number which is marked as trigger candidate
+        and update trigger probability for each word in a sentence
+        allow multi-words trigger
+        """
+        
+        # list of used word
+        used = []
+        
+        for i in range(0,Sentence.nwords):
+            if i in used: continue
             
+            w1 = Sentence.words[i]
+            
+            # assign string
+            str1 = w1['string']
+            str2 = ''
+            str3 = ''
+            
+            # assign score
+            w1["score"] = self.get_score(str1)
+            w1['score-2'] = self.get_score(w1['stem'])
+            
+            # get bigram
+            if i+1 < Sentence.nwords:                
+                w2 = Sentence.words[i+1]
+                str2 = str1 +' '+ w2['string']
+            
+                # get trigram
+                if i+2 < Sentence.nwords:  
+                    w3 = Sentence.words[i+2]              
+                    str3 = str2 +' '+ w3['string'] 
+                    
+            
+            # procees trigger candidate
+            # check wheter to accept str3
+            if str3 != 0:
+                str3_score = self.get_score(str3)
+                cond1 = str3_score > 0.01
+                cond2 = w2['type'] != 'Protein'
+                cond3 = w3['type'] != 'Protein'                
+                if cond1 and cond2 and cond3:
+                    Sentence.trigger_candidate.append((i,i+1,i+2))
+                    used = [i+1,i+2]
+                    w1["score"] = str3_score
+                    w2["score"] = str3_score
+                    w3["score"] = str3_score
+                    continue
+            
+            if str2 != 0:
+                str2_score =  self.get_score(str2)
+                cond1 = str2_score > 0.01
+                cond2 = w2['type'] != 'Protein'
+                if cond1 and cond2:
+                    Sentence.trigger_candidate.append((i,i+1))
+                    used = [i+1]
+                    w1['score'] = str2_score
+                    w2['score'] = str2_score
+                    continue
+                
+            if not self.filter(w1):
+                Sentence.trigger_candidate.append((i))     
+        
                                             
     def filter(self, word):
         """
@@ -126,22 +189,34 @@ class SentenceAnalyzer(object):
             # skip two words trigger, currently only handle 1 word trigger
             # skip entity type, we ignore entity for task 1
             #TODO: handling multi-word trigger
-            if ' ' in e[4] and e[1] != "Protein": continue
+            #if ' ' in e[4] and e[1] != "Protein": continue
             if e[1] == "Entity": continue            
+                        
+            nword = len(e[4].split(' '))
+            if nword > 3: continue
             
             # check whether offset of protein is in this sentence
             offset =  int(e[2])                                
             i = Sentence.offset_map.get(offset,-1)            
             if i>=0: 
                 Sentence.words[i]["type"] = e[1] 
-                # add mapping
-                mapping[e[0]] = i
-                
+                                
                 if e[1] == "Protein":
-                    Sentence.protein.append(i)
+                    wn_tuple = i
+                    Sentence.protein.append(wn_tuple)
                 else:
-                    Sentence.trigger.append(i)
-        
+                    if nword == 1:
+                        wn_tuple = i                        
+                    elif nword == 2:
+                        wn_tuple = (i,i+1)
+                        Sentence.words[i+1]["type"] = e[1]
+                    elif nword == 3:
+                        wn_tuple = (i,i+1,i+2)          
+                        Sentence.words[i+2]["type"] = e[1]          
+                    Sentence.trigger.append(wn_tuple)
+                
+                mapping[e[0]] = wn_tuple 
+                
         Sentence.entity_map.update(mapping)        
                        
     def build_mapping(self, sentence):
