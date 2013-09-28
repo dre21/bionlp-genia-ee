@@ -45,6 +45,7 @@ class SentenceAnalyzer(object):
         
         # update word type with protein & trigger
         self.update_word_type(o_sen, proteins)
+        
         if triggers != []:
             self.update_word_type(o_sen, triggers)
         
@@ -107,7 +108,7 @@ class SentenceAnalyzer(object):
             
             # procees trigger candidate
             # check wheter to accept str3
-            if str3 != 0:
+            if str3 != '':
                 str3_score = self.get_score(str3)
                 cond1 = str3_score > 0.01
                 cond2 = w2['type'] != 'Protein'
@@ -120,7 +121,7 @@ class SentenceAnalyzer(object):
                     w3["score"] = str3_score
                     continue
             
-            if str2 != 0:
+            if str2 != '':
                 str2_score =  self.get_score(str2)
                 cond1 = str2_score > 0.01
                 cond2 = w2['type'] != 'Protein'
@@ -193,7 +194,7 @@ class SentenceAnalyzer(object):
             if e[1] == "Entity": continue            
                         
             nword = len(e[4].split(' '))
-            if nword > 3: continue
+            if nword > 3 and  e[1] != "Protein": continue
             
             # check whether offset of protein is in this sentence
             offset =  int(e[2])                                
@@ -212,6 +213,7 @@ class SentenceAnalyzer(object):
                         Sentence.words[i+1]["type"] = e[1]
                     elif nword == 3:
                         wn_tuple = (i,i+1,i+2)          
+                        Sentence.words[i+1]["type"] = e[1]
                         Sentence.words[i+2]["type"] = e[1]          
                     Sentence.trigger.append(wn_tuple)
                 

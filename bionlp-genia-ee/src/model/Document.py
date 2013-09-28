@@ -110,7 +110,7 @@ class DocumentBuilder(object):
         if doc["test"] == False:
             o_doc.is_test = is_test
         
-        
+         
         # process document sentence        
         for i in range(0,doc["nsen"]):
             # remove these property if document is marked as a test doc            
@@ -118,8 +118,7 @@ class DocumentBuilder(object):
                 doc["trigger"] = []
                 doc["even"] = []
                 doc["equiv"] = []
-                
-                       
+                                    
             # create sentence object
             o_sen = self.sa.analyze(doc["sen"][i], doc["protein"],doc["trigger"])      
             o_sen.number = i
@@ -136,7 +135,7 @@ class DocumentBuilder(object):
             # add relation to sentence
             o_sen.rel = Relation()
             if not o_doc.is_test:
-                o_sen.rel.build(o_sen.entity_map, doc["event"], doc["equiv"])
+                o_sen.rel.build(o_sen.entity_map, doc["event"], doc["equiv"], o_sen.dep)
             
             # add sentence object to document object
             o_doc.add_sentence(o_sen)                         

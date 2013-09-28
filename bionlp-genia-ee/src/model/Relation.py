@@ -24,7 +24,7 @@ class Relation(object):
         self.out_scope = []
         
         
-    def build(self, entity_map, events, equiv):
+    def build(self, entity_map, events, equiv, dep):
         """
         build a relation from events data
         event is a dictionary form
@@ -44,7 +44,7 @@ class Relation(object):
             if e[2] in entity_map.keys():
                 # get word number for trigger
                 t_wn = entity_map[e[2]]
-                
+                t_wn = dep.get_head(t_wn)
                 # process argument, it's mandatory        
                 args = self.get_equiv_protein(e[3], equiv)                      
                 for arg in args:                  
@@ -57,7 +57,7 @@ class Relation(object):
                     # word number may not be found in trigger entity
                     # because inter sentence relation, need co-reference to solve this
                     arg_wn = entity_map.get(arg, -1)
-                    
+                    arg_wn = dep.get_head(arg_wn)
                     # add relation for trigger and first argument
                     if arg_wn >= 0:
                         self.add_relation(t_wn, arg_wn, "Theme", arg_type)
@@ -71,6 +71,7 @@ class Relation(object):
                     args = self.get_equiv_protein(e[4], equiv)      
                     for arg in args:  
                         arg_wn = entity_map.get(arg, -1)
+                        arg_wn = dep.get_head(arg_wn)
                         # add relation for trigger and 2nd binding argument
                         if arg_wn >= 0:
                             self.add_relation(t_wn, arg_wn, "Theme2", "P")
@@ -88,7 +89,8 @@ class Relation(object):
                             arg = events[arg][2]
                             arg_type = "E"
                         
-                        arg_wn = entity_map.get(arg, -1)                
+                        arg_wn = entity_map.get(arg, -1)   
+                        arg_wn = dep.get_head(arg_wn)             
                         # add relation for trigger and cause argument
                         if arg_wn >= 0:
                             self.add_relation(t_wn, arg_wn, "Cause", arg_type)
@@ -114,6 +116,9 @@ class Relation(object):
         arg_name: "Theme", "Binding2", "Cause"
         arg_type: "P", or "E"
         """
+        if type(trigger_wn) == tuple or type(arg_wn) == tuple:
+            raise ValueError("Tuple is not supported yet")
+        
         rel_tuple = (trigger_wn, arg_wn, arg_name, arg_type)
         # check duplicate
         if rel_tuple not in self.data:

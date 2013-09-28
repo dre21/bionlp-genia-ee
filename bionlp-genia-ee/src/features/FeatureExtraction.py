@@ -110,9 +110,9 @@ class FeatureExtraction(object):
             tc_list = o_sen.trigger_candidate
             p_list = o_sen.protein
                         
-            for tc in tc_list:                               
-                for p in p_list:
-                    
+            for tc in tc_list:  
+                tc = o_sen.dep.get_head(tc)                             
+                for p in p_list:                    
                     #print tc, o_sen.words[tc]["string"], "-", p, o_sen.words[p]["string"]                                        
                     feature = self.get_feature_tp(o_sen, tc, p)                    
                     info = {"doc":o_doc.doc_id, "sen":i, "t":tc, "a":p}
@@ -155,6 +155,7 @@ class FeatureExtraction(object):
             
           
             for tc in tc_list:      
+                tc = o_sen.dep.get_head(tc)
                 # argument is a trigger which has relation with protein as argument1                         
                 for ac in ac_list:
                     # no relation to it-self, there are few case but small   
@@ -198,8 +199,9 @@ class FeatureExtraction(object):
             o_sen = o_doc.sen[i]            
             
             # trigger candidates are trigger with regulation event
-            tc_list = list(o_sen.trigger_candidate)
+            tc_list = [o_sen.dep.get_head(tc) for tc in list(o_sen.trigger_candidate)]
             for wn in o_sen.trigger_candidate:
+                wn = o_sen.dep.get_head(wn)
                 if o_sen.words[wn]["type"] not in self.REGULATION_EVENT:                    
                     tc_list.remove(wn)
             
@@ -217,11 +219,14 @@ class FeatureExtraction(object):
                         
             
             # for each tc
-            for tc in tc_list:                
+            for tc in tc_list:           
+                tc = o_sen.dep.get_head(tc)     
                 # for each arg1 of tc 
                 for ac in o_sen.rel.get_theme(tc):
+                    ac = o_sen.dep.get_head(ac)
                     # for each cause candidate                                     
                     for cc in cc_list:
+                        cc = o_sen.dep.get_head(cc)
                         
                         # no relation to it-self   
                         if tc == cc: continue
@@ -268,8 +273,9 @@ class FeatureExtraction(object):
             o_sen = o_doc.sen[i]          
                                                 
             # trigger candidates are trigger with binding event
-            tc_list = list(o_sen.trigger_candidate)
+            tc_list = [o_sen.dep.get_head(tc) for tc in o_sen.trigger_candidate]
             for wn in o_sen.trigger_candidate:
+                wn = o_sen.dep.get_head(wn)
                 if o_sen.words[wn]["type"] != 'Binding':                    
                     tc_list.remove(wn)
                     
@@ -277,10 +283,11 @@ class FeatureExtraction(object):
             ac_list = o_sen.rel.get_theme(tc_list)
             
             for tc in tc_list:
+                tc = o_sen.dep.get_head(tc)
                 for ac1 in ac_list:
                     for ac2 in ac_list:
-
-                        if ac1 == ac2: continue
+                            
+                        if ac1 == ac2: continue            
                         # binding relation trigger-theme must be exist
                         if not o_sen.rel.check_pair(tc, ac1): continue                        
                         if str(tc)+'-'+str(ac2)+'-'+str(ac1) in pair: continue
@@ -451,7 +458,7 @@ if __name__ == "__main__":
     
     
     source = "E:/corpus/bionlp2011/project_data"
-    doc_id = "PMC-1920263-13-RESULTS-05"
+    doc_id = "PMID-10029589"
     #doc_id = "PMID-9351352"
     
     WD = WordDictionary(source)    
@@ -468,6 +475,6 @@ if __name__ == "__main__":
     FE = FeatureExtraction(source, WD, TD)
     feature = FE.extract_t2(o_doc)
     for f in feature[0:50]:
-        print f[0]
+        print f[0], f[1]
         print f[2]
     

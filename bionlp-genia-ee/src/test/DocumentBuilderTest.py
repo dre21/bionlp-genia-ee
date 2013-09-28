@@ -34,7 +34,7 @@ class DocumentBuilderTest(object):
         self.test3()
     
     def test1(self):
-        doc_id = "PMID-2160380"
+        doc_id = "PMC-2222968-06-Results-05"
         o_doc = self.builder.build(doc_id, is_test = False)
         
         print "Test 1: document from test corpus\n================================================="
@@ -63,9 +63,18 @@ class DocumentBuilderTest(object):
             o_sen = o_doc.sen[i]
             print "sen:", i
             print "-------------------------------"
+            j = 0
+            for w in o_sen.words:
+                print j, w['start'], w['string'], w['type'], w['score']
+                j+=1
+            print o_sen.offset_map
             # list of word number which is marked as trigger candidate
             print "trigger candidate:"
-            print o_sen.trigger_candidate            
+            print o_sen.trigger_candidate    
+            tc_head = []
+            for tc in o_sen.trigger_candidate:
+                tc_head.append(o_sen.dep.get_head(tc))
+            print tc_head
             # list of protein word number
             print "protein:"
             print o_sen.protein            
@@ -74,6 +83,7 @@ class DocumentBuilderTest(object):
             print o_sen.trigger            
             # dependency
             print "dependency"
+            print 'root',o_sen.dep.root
             print o_sen.dep.graph
             print o_sen.dep.pair            
             # chunk
@@ -92,4 +102,4 @@ class DocumentBuilderTest(object):
 if __name__ == "__main__":
     
     test = DocumentBuilderTest()
-    test.run()
+    test.test1()
