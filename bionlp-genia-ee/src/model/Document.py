@@ -121,7 +121,7 @@ class DocumentBuilder(object):
                 
                        
             # create sentence object
-            o_sen = self.sa.analyze(doc["sen"][i], doc["protein"],doc["trigger"])      
+            o_sen = self.sa.analyze(doc["sen"][i], doc["protein"],[])      
             o_sen.number = i
             
             # add dependency to sentence
@@ -137,7 +137,7 @@ class DocumentBuilder(object):
             o_sen.rel = Relation()
             if not o_doc.is_test:
                 o_sen.rel.build(o_sen.entity_map, doc["event"], doc["equiv"])
-            
+                self.sa.update_trigger_word(o_sen,doc["trigger"])
             # add sentence object to document object
             o_doc.add_sentence(o_sen)                         
                                                       

@@ -143,6 +143,40 @@ class SentenceAnalyzer(object):
                     Sentence.trigger.append(i)
         
         Sentence.entity_map.update(mapping)        
+        
+    def update_trigger_word(self, Sentence, entity_list):
+        """
+        Update word type based on protein or trigger type
+        entity list is either protein or trigger list        
+        """
+        mapping = {}
+        # update entity
+        # protein is list format 'T1' : ['T1', 'Protein', '0', '4', 'IL-4']
+        # trigger is list format 'T60' : ['T60', 'Negative_regulation', '190', '197', 'inhibit']
+        for e in entity_list.values():
+            
+            # skip two words trigger, currently only handle 1 word trigger
+            # skip entity type, we ignore entity for task 1
+            #TODO: handling multi-word trigger
+            if ' ' in e[4] and e[1] != "Protein": continue
+            if e[1] == "Entity": continue  
+            
+            nword = len(e[4].split(' '))          
+            
+            # check whether offset of protein is in this sentence
+            offset =  int(e[2])                                
+            i = Sentence.offset_map.get(offset,-1)  
+            # update i with head word in case of multi words          
+            i = Sentence.dep.get_head(tuple(range[i,i+nword]))
+            if i>=0: 
+                Sentence.words[i]["type"] = e[1] 
+                # add mapping
+                mapping[e[0]] = i
+                # append trigger                
+                Sentence.trigger.append(i)
+        
+        Sentence.entity_map.update(mapping)
+        
                        
     def build_mapping(self, sentence):
         """
