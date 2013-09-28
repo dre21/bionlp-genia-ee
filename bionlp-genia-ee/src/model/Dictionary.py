@@ -253,10 +253,13 @@ class TriggerDictionary(Dictionary):
             for t in triggers.values():
                 # format of trigger
                 # ["T60", "Negative_regulation", "190", "197", "inhibit"]
-                string = t[4].lower()                               
                 ttype = t[1]
+                # skip entity
+                if ttype == 'Entity': continue
+                
+                string = t[4].lower()                                               
                 td[string][ttype] += 1
-                # only process single word trigger for steming      
+                # if it's single word, we can add stem score      
                 if " " not in string:          
                     stem = self.Stemmer.stem(string, 0, len(string)-1)                    
                     td[stem][ttype] += 1
