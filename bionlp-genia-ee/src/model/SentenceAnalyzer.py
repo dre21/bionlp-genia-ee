@@ -80,6 +80,8 @@ class SentenceAnalyzer(object):
             
             w1 = o_sen.words[wn]
             str1 = w1['string']
+            str2 = ''
+            str3 = ''
             # get bigram
             if wn+1 < o_sen.nwords:
                 w2 = o_sen.words[wn+1]
