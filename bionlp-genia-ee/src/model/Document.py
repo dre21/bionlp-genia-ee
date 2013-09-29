@@ -135,9 +135,9 @@ class DocumentBuilder(object):
             
             # add relation to sentence
             o_sen.rel = Relation()
-            if not o_doc.is_test:
-                o_sen.rel.build(o_sen.entity_map, doc["event"], doc["equiv"])
+            if not o_doc.is_test:                
                 self.sa.update_trigger_word(o_sen,doc["trigger"])
+                o_sen.rel.build(o_sen.entity_map, doc["event"], doc["equiv"])
             # add sentence object to document object
             o_doc.add_sentence(o_sen)                         
                                                       

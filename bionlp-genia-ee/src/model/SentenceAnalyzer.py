@@ -158,7 +158,6 @@ class SentenceAnalyzer(object):
             # skip two words trigger, currently only handle 1 word trigger
             # skip entity type, we ignore entity for task 1
             #TODO: handling multi-word trigger
-            if ' ' in e[4] and e[1] != "Protein": continue
             if e[1] == "Entity": continue  
             
             nword = len(e[4].split(' '))          
@@ -166,9 +165,9 @@ class SentenceAnalyzer(object):
             # check whether offset of protein is in this sentence
             offset =  int(e[2])                                
             i = Sentence.offset_map.get(offset,-1)  
-            # update i with head word in case of multi words          
-            i = Sentence.dep.get_head(tuple(range[i,i+nword]))
+            # update i with head word in case of multi words                      
             if i>=0: 
+                i = Sentence.dep.get_head(tuple(range(i,i+nword)))
                 Sentence.words[i]["type"] = e[1] 
                 # add mapping
                 mapping[e[0]] = i
