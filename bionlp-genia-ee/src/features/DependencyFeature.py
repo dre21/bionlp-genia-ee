@@ -39,14 +39,27 @@ class DependencyFeature(Feature):
             if t in tc: n_tc+=1
         self.add('n_tc', n_tc)
         
-        # edges name from trigger to argument
-        edges = o_dep.get_edges_name(upath)
-        self.add(prefix+self.list_to_string(edges), True) 
+        # define dependency type and edges name
+        dpath_trig_arg = o_dep.get_shortest_path(trig_wn, arg_wn)
+        dpath_arg_trig = o_dep.get_shortest_path(arg_wn, trig_wn)                
+        if dpath_trig_arg != []:
+            # dependency type 1: direct path trigger-argument
+            self.add(prefix+"type1", True)
+            # edges name from trigger to argument
+            edges = o_dep.get_edges_name(dpath_trig_arg)                        
+        elif dpath_arg_trig != []:
+            # dependency type 2: direct path argument-trigger
+            self.add(prefix+"type2", True)
+            # edges name from argument to trigger
+            edges = o_dep.get_edges_name(dpath_trig_arg)
+        else:
+            # dependency type 3: no direct path between argument and trigger (only trough other word)
+            self.add(prefix+"type3", True)
+            # edges name undirect path from argument to trigger
+            edges = o_dep.get_edges_name(upath)
+            
+        self.add(prefix+self.list_to_string(edges), True)
         
-        # direct path from trigger to prot
-        dpath = o_dep.get_shortest_path(trig_wn, arg_wn)
-        if dpath != []:
-            self.add(prefix+"direct", True)
             
         # extract word feature for parent of trigger
         parent = o_dep.get_parent(trig_wn)

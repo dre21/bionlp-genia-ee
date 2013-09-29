@@ -48,7 +48,7 @@ class FeatureExtraction(object):
     REGULATION_EVENT = ['Regulation','Positive_regulation','Negative_regulation']
 
     # filter out feature criteria
-    FF_MAX_DEP_DIST = 5
+    FF_MAX_DEP_DIST = 6
     
     FF_MAX_CHK_DIST = 10
     
@@ -451,7 +451,7 @@ if __name__ == "__main__":
     
     
     source = "E:/corpus/bionlp2011/project_data"
-    doc_id = "PMC-1920263-13-RESULTS-05"
+    doc_id = "PMC-1447668-16-Materials_and_Methods-06"
     #doc_id = "PMID-9351352"
     
     WD = WordDictionary(source)    
@@ -466,8 +466,8 @@ if __name__ == "__main__":
     o_doc = builder.build_doc_from_raw(doc, is_test=False)
     
     FE = FeatureExtraction(source, WD, TD)
-    feature = FE.extract_t2(o_doc)
+    feature = FE.extract_tp(o_doc)
     for f in feature[0:50]:
-        print f[0]
+        print f[0], f[1]
         print f[2]
     
