@@ -91,8 +91,8 @@ if __name__ == '__main__':
     
     source = "E:/corpus/bionlp2011/project_data"
 
-    dir_name_eval = "test-model-030"    
-    dir_name_final = "model-030"
+    dir_name_eval = "test-model-030-fix"    
+    dir_name_final = "model-030-fix"
     
     # evaluation
     learn_train(source, dir_name_eval)

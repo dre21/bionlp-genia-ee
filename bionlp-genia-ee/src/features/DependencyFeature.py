@@ -51,7 +51,7 @@ class DependencyFeature(Feature):
             # dependency type 2: direct path argument-trigger
             self.add(prefix+"type2", True)
             # edges name from argument to trigger
-            edges = o_dep.get_edges_name(dpath_trig_arg)
+            edges = o_dep.get_edges_name(dpath_arg_trig)
         else:
             # dependency type 3: no direct path between argument and trigger (only trough other word)
             self.add(prefix+"type3", True)
