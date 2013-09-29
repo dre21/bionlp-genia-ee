@@ -83,14 +83,30 @@ def extract_doc(o_doc, dependency = False, chunk = False, sen = False):
                     o_dep = o_sen.dep       
                     # length from trigger to argument
                     upath = o_dep.get_shortest_path(tc, ac, "undirected")
-                    # edge name                       
-                    edges = list_to_string(o_dep.get_edges_name(upath))                        
-                    # direct path from trigger to prot                
-                    dpath = o_dep.get_shortest_path(tc, ac)
-                    direct = 'T' if dpath != [] else 'F'
-                    str_len = str(len(upath)-1)
+                                                   
+                    # edge name
+                    dpath_trig_arg = o_dep.get_shortest_path(tc, ac)
+                    dpath_arg_trig = o_dep.get_shortest_path(ac, tc)                
+                    if dpath_trig_arg != []:
+                        dep_type = '1'
+                        # edges name from trigger to argument
+                        edges = o_dep.get_edges_name(dpath_trig_arg)
+                        str_len = str(len(dpath_trig_arg)-1)                        
+                    elif dpath_arg_trig != []:
+                        dep_type = '2'
+                        # edges name from argument to trigger
+                        edges = o_dep.get_edges_name(dpath_arg_trig)
+                        str_len = str(len(dpath_arg_trig)-1)      
+                    else:
+                        dep_type = '3'                        
+                        # edges name undirect path from argument to trigger
+                        root = o_sen.dep.root  
+                        edges = o_dep.get_edges_name(upath)
+                        str_len = str(len(upath)-1)
                     
-                    write_tsv(dep_fname, [o_doc.doc_id, str(i), str(tc), str(ac), trig_type, arg_type, rel_type, edges, str_len, direct])
+                    edges = list_to_string(edges)
+                    
+                    write_tsv(dep_fname, [o_doc.doc_id, str(i), str(tc), str(ac), trig_type, arg_type, rel_type, edges, str_len, dep_type])
                     
                     edge_cnt[edges] += 1
                     len_cnt[str_len] += 1
@@ -163,9 +179,9 @@ def delete_stat(fname):
 if __name__ == '__main__':
         
         
-    dependency = False
+    dependency = True
     chunk = False
-    sen = True
+    sen = False
     
     # delete existing stat
     if dependency:
