@@ -273,6 +273,9 @@ class TriggerDictionary(Dictionary):
                     string = w['string']
                     stem = w['stem']
                     
+                    # skip short word
+                    if len(string) < 4: continue
+                    
                     # adding unigram text and stem to dictionary
                     td[string][ttype] += 1
                     td[stem][ttype] += 1
@@ -300,9 +303,9 @@ class TriggerDictionary(Dictionary):
     def test(self, test_name):
            
         if test_name == "loading":            
-            trigger = {"induction":"Positive_regulation",
-                       "restimulated":"Regulation",
-                       "binding":"Binding",
+            trigger = {"Negative Regulator":"Negative_regulation",
+                       "Negative":"Negative_regulation",
+                       "Regulator":"Negative_regulation",
                        "binds":"Binding",
                        "mRNA expression":"Transcription",
                        "binding activity":"Binding"}
@@ -336,7 +339,7 @@ if __name__ == "__main__":
     WD.test("loading")
            
     TD = TriggerDictionary(source)
-    #TD.build()
+    TD.build()
     TD.test("loading")
         
     
