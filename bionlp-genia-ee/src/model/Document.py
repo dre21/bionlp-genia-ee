@@ -122,10 +122,7 @@ class DocumentBuilder(object):
                        
             # create sentence object
             o_sen = self.sa.analyze(doc["sen"][i], doc["protein"])      
-            o_sen.number = i
-            
-            # set trigger candidate
-            self.sa.set_candidate(o_sen)
+            o_sen.number = i                        
             
             # add dependency to sentence
             o_sen.dep = Dependency(doc["dep"][i])
@@ -135,6 +132,9 @@ class DocumentBuilder(object):
             
             # add tree to sentence
             # TODO: add tree to sentence
+            
+            # set trigger candidate
+            self.sa.set_candidate_multi(o_sen)
             
             # add relation and trigger to sentence
             o_sen.rel = Relation()

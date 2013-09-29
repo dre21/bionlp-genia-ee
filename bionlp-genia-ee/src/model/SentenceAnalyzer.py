@@ -62,69 +62,54 @@ class SentenceAnalyzer(object):
             if not self.filter(word):
                 Sentence.trigger_candidate.append(i)
             
-    def set_candidate_multi(self, Sentence):
+    def set_candidate_multi(self, o_sen):
         """
         Set list of word number which is marked as trigger candidate
         and update trigger probability for each word in a sentence
         allow multi-words trigger
         """
+        if self.tdict == None:
+            print "SKIPPED: set_candidate_multi, no dictionary found"
+            return
         
         # list of used word
         used = []
         
-        for i in range(0,Sentence.nwords):
-            if i in used: continue
+        for wn in range(0,o_sen.nwords):
+            if wn in used: continue
             
-            w1 = Sentence.words[i]
-            
-            # assign string
+            w1 = o_sen.words[wn]
             str1 = w1['string']
-            str2 = ''
-            str3 = ''
-            
-            # assign score
-            w1["score"] = self.get_score(str1)
-            w1['score-2'] = self.get_score(w1['stem'])
-            
             # get bigram
-            if i+1 < Sentence.nwords:                
-                w2 = Sentence.words[i+1]
+            if wn+1 < o_sen.nwords:
+                w2 = o_sen.words[wn+1]
                 str2 = str1 +' '+ w2['string']
-            
                 # get trigram
-                if i+2 < Sentence.nwords:  
-                    w3 = Sentence.words[i+2]              
+                if wn+2 < o_sen.nwords:  
+                    w3 = o_sen.words[wn+2]              
                     str3 = str2 +' '+ w3['string'] 
-                    
             
-            # process trigger candidate
-            # check whether to accept str3
-            if str3 != 0:
-                str3_score = self.get_score(str3)
-                cond1 = str3_score > 0.01
-                cond2 = w2['type'] != 'Protein'
-                cond3 = w3['type'] != 'Protein'                
-                if cond1 and cond2 and cond3:
-                    Sentence.trigger_candidate.append((i,i+1,i+2))
-                    used = [i+1,i+2]
-                    w1["score"] = str3_score
-                    w2["score"] = str3_score
-                    w3["score"] = str3_score
-                    continue
+            # use maximum word sequence (trigram) if found in dictionary
+            if self.tdict.count(str3) > 0:
+                trigger_wn = range(wn,wn+3)
+                head_wn = o_sen.dep.get_head(tuple(trigger_wn))                
+            elif self.tdict.count(str2) > 0:
+                trigger_wn = range(wn,wn+2)
+                head_wn = o_sen.dep.get_head(tuple(trigger_wn))                
+            else:
+                trigger_wn = [wn]
+                head_wn = wn
             
-            if str2 != 0:
-                str2_score =  self.get_score(str2)
-                cond1 = str2_score > 0.01
-                cond2 = w2['type'] != 'Protein'
-                if cond1 and cond2:
-                    Sentence.trigger_candidate.append((i,i+1))
-                    used = [i+1]
-                    w1['score'] = str2_score
-                    w2['score'] = str2_score
-                    continue
-                
-            if not self.filter(w1):
-                Sentence.trigger_candidate.append((i))     
+            # update used wn
+            used += trigger_wn
+            
+            # assign score, for head word only
+            word = o_sen.words[head_wn]
+            word["score"] = self.get_score(word['string'])
+            word['score-2'] = self.get_score(word['stem'])
+                                        
+            if not self.filter(word):
+                o_sen.trigger_candidate.append(head_wn)     
         
                                             
     def filter(self, word):

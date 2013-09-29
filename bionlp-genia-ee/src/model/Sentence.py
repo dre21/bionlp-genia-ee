@@ -43,7 +43,7 @@ class Sentence(object):
         self.trigger = []
         
         # full trigger text
-        # key is head word number from self.trigger
+        # key is head word number of trigger
         # value is full string
         self.trigger_text = {}
         
