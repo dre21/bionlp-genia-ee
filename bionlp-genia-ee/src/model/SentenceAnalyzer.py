@@ -18,14 +18,12 @@ class SentenceAnalyzer(object):
     # list of allowed pos tag for trigger
     POS_TAG = ["NN","VBN", "JJ", "VB", "VBZ", "VBD", "VBG", "VBP", "NNS"]
 
-    def __init__(self, WDict, TDict):
+    def __init__(self, WDict = None, TDict = None):
         """
         Init SentenceAnalyzer object
-        it requires Word dictionary and Trigger dictionary
+        Word dictionary and Trigger dictionary are optional for scoring
         """
-        if not (isinstance(WDict, WordDictionary) and isinstance(TDict,TriggerDictionary)):
-            raise TypeError("Dictionary type is not match")
-                
+                        
         self.wdict = WDict
         self.tdict = TDict
     
@@ -168,11 +166,11 @@ class SentenceAnalyzer(object):
         calculate the probability score for trigger candidate
         """
         retval = 0.0
-        #stem = word["stem"]
-        #string = word["string"]
-        w = self.wdict.count(word)
-        if w != 0:
-            retval = self.tdict.count(word) * 1.0 / w
+        # calculate score if dictionaries are present
+        if self.wdict != None and self.tdict != None:
+            w = self.wdict.count(word)
+            if w != 0:
+                retval = self.tdict.count(word) * 1.0 / w
         return retval
         
     def update_word_type(self, Sentence, entity_list):

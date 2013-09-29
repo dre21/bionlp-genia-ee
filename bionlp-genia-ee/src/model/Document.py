@@ -71,10 +71,11 @@ class DocumentBuilder(object):
     CORPUS_DIR = ["dev","train","mix"]
            
     
-    def __init__(self, source, word_dict, trigger_dict):
-       
-        if not (isinstance(trigger_dict, TriggerDictionary) and isinstance(word_dict, WordDictionary)):
-            raise TypeError("Dictionaries must be a TriggerDictionary and WordDictionary")
+    def __init__(self, source, word_dict = None, trigger_dict = None):
+        if word_dict != None or trigger_dict != None:
+            # checking dictionary type if they're not none
+            if not (isinstance(trigger_dict, TriggerDictionary) and isinstance(word_dict, WordDictionary)):
+                raise TypeError("Dictionaries must be a TriggerDictionary and WordDictionary")
                 
         self.src = source
         self.td = trigger_dict
