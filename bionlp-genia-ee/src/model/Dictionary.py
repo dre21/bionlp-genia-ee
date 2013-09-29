@@ -7,6 +7,7 @@ Created on Sep 2, 2013
 import json, os
 from collections import Counter, defaultdict
 from tools.PorterStemmer import PorterStemmer
+from model.Document import DocumentBuilder
 
 class Dictionary(object):
     # this folder contain data source for all docs
@@ -133,7 +134,7 @@ class WordDictionary(Dictionary):
                         stem = stem.lower()
                         cnt[string] += 1
                         cnt[stem] += 1
-                        
+                    '''
                     # adding bigram to dict
                     if i+1 < nwords:
                         w2 = sen[i+1]
@@ -145,7 +146,8 @@ class WordDictionary(Dictionary):
                         w3 = sen[i+2]
                         string3 = w3["string"].lower()
                         cnt[string +' '+ string2 +' '+ string3] += 1
-        
+                    '''
+                        
         print "the dictionary contains:", len(cnt), "words"
         
         return dict(cnt)        
@@ -239,31 +241,47 @@ class TriggerDictionary(Dictionary):
                  
                  
     def build_dict(self, corpus_dir):
+        """
+        add trigger word to dictionary, including multi-word trigger
+        ex. 
+        triggers: "Negative Regulator", "Expression"
+        store in dict:
+        "Negative Regulator" <== bigram version 
+        "Negative" <== head of bigram
+        "Expression"  <== standard unigram
+        """
         if corpus_dir not in self.CORPUS_DIR:
             raise ValueError("wrong value. choose 'dev', 'train', or 'mix'")
         
-        # get list of document
-        doc_ids = self.get_doc_ids(corpus_dir)
+        # init document builder
+        doc_builder = DocumentBuilder(self.src)
         
         # init default dict with counter
         td = defaultdict(Counter)
         
+        # get list of document
+        doc_ids = self.get_doc_ids(corpus_dir)                
+        
         for doc_id in doc_ids:
-            triggers = self.get_triggers(doc_id)
-            for t in triggers.values():
-                # format of trigger
-                # ["T60", "Negative_regulation", "190", "197", "inhibit"]
-                ttype = t[1]
-                # skip entity
-                if ttype == 'Entity': continue
-                
-                string = t[4].lower()                                               
-                td[string][ttype] += 1
-                # if it's single word, we can add stem score      
-                if " " not in string:          
-                    stem = self.Stemmer.stem(string, 0, len(string)-1)                    
+            o_doc = doc_builder.build(doc_id)
+            
+            for i in range(0, len(o_doc.sen)):
+                o_sen = o_doc.sen[i]
+                for twn in o_sen.trigger:
+                    w = o_sen.words[twn]
+                    ttype = w['type']
+                    string = w['string']
+                    stem = w['stem']
+                    
+                    # adding unigram text and stem to dictionary
+                    td[string][ttype] += 1
                     td[stem][ttype] += 1
-                
+                    
+                    # check full text
+                    # add to dict if it's multi-word
+                    full_string = o_sen.trigger_text[twn]
+                    if ' ' in full_string:
+                        td[full_string][ttype] += 1                                    
                 
         print "the dictionary contains:", len(td), "trigger words"
         
@@ -291,7 +309,7 @@ class TriggerDictionary(Dictionary):
             
             print "\n\n----------------------------"
             print "Using original string"
-            self.load("dev")
+            self.load("mix")
             for t,ttype in trigger.iteritems():
                 cnt1 = self.count(t)
                 cnt2 = self.count(t, ttype)
@@ -314,11 +332,11 @@ if __name__ == "__main__":
     source = "E:/corpus/bionlp2011/project_data/"
     
     WD = WordDictionary(source)    
-    WD.build()
+    #WD.build()
     WD.test("loading")
            
     TD = TriggerDictionary(source)
-    TD.build()
+    #TD.build()
     TD.test("loading")
         
     

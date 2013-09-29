@@ -5,8 +5,6 @@ Created on Sep 4, 2013
 """
 
 import json
-from datetime import datetime as dt
-from model.Dictionary import TriggerDictionary, WordDictionary
 from model.SentenceAnalyzer import SentenceAnalyzer 
 from model.Dependency import Dependency
 from model.Relation import Relation
@@ -72,11 +70,12 @@ class DocumentBuilder(object):
            
     
     def __init__(self, source, word_dict = None, trigger_dict = None):
+        '''
         if word_dict != None or trigger_dict != None:
             # checking dictionary type if they're not none
             if not (isinstance(trigger_dict, TriggerDictionary) and isinstance(word_dict, WordDictionary)):
                 raise TypeError("Dictionaries must be a TriggerDictionary and WordDictionary")
-                
+        '''     
         self.src = source
         self.td = trigger_dict
         self.wd = word_dict
@@ -126,7 +125,7 @@ class DocumentBuilder(object):
             o_sen.number = i
             
             # set trigger candidate
-            #self.sa.set_candidate_multi(o_sen)
+            self.sa.set_candidate(o_sen)
             
             # add dependency to sentence
             o_sen.dep = Dependency(doc["dep"][i])

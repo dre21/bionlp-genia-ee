@@ -4,7 +4,6 @@ Created on Sep 3, 2013
 @author: Andresta
 """
 
-from model.Dictionary import WordDictionary, TriggerDictionary
 from model.Sentence import Sentence
 
 class SentenceAnalyzer(object):
@@ -98,8 +97,8 @@ class SentenceAnalyzer(object):
                     str3 = str2 +' '+ w3['string'] 
                     
             
-            # procees trigger candidate
-            # check wheter to accept str3
+            # process trigger candidate
+            # check whether to accept str3
             if str3 != 0:
                 str3_score = self.get_score(str3)
                 cond1 = str3_score > 0.01
