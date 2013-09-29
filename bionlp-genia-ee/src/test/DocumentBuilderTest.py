@@ -17,16 +17,15 @@ class DocumentBuilderTest(object):
         '''
         Constructor
         '''
-        source = "E:/corpus/bionlp2011/project_data/"
-        doc_id = "PMID-2160380"
+        self.source = "E:/corpus/bionlp2011/project_data/"        
         
-        WD = WordDictionary(source)    
+        WD = WordDictionary(self.source)    
         WD.load("train")
                
-        TD = TriggerDictionary(source)
+        TD = TriggerDictionary(self.source)
         TD.load("train")
         
-        self.builder = DocumentBuilder(source, WD, TD)
+        self.builder = DocumentBuilder(self.source, WD, TD)
         
     def run(self):
         self.test1()
@@ -53,7 +52,15 @@ class DocumentBuilderTest(object):
         
         print "\n\nTest 3: document from dev corpus\n================================================="
         self.print_info(o_doc)
-    
+        
+    def test4(self):
+        # document builder without dictionary
+        doc_id = 'PMC-2222968-06-Results-05'
+        
+        o_doc = self.builder.build(doc_id)
+        print "\n\nTest 4: document with multi word trigger\n================================================="
+        self.print_info(o_doc)
+        
     def print_info(self, o_doc):
         print "doc id:", o_doc.doc_id
         print "is test:", o_doc.is_test
@@ -63,6 +70,12 @@ class DocumentBuilderTest(object):
             o_sen = o_doc.sen[i]
             print "sen:", i
             print "-------------------------------"
+            for j in range(0,o_sen.nwords):
+                w = o_sen.words[j]
+                print j, w['start'], w['string'], w['type'], w['score']
+            # entity maps
+            print "entity maps"
+            print o_sen.entity_map
             # list of word number which is marked as trigger candidate
             print "trigger candidate:"
             print o_sen.trigger_candidate            
@@ -71,9 +84,11 @@ class DocumentBuilderTest(object):
             print o_sen.protein            
             # list of trigger word number
             print "trigger:"
-            print o_sen.trigger            
+            print o_sen.trigger      
+            print o_sen.trigger_text      
             # dependency
             print "dependency"
+            print o_sen.dep.root
             print o_sen.dep.graph
             print o_sen.dep.pair            
             # chunk
@@ -92,4 +107,4 @@ class DocumentBuilderTest(object):
 if __name__ == "__main__":
     
     test = DocumentBuilderTest()
-    test.run()
+    test.test4()
