@@ -122,8 +122,11 @@ class DocumentBuilder(object):
                 
                        
             # create sentence object
-            o_sen = self.sa.analyze(doc["sen"][i], doc["protein"],doc["trigger"])      
+            o_sen = self.sa.analyze(doc["sen"][i], doc["protein"])      
             o_sen.number = i
+            
+            # set trigger candidate
+            #self.sa.set_candidate_multi(o_sen)
             
             # add dependency to sentence
             o_sen.dep = Dependency(doc["dep"][i])
@@ -134,9 +137,10 @@ class DocumentBuilder(object):
             # add tree to sentence
             # TODO: add tree to sentence
             
-            # add relation to sentence
+            # add relation and trigger to sentence
             o_sen.rel = Relation()
             if not o_doc.is_test:
+                self.sa.update_word_trigger(o_sen, doc["trigger"])
                 o_sen.rel.build(o_sen.entity_map, doc["event"], doc["equiv"])
             
             # add sentence object to document object

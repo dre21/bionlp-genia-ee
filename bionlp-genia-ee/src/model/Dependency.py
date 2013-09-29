@@ -121,6 +121,26 @@ class Dependency(object):
         """
         return self.graph.get(node,[])
           
+    def get_head(self, wn_tuple):
+        """
+        return syntactical head of a given wn_tuple
+        """
+        if type(wn_tuple) == tuple:
+            temp_head = []
+            for gov in self.graph.iterkeys():
+                for wn in wn_tuple:
+                    if wn == gov: temp_head.append(wn)  
+            if len(temp_head) > 0:     
+                head = sorted(temp_head)[0]
+            else:
+                # if all wn in tuple are dependence
+                # choose the first word in tuple
+                head = wn_tuple[0]            
+        else: 
+            head = wn_tuple
+        
+        return head
+          
     def get_edges_name(self, path):        
         if len(path) < 2: return []
         

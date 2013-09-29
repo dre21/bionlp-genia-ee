@@ -27,7 +27,7 @@ class SentenceAnalyzer(object):
         self.wdict = WDict
         self.tdict = TDict
     
-    def analyze(self, sentence, proteins, triggers):
+    def analyze(self, sentence, proteins):
         """
         analyze and construct sentence object
         return sentence object
@@ -41,13 +41,8 @@ class SentenceAnalyzer(object):
         # set sentence mapping
         o_sen.offset_map = self.build_mapping(sentence)
         
-        # update word type with protein & trigger
-        self.update_word_type(o_sen, proteins)
-        if triggers != []:
-            self.update_word_type(o_sen, triggers)
-        
-        # set trigger candidate
-        self.set_candidate_multi(o_sen)
+        # update word type with protein
+        self.update_word_protein(o_sen, proteins)                        
                                             
         return o_sen
             
@@ -173,50 +168,69 @@ class SentenceAnalyzer(object):
                 retval = self.tdict.count(word) * 1.0 / w
         return retval
         
-    def update_word_type(self, Sentence, entity_list):
+    def update_word_protein(self, o_sen, proteins):
         """
-        Update word type based on protein or trigger type
-        entity list is either protein or trigger list        
+        Update word type with protein       
         """
-        mapping = {}
-        # update entity
-        # protein is list format 'T1' : ['T1', 'Protein', '0', '4', 'IL-4']
-        # trigger is list format 'T60' : ['T60', 'Negative_regulation', '190', '197', 'inhibit']
-        for e in entity_list.values():
+        # mapping protein id with word number
+        protein_mapping = {}
+        
+        # protein is dictionary format 'T1' : ['T1', 'Protein', '0', '4', 'IL-4']
+        for e in proteins.values():
+                                                
+            # check whether start offset of protein is in sentence offset map
+            # and get word number of protein
+            offset =  int(e[2])                                
+            wn = o_sen.offset_map.get(offset,-1)            
+            if wn>=0: 
+                o_sen.words[wn]["type"] = 'Protein'
+                o_sen.protein.append(wn)
+                protein_mapping[e[0]] = wn
+                
+        o_sen.entity_map.update(protein_mapping)        
+    
+    def update_word_trigger(self, o_sen, triggers):
+        """
+        Update word type with trigger       
+        """
+        # check dependency
+        dep = o_sen.dep
+        if dep == None:
+            raise ValueError("update_word_trigger require dependency to process multi-words trigger")
+        
+        # mapping trigger id with trigger head word number
+        trigger_mapping = {}
+        
+        # trigger is dictionary format 'T60' : ['T60', 'Negative_regulation', '190', '197', 'inhibit']
+        for e in triggers.values():
             
-            # skip two words trigger, currently only handle 1 word trigger
-            # skip entity type, we ignore entity for task 1
-            #TODO: handling multi-word trigger
-            #if ' ' in e[4] and e[1] != "Protein": continue
-            if e[1] == "Entity": continue            
-                        
+            # skip entity
+            if e[1] == 'Entity': continue
+            
+            # skip trigger more than 3 words
             nword = len(e[4].split(' '))
             if nword > 3: continue
-            
-            # check whether offset of protein is in this sentence
+                                                           
+            # check whether offset of trigger is in sentence offset map
+            # and get word number of first word of trigger
             offset =  int(e[2])                                
-            i = Sentence.offset_map.get(offset,-1)            
-            if i>=0: 
-                Sentence.words[i]["type"] = e[1] 
+            wn = o_sen.offset_map.get(offset,-1)                        
+            if wn>=0: 
+                # get the head of trigger word number for trigger which has more than 1 word
+                if nword > 1:
+                    wn = dep.get_head(tuple(range(wn,wn+nword)))
                                 
-                if e[1] == "Protein":
-                    wn_tuple = i
-                    Sentence.protein.append(wn_tuple)
-                else:
-                    if nword == 1:
-                        wn_tuple = i                        
-                    elif nword == 2:
-                        wn_tuple = (i,i+1)
-                        Sentence.words[i+1]["type"] = e[1]
-                    elif nword == 3:
-                        wn_tuple = (i,i+1,i+2)          
-                        Sentence.words[i+2]["type"] = e[1]          
-                    Sentence.trigger.append(wn_tuple)
+                o_sen.words[wn]["type"] = e[1] 
+                o_sen.trigger.append(wn)
+                trigger_mapping[e[0]] = wn
                 
-                mapping[e[0]] = wn_tuple 
+                # set trigger text
+                o_sen.trigger_text[wn] = e[4].lower()
+                                
                 
-        Sentence.entity_map.update(mapping)        
-                       
+        o_sen.entity_map.update(trigger_mapping)      
+        
+            
     def build_mapping(self, sentence):
         """
         return mapping of start offset to word number of a sentence

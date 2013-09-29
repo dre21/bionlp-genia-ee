@@ -42,6 +42,11 @@ class Sentence(object):
         # list of trigger word number
         self.trigger = []
         
+        # full trigger text
+        # key is head word number from self.trigger
+        # value is full string
+        self.trigger_text = {}
+        
         # dependency
         self.dep = None
         
