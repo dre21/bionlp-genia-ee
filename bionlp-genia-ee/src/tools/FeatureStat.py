@@ -158,8 +158,15 @@ def extract_doc(o_doc, dependency = False, chunk = False, sen = False):
                     # score
                     score = tword['score']
                     
+                    # number of occurance
+                    str_count = TD.count(tword['string'])
+                    
+                    stem_count = TD.count(tword['stem'])
+                    
+                    str_len = len(tword['string'])
+                    
                     # write data
-                    #write_tsv(sen_fname, [o_doc.doc_id, str(i), str(tc), str(ac), tword['string'], trig_type, arg_type, rel_type, str(dist), pos, str(score)])
+                    write_tsv(sen_fname, [o_doc.doc_id, str(i), str(tc), str(ac), tword['string'], trig_type, arg_type, rel_type, str(dist), pos, str(score), str(str_count),str(stem_count), str(str_len)])
                     
                     # statistic
                     wdist_cnt[dist] += 1
@@ -179,9 +186,9 @@ def delete_stat(fname):
 if __name__ == '__main__':
         
         
-    dependency = True
+    dependency = False
     chunk = False
-    sen = False
+    sen = True
     
     # delete existing stat
     if dependency:
