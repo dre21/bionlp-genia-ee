@@ -153,10 +153,13 @@ class FeatureExtraction(object):
             ac_list = o_sen.rel.get_tp_triger()
             tc_list = [t for t in o_sen.trigger_candidate if t not in ac_list] 
             
+            # update ac_list with tc list
+            ac_list += tc_list
+            
           
             for tc in tc_list:      
                 # argument is a trigger which has relation with protein as argument1                         
-                for ac in ac_list:
+                for ac in set(ac_list):
                     # no relation to it-self, there are few case but small   
                     if tc == ac: continue
                     pair = str(tc)+'-'+str(ac)
