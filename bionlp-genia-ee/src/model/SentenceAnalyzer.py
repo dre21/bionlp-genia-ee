@@ -76,7 +76,7 @@ class SentenceAnalyzer(object):
         used = []
         
         for wn in range(0,o_sen.nwords):
-            if wn in used: continue
+            #if wn in used: continue
             
             w1 = o_sen.words[wn]
             str1 = w1['string']

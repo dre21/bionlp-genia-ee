@@ -134,7 +134,7 @@ class DocumentBuilder(object):
             # TODO: add tree to sentence
             
             # set trigger candidate
-            self.sa.set_candidate_multi(o_sen)
+            self.sa.set_candidate(o_sen)
             
             # add relation and trigger to sentence
             o_sen.rel = Relation()
