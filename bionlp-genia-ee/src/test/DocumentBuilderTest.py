@@ -55,7 +55,7 @@ class DocumentBuilderTest(object):
         
     def test4(self):
         # document builder without dictionary
-        doc_id = 'PMC-2222968-06-Results-05'
+        doc_id = 'PMID-8978306'
         
         o_doc = self.builder.build(doc_id)
         print "\n\nTest 4: document with multi word trigger\n================================================="
@@ -72,7 +72,7 @@ class DocumentBuilderTest(object):
             print "-------------------------------"
             for j in range(0,o_sen.nwords):
                 w = o_sen.words[j]
-                print j, w['start'], w['string'], w['type'], w['score']
+                print j, w['start'], w['string'], w['pos_tag'], w['type'], w['score']
             # entity maps
             print "entity maps"
             print o_sen.entity_map
