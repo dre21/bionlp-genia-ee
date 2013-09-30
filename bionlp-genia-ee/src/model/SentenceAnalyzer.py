@@ -69,7 +69,7 @@ class SentenceAnalyzer(object):
         allow multi-words trigger
         """
         if self.tdict == None:
-            print "SKIPPED: set_candidate_multi, no dictionary found"
+            #print "SKIPPED: set_candidate_multi, no dictionary found"
             return
         
         # list of used word
@@ -94,7 +94,7 @@ class SentenceAnalyzer(object):
             # use maximum word sequence (trigram) if found in dictionary
             if self.tdict.count(str3) > 0:
                 trigger_wn = range(wn,wn+3)
-                head_wn = o_sen.dep.get_head(tuple(trigger_wn))                
+                head_wn = o_sen.dep.get_head(tuple(trigger_wn))                                
             elif self.tdict.count(str2) > 0:
                 trigger_wn = range(wn,wn+2)
                 head_wn = o_sen.dep.get_head(tuple(trigger_wn))                
@@ -105,15 +105,19 @@ class SentenceAnalyzer(object):
             # update used wn
             used += trigger_wn
             
-            # assign score, for head word only
-            word = o_sen.words[head_wn]
+            # assign score, for all words
+            self._set_word_score(o_sen,trigger_wn)                    
+                                 
+            head_word = o_sen.words[head_wn]       
+            if not self.filter(head_word):
+                o_sen.trigger_candidate.append(head_wn)     
+    
+    def _set_word_score(self, o_sen, wn_list):
+        for wn in wn_list:
+            word = o_sen.words[wn]
             word["score"] = self.get_score(word['string'])
             word['score-2'] = self.get_score(word['stem'])
-                                        
-            if not self.filter(word):
-                o_sen.trigger_candidate.append(head_wn)     
-        
-                                            
+                                           
     def filter(self, word):
         """
         return true if the word is filtered out from a candidate trigger, false otherwise        
@@ -138,6 +142,10 @@ class SentenceAnalyzer(object):
             
         # Rule 3, filter by score
         elif word['score'] < 0.02:
+            remove = True
+            
+        # rule 4 filter by number of string occurance in dictionary
+        elif self.wdict.count(word['string']) < 3:
             remove = True
             
         return remove

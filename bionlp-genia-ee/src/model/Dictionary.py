@@ -270,8 +270,8 @@ class TriggerDictionary(Dictionary):
                 for twn in o_sen.trigger:
                     w = o_sen.words[twn]
                     ttype = w['type']
-                    string = w['string']
-                    stem = w['stem']
+                    string = w['string'].lower()
+                    stem = w['stem'].lower()
                     
                     # skip short word
                     if len(string) < 4: continue
@@ -308,7 +308,7 @@ class TriggerDictionary(Dictionary):
                        "Regulator":"Negative_regulation",
                        "binds":"Binding",
                        "mRNA expression":"Transcription",
-                       "binding activity":"Binding"}
+                       "mRNA":"Transcription"}
             
             print "\n\n----------------------------"
             print "Using original string"

@@ -157,7 +157,9 @@ class Relation(object):
         for rel in self.data:
             cond1 = trigger_wn + arg_wn == rel[0] + rel[1]
             cond2 = abs(trigger_wn - arg_wn) == abs(rel[0] - rel[1])
-            if cond1 and cond2: retval = True
+            if cond1 and cond2: 
+                retval = True
+                break
         return retval
     
     

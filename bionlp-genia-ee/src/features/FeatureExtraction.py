@@ -48,7 +48,7 @@ class FeatureExtraction(object):
     REGULATION_EVENT = ['Regulation','Positive_regulation','Negative_regulation']
 
     # filter out feature criteria
-    FF_MAX_DEP_DIST = 6
+    FF_MAX_DEP_DIST = 5
     
     FF_MAX_CHK_DIST = 10
     
@@ -154,7 +154,7 @@ class FeatureExtraction(object):
             tc_list = [t for t in o_sen.trigger_candidate if t not in ac_list] 
             
             # update ac_list with tc list
-            ac_list += tc_list
+            #ac_list += tc_list
             
           
             for tc in tc_list:      
@@ -454,7 +454,7 @@ if __name__ == "__main__":
     
     
     source = "E:/corpus/bionlp2011/project_data"
-    doc_id = "PMC-1447668-16-Materials_and_Methods-06"
+    doc_id = "PMID-9878621"
     #doc_id = "PMID-9351352"
     
     WD = WordDictionary(source)    
