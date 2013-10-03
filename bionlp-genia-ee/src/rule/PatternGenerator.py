@@ -142,7 +142,7 @@ class PatternGenerator(object):
             t_arg2 = o_sen.words[arg2]
             arg2_type = 'P' if t_arg2['type'] == 'Protein' else 'E'
             # preposition
-            preps2 = self.get_prep_word(o_sen,t_wn, arg2)
+            preps2 = [p for p in self.get_prep_word(o_sen,t_wn, arg2) if p not in preps1]
             
             # pattern
             pattern[arg2] = 'arg2'
@@ -166,7 +166,7 @@ class PatternGenerator(object):
         
         # build pattern type
         pattern_type = ''
-        for _,v in pattern.iteritems():
+        for _,v in sorted(pattern.iteritems()):
             pattern_type += v +'-'        
         pattern_type = pattern_type.rstrip('-')        
         
