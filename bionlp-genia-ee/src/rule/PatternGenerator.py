@@ -70,7 +70,7 @@ class PatternGenerator(object):
     def generate(self, cdir,word_dict, trigger_dict):
         
         # document builder
-        builder = DocumentBuilder(source, word_dict, trigger_dict)
+        builder = DocumentBuilder(self.src, word_dict, trigger_dict)
         
         # file name to write data
         fname = 'data_'+cdir+'.csv'
