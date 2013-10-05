@@ -77,7 +77,7 @@ class Extraction(object):
             doc_ids = json.loads(f.read())
             return doc_ids
         
-    def _build_doc(self, builder, doc_id, is_test = False):                
+    def _build_doc(self, builder, doc_id, is_test = True):                
         doc = builder.read_raw(doc_id)
         return builder.build_doc_from_raw(doc, is_test)
     
@@ -109,6 +109,7 @@ class Extraction(object):
             
         print 'extracting document ....'
         for doc_id in doc_ids:
+            print doc_id
             o_doc = self._build_doc(builder, doc_id)            
             
             for i in range(0, len(o_doc.sen)):                                
@@ -163,27 +164,51 @@ class Extraction(object):
                 # filter the extracted pattern in a sentence
                 filered_pattern = self.filter_pattern(extraction_pattern)
                 for p in filered_pattern:
-                    self.update_sentence(o_sen, p)
-                
+                    #p.prints()
+                    self.update_non_regulation(o_sen, p)
+                    self.update_regulation(o_sen, p)
             # write a2                                
             self.a2.write(o_doc)
                 
-    def update_sentence(self, o_sen, pattern):
+    def update_non_regulation(self, o_sen, pattern):
         ttype = o_sen.words[pattern.tc]['type']
+        if ttype in self.EVENT_LABEL[6:]: return
         arg1_type = 'P' if pattern.arg1_type == 'Protein' else 'E'
-        o_sen.update(pattern.tc, ttype, pattern.arg1, 'Theme', arg1_type)
+        if arg1_type == 'P':
+            o_sen.update(pattern.tc, ttype, pattern.arg1, 'Theme', arg1_type)
         
-        if pattern.has_arg2():
-            arg2_type = 'P' if pattern.arg2_type == 'Protein' else 'E'
-            if ttype == 'Binding':
-                rel_name = 'Theme2'
-            elif type in self.EVENT_LABEL[6:]:
-                rel_name = 'Cause'
-            else:
-                print o_sen.number
-                pattern.prints()
-                raise ValueError(ttype + ' does not have argument 2')
-            o_sen.update(pattern.tc, ttype, pattern.arg2, rel_name, arg2_type)
+            if pattern.has_arg2():
+                arg2_type = 'P' if pattern.arg2_type == 'Protein' else 'E'
+                if ttype == 'Binding':
+                    rel_name = 'Theme2'
+                elif ttype in self.EVENT_LABEL[6:]:
+                    rel_name = 'Cause'
+                else:
+                    print o_sen.number
+                    pattern.prints()
+                    raise ValueError(ttype + ' does not have argument 2')
+                if arg2_type == 'P' and ttype != 'Binding':
+                    o_sen.update(pattern.tc, ttype, pattern.arg2, rel_name, arg2_type)
+                    
+    def update_regulation(self, o_sen, pattern):
+        ttype = o_sen.words[pattern.tc]['type']
+        if ttype in self.EVENT_LABEL[0:6]: return
+        arg1_type = 'P' if pattern.arg1_type == 'Protein' else 'E'
+        if arg1_type == 'P':
+            o_sen.update(pattern.tc, ttype, pattern.arg1, 'Theme', arg1_type)
+        
+            if pattern.has_arg2():
+                arg2_type = 'P' if pattern.arg2_type == 'Protein' else 'E'
+                if ttype == 'Binding':
+                    rel_name = 'Theme2'
+                elif ttype in self.EVENT_LABEL[6:]:
+                    rel_name = 'Cause'
+                else:
+                    print o_sen.number
+                    pattern.prints()
+                    raise ValueError(ttype + ' does not have argument 2')
+                if arg2_type == 'P':
+                    o_sen.update(pattern.tc, ttype, pattern.arg2, rel_name, arg2_type)
                 
     def _extract_pattern(self, o_sen, tc, arg1, arg2 = -1):
         """
@@ -281,28 +306,39 @@ class Extraction(object):
                                 
             if pattern_list.get(pattern.t_string,None) == None:
                 pattern_list[pattern.t_string] = {}
-                pattern_list[pattern.t_string]['chunk'] = None
-                pattern_list[pattern.t_string]['phrase'] = None
-                pattern_list[pattern.t_string]['clause'] = None
+                pattern_list[pattern.t_string]['chunk'] = []
+                pattern_list[pattern.t_string]['phrase'] = []
+                pattern_list[pattern.t_string]['clause'] = []
+            
             
             # add pattern to list
             # add patter to container, if container is empty
-            if pattern_list[pattern.t_string][pattern.container] == None:
-                pattern_list[pattern.t_string][pattern.container] = pattern
+            if pattern_list[pattern.t_string][pattern.container] == []:
+                pattern_list[pattern.t_string][pattern.container].append(pattern)
             # if container is not empty, compare the frequency
             else:
-                if pattern_list[pattern.t_string][pattern.container].freq < pattern.freq:
-                    pattern_list[pattern.t_string][pattern.container] = pattern
+                #pattern.prints()
+                if pattern_list[pattern.t_string][pattern.container][0].pattern_type == pattern.pattern_type:
+                    pattern_list[pattern.t_string][pattern.container].append(pattern)
+                elif pattern_list[pattern.t_string][pattern.container][0].freq < pattern.freq:
+                    pattern_list[pattern.t_string][pattern.container] = [pattern]
         
         filtered_pattern = []        
         # process pattern for each trigger string
-        for container in pattern_list.itervalues():     
-            if container['chunk'] != None:
-                filtered_pattern.append(container['chunk'])
-            elif container['phrase'] != None:
-                filtered_pattern.append(container['phrase'])
+        for string, container in pattern_list.iteritems():
+            #print string, len(container['chunk']), len(container['phrase']), len(container['clause'])           
+            if container['chunk'] != []:
+                for p in container['chunk']:
+                    #print 'chunk:',p.t_string
+                    filtered_pattern.append(p)
+            elif container['phrase'] != []:
+                for p in container['phrase']:
+                    #print 'phrase:',p.t_string
+                    filtered_pattern.append(p)
             else:
-                filtered_pattern.append(container['clause'])
+                for p in container['clause']:
+                    #print 'clause:',p.t_string
+                    filtered_pattern.append(p)
                
         return filtered_pattern                
         
@@ -333,10 +369,10 @@ if __name__ == '__main__':
     learning_corpus = 'train'
     extraction_corpus = 'dev'
     
-    dir_name_eval = "rule-test-model-001"    
-    dir_name_final = "rule-model-001"
+    dir_name_eval = "rule-test-model-002"    
+    dir_name_final = "rule-model-002"
     
-    doc_ids = ['PMID-9796963']
+    doc_ids = ['PMID-10090947']
 
     WD = WordDictionary(source)    
     WD.load("mix")
@@ -345,7 +381,7 @@ if __name__ == '__main__':
     TD.load("mix")        
 
     extraction = Extraction(source, learning_corpus, extraction_corpus, dir_name_eval)
-    extraction.extract(WD, TD, doc_ids)
+    extraction.extract(WD, TD)
     
         
         
