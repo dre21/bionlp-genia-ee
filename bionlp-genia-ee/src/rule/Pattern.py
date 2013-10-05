@@ -4,7 +4,7 @@ Created on Oct 2, 2013
 @author: Andresta
 '''
 
-class Pattern(object):
+class TemplatePattern(object):
     '''
     classdocs
     '''
@@ -71,3 +71,57 @@ class Pattern(object):
         print 'dist2:', sorted(self.dist2)
         print '# arg2 pro:', self.pro2_count
         print '# arg2 evt:', self.evt2_count
+        
+
+
+class ExtractionPattern(object):
+    
+    def __init__(self, tc, t_string, pos_tag, arg1, arg2 = -1):
+        
+        self.tc = tc
+        self.arg1 = arg1
+        self.arg2 = arg2
+        
+        self.t_string = t_string.lower()
+        self.pos = pos_tag
+        
+        self.container = ''
+        self.pattern_type = ''
+        
+        self.freq = 0
+        
+        # preposition
+        self.prep1 = ''
+        self.prep2 = ''
+        
+        # distance
+        self.dist1 = -1
+        self.dist2 = -1
+        
+        # argument type
+        self.arg1_type = 'null'
+        self.arg2_type = 'null'
+        
+    def has_arg2(self):
+        return self.dist2 != -1
+    
+    def get_key(self):
+        return ':'.join([self.t_string,self.pos, self.pattern_type, self.container])
+    
+    def prints(self):
+        print '================================================'
+        print 'key:', self.get_key()
+        print self.container, '=>', self.pattern_type     
+        print 'freq:', self.freq   
+        print 'trigger:', self.tc, self.t_string, self.pos
+        print '-------'
+        print self.arg1 ,'-', self.arg1_type
+        print 'dist1:', self.dist1
+        print 'prep1:',self.prep1
+        if self.arg2!= -1:
+            print '-------'
+            print self.arg2 ,'-', self.arg2_type
+            print 'dist2:', self.dist2
+            print 'prep2:',self.prep2
+        
+    

@@ -9,7 +9,7 @@ from collections import Counter, defaultdict
 
 from model.Dictionary import WordDictionary, TriggerDictionary
 from model.Document import DocumentBuilder
-from rule.Pattern import Pattern as pattern
+from rule.Pattern import TemplatePattern as pattern
 
 class PatternGenerator(object):
     '''
