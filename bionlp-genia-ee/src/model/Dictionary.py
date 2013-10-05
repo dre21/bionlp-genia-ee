@@ -239,11 +239,12 @@ class TriggerDictionary(Dictionary):
             for t in triggers.values():
                 # format of trigger
                 # ["T60", "Negative_regulation", "190", "197", "inhibit"]
+                ttype = t[1]
+                if ttype == 'Entity':continue
                 string = t[4].lower()               
                 stem = self.Stemmer.stem(string, 0, len(string)-1)
                 # only process single word trigger      
-                if " " not in string:          
-                    ttype = t[1]
+                if " " not in string:                              
                     td[string][ttype] += 1
                     td[stem][ttype] += 1
                 
@@ -265,7 +266,7 @@ class TriggerDictionary(Dictionary):
     def test(self, test_name):
            
         if test_name == "loading":            
-            trigger = {"induction":"Positive_regulation",
+            trigger = {"nuclear":"Positive_regulation",
                        "restimulated":"Regulation",
                        "binding":"Binding",
                        "binds":"Binding",
