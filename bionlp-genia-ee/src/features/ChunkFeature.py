@@ -52,11 +52,15 @@ class ChunkFeature(Feature):
         
         """ capture feature of events expressed in a phrase layer """
         # check any preposition chunk in between trigger and argument        
-        if trig_wn < arg_wn:                        
+        if trig_wn < arg_wn:            
             preps = self.get_prep_word(o_sen,trig_wn, arg_wn)
             if len(preps) == 1:
-                self.add(prefix+'has_prep', True)
-                self.add(prefix+preps[0][0], True)
+                trig_cn = o_sen.chunk.chunk_map[trig_wn]             
+                prep_cn = o_sen.chunk.chunk_map[preps[0][1]]
+                # prep must be the next chunk
+                if trig_cn + 1 == prep_cn:
+                    self.add(prefix+'has_prep', True)
+                    self.add(prefix+preps[0][0], True)
          
         """ capture feature of events expressed in a clause layer """
         # distance between chunk
