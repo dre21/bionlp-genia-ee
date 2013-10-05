@@ -115,7 +115,7 @@ class PatternGenerator(object):
         t_arg = o_sen.words[arg1]
         
         # trigger argument info
-        t_string = t_word['string']
+        t_string = t_word['string'].lower()
         t_pos = t_word['pos_tag']
         arg1_type = 'P' if t_arg['type'] == 'Protein' else 'E'
         arg2_type = ''
@@ -171,7 +171,7 @@ class PatternGenerator(object):
         pattern_type = pattern_type.rstrip('-')        
         
         # build key
-        key = ':'.join([t_word['string'],t_word['pos_tag'], pattern_type, container]) 
+        key = ':'.join([t_string,t_pos, pattern_type, container]) 
         
         # increase frequency 
         self.frequency[key] += 1
