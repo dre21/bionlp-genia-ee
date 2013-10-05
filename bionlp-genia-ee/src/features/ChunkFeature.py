@@ -22,21 +22,18 @@ class ChunkFeature(Feature):
            
     def get_prep_word(self, o_sen, trig_wn, arg_wn):
         """
-        return string of prepositions and number of preposition between trig_wn and arg_wn
-                
+        return tuple of prepositions (string,word_number)                
         """
         o_chunk = o_sen.chunk
-        preps_word = ''
-        n_prep = 0
+        preps_word = []
         trig_chk_num = o_chunk.chunk_map[trig_wn]
         arg_chk_num = o_chunk.chunk_map[arg_wn]
         for chk_num in range(trig_chk_num+1, arg_chk_num):
-            prep = o_chunk.prep_chunk.get(chk_num,'')
-            if prep != '':
-                preps_word += prep + '-'
-                n_prep += 1
+            prep = o_chunk.prep_chunk.get(chk_num,None)
+            if prep != None:
+                preps_word.append(prep)                
         
-        return preps_word.rstrip('-'), n_prep
+        return preps_word
         
     
     def _extract_common_feature(self, o_sen, trig_wn, arg_wn, prefix = ''):
@@ -55,11 +52,11 @@ class ChunkFeature(Feature):
         
         """ capture feature of events expressed in a phrase layer """
         # check any preposition chunk in between trigger and argument        
-        if trig_wn < arg_wn:            
-            prep_str, n_prep = self.get_prep_word(o_sen, trig_wn, arg_wn)
-            if n_prep == 1:
+        if trig_wn < arg_wn:                        
+            preps = self.get_prep_word(o_sen,trig_wn, arg_wn)
+            if len(preps) == 1:
                 self.add(prefix+'has_prep', True)
-                self.add(prefix+prep_str, True)
+                self.add(prefix+preps[0][0], True)
          
         """ capture feature of events expressed in a clause layer """
         # distance between chunk
