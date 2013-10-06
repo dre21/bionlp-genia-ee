@@ -272,9 +272,10 @@ class Prediction(object):
         # update document
         self.update_doc_info(info, Ypred, "Theme", "P")
         
-        # predict trigger-trigger relation
-        Ypred, _, info = self.predict_tt(grid_search = True)
-        self.update_doc_info(info, Ypred, "Theme", "E")
+        for _ in range(0,2):
+            # predict trigger-trigger relation
+            Ypred, _, info = self.predict_tt(grid_search = True)
+            self.update_doc_info(info, Ypred, "Theme", "E")
         
         # predict trigger-theme-cause relation
         Ypred, _, info = self.predict_tc(grid_search = True)
