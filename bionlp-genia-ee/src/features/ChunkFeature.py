@@ -41,6 +41,7 @@ class ChunkFeature(Feature):
         extract common chunk feature between trig_wn and arg_wn in o_sen
         """
         o_chunk = o_sen.chunk
+        o_dep = o_sen.dep
         
                 
         """ capture feature of events expressed in a chunk layer """
@@ -51,16 +52,14 @@ class ChunkFeature(Feature):
                                             
         
         """ capture feature of events expressed in a phrase layer """
-        # check any preposition chunk in between trigger and argument        
-        if trig_wn < arg_wn:            
-            preps = self.get_prep_word(o_sen,trig_wn, arg_wn)
-            if len(preps) == 1:
-                trig_cn = o_sen.chunk.chunk_map[trig_wn]             
-                prep_cn = o_sen.chunk.chunk_map[preps[0][1]]
-                # prep must be the next chunk
-                if trig_cn + 1 == prep_cn:
-                    self.add(prefix+'has_prep', True)
-                    self.add(prefix+preps[0][0], True)
+        # check any preposition chunk in between trigger and argument    
+        dpath_trg_arg = o_dep.get_shortest_path(trig_wn, arg_wn)
+        if len(dpath_trg_arg) > 2:
+            edges = o_dep.get_edges_name(dpath_trg_arg)
+            if edges[0] == 'prep':
+                self.add(prefix+'has_prep', True)
+                prep = o_sen.words[dpath_trg_arg[1]]['string']
+                self.add(prefix+'prep_'+prep, True)
          
         """ capture feature of events expressed in a clause layer """
         # distance between chunk
