@@ -44,9 +44,21 @@ class DependencyFeature(Feature):
         self.add(prefix+self.list_to_string(edges), True) 
         
         # direct path from trigger to prot
-        dpath = o_dep.get_shortest_path(trig_wn, arg_wn)
-        if dpath != []:
-            self.add(prefix+"direct", True)
+        dpath_trg_arg = o_dep.get_shortest_path(trig_wn, arg_wn)
+        dpath_arg_trig = o_dep.get_shortest_path(arg_wn, trig_wn)
+        
+        if dpath_trg_arg != []:
+            # set type
+            self.add(prefix+"type1", True)
+            # edges from trigger to protein
+            self.add(prefix+self.list_to_string(o_dep.get_edges_name(dpath_trg_arg)), True)
+        elif dpath_arg_trig != []:
+            self.add(prefix+"type2", True)
+            # edges from trigger to protein
+            self.add(prefix+self.list_to_string(o_dep.get_edges_name(dpath_arg_trig)), True)
+        else:
+            self.add(prefix+"type3", True)
+            self.add(prefix+self.list_to_string(o_dep.get_edges_name(upath)), True)
             
         # extract word feature for parent of trigger
         parent = o_dep.get_parent(trig_wn)
