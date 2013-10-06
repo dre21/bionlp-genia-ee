@@ -129,6 +129,17 @@ class Relation(object):
             if rel[2] == "Theme" and rel[3] == "P":
                 trig.append(rel[0])
         return trig
+    
+    def get_tptt_triger(self):
+        """
+        return list of trigger node (word number) which has relation
+        it's used to get argument candidate of trigger-trigger relation
+        """
+        trig = []
+        for rel in self.data:            
+            if rel[2] == "Theme":
+                trig.append(rel[0])
+        return trig
         
     def get_theme(self, trigger_wn):
         """

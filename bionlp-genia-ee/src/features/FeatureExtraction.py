@@ -150,8 +150,8 @@ class FeatureExtraction(object):
             #if i != 2: continue
             o_sen = o_doc.sen[i]
             
-            ac_list = o_sen.rel.get_tp_triger()
-            tc_list = [t for t in o_sen.trigger_candidate if t not in ac_list] 
+            ac_list = o_sen.rel.get_tptt_triger()
+            tc_list = [t for t in o_sen.trigger_candidate if t not in o_sen.rel.get_tp_triger()] 
             
           
             for tc in tc_list:      
