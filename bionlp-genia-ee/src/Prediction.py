@@ -265,23 +265,33 @@ class Prediction(object):
     def predict(self, docid_list_fname, write_result = True):
         
         # create document object for prediction
+        print '\ncreate document object for prediction'
+        print '-------------------------------------'
         self.set_prediction_docs(docid_list_fname)
         
         # predict trigger-protein relation
+        print '\npredict trigger-protein relation'
+        print '--------------------------------'
         Ypred, _, info = self.predict_tp(grid_search = True)
         # update document
         self.update_doc_info(info, Ypred, "Theme", "P")
         
-        for _ in range(0,2):
+        for i in range(0,2):
             # predict trigger-trigger relation
+            print '\npredict trigger-trigger relation step',i
+            print '------------------------------------------'
             Ypred, _, info = self.predict_tt(grid_search = True)
             self.update_doc_info(info, Ypred, "Theme", "E")
         
         # predict trigger-theme-cause relation
+        print '\npredict trigger-theme-cause relation'
+        print '-------------------------------------'
         Ypred, _, info = self.predict_tc(grid_search = True)
         self.update_doc_relation('cause', info, Ypred)
         
         # predict theme2 relation
+        print '\npredict theme2 relation'
+        print '-----------------------'
         Ypred, _, info = self.predict_t2(grid_search = True)
         self.update_doc_relation('theme2', info, Ypred)
         

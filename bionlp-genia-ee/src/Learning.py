@@ -136,7 +136,8 @@ class Learning(object):
         return X,Y
     
     def learn_tp(self, docid_list_fname, grid_search):
-                 
+        print 'learning trigger - protein relation'
+        print '---------------------------------'
         # get list of file
         doc_ids = self.get_docid_list(docid_list_fname)
         
@@ -151,6 +152,8 @@ class Learning(object):
         svm.learn(X, Y)        
         
     def learn_tt(self, docid_list_fname, grid_search):
+        print 'learning trigger - trigger relation'
+        print '----------------------------------'
         # get list of file
         doc_ids = self.get_docid_list(docid_list_fname)
         
@@ -166,6 +169,8 @@ class Learning(object):
         
         
     def learn_tc(self, docid_list_fname, grid_search):
+        print 'learning trigger - theme - cause relation'
+        print '---------------------------------------'
         # get list of file
         doc_ids = self.get_docid_list(docid_list_fname)
         
@@ -180,6 +185,8 @@ class Learning(object):
         svm.learn(X, Y) 
         
     def learn_t2(self, docid_list_fname, grid_search):
+        print 'learning trigger - theme1 - theme2 relation'
+        print '-----------------------------------------'
         # get list of file
         doc_ids = self.get_docid_list(docid_list_fname)
         
