@@ -332,7 +332,9 @@ class FeatureExtraction(object):
                         else:
                             self.sample_pos += 1                      
                     
-                    feature_data.append([info,label,feature])
+                    # filter feature                    
+                    if not self.filter_feature(feature):
+                        feature_data.append([info,label,feature])
                     
                     
                         
