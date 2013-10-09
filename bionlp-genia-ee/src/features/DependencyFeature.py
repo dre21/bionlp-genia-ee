@@ -100,8 +100,7 @@ class DependencyFeature(Feature):
         self.feature = {}
         
         self._extract_common_feature(o_sen, trig_wn, arg_wn)
-        
-    
+            
     def extract_feature_tac(self, o_sen, trig_wn, theme_wn, cause_wn):
         """
         extract dependency feature for trigger-theme-cause relation
@@ -137,19 +136,7 @@ class DependencyFeature(Feature):
         dpath = o_dep.get_shortest_path(cause_wn, theme_wn)
         if dpath != []:
             self.add("path_ca", True)
-        
-        
-        
-        
-        # number of protein between theme and cause
-        #prots = o_sen.protein
-        #n_prot = 0
-        #for p in upath[1:-1]:
-        #    if p in prots: n_prot+=1
-        #self.add('n_pr', n_prot)
-        
-        
-        
+              
     def extract_feature_t2(self, o_sen, trig_wn, theme1_wn, theme2_wn):
         """
         extract dependency feature for trigger-theme1-theme2 relation
@@ -177,11 +164,54 @@ class DependencyFeature(Feature):
         upath = o_dep.get_shortest_path(theme1_wn, theme2_wn, "undirected")
         self.add('t2_dist', len(upath)-1)
         
+    def extract_feature_evt(self, o_sen, trig_wn, arg_wn):
+        """
+        extract dependency feature for simple event
+        """        
+        o_dep = o_sen.dep
+                
+                
+        # extract word feature for parent of trigger
+        trig_parent = o_dep.get_parent(trig_wn)
+        if trig_parent >= 0:
+            self.extract_word_feature(o_sen.words[trig_parent], "t_parent")
+            
+        # extract word feature for parent of argument
+        arg_parent = o_dep.get_parent(arg_wn)
+        if arg_parent >= 0:
+            self.extract_word_feature(o_sen.words[arg_parent], "a_parent")
+        
+        # type of dependency
+        dpath_trg_arg = o_dep.get_shortest_path(trig_wn, arg_wn)
+        dpath_arg_trig = o_dep.get_shortest_path(arg_wn, trig_wn)
+        upath = o_dep.get_shortest_path(trig_wn, arg_wn, "undirected")
+        
+        if dpath_trg_arg != []:
+            # set type
+            self.add("type1", True)
+            # directed edges from trigger to protein
+            self.add('t1-'+self.list_to_string(o_dep.get_edges_name(dpath_trg_arg)), True)
+            # trigger is parent of protein 
+            self.add('t1-trig-parent',trig_parent == arg_wn)
+        elif dpath_arg_trig != []:
+            self.add("type2", True)
+            # directed edges from protein to trigger 
+            self.add('t2-'+self.list_to_string(o_dep.get_edges_name(dpath_arg_trig)), True)
+            # protein is parent of trigger 
+            self.add('t2-arg-parent',trig_parent == arg_wn)
+        else:
+            self.add("type3", True)
+            # undirected edges from trigger to protein
+            self.add('t3-'+self.list_to_string(o_dep.get_edges_name(upath)), True)
+    
+        # number of trigger candidate between trigger and theme
+        tc = o_sen.trigger_candidate
+        n_tc = 0 
+        for t in upath[1:-1]:
+            if t in tc: n_tc+=1
+        self.add('n_tc', n_tc)
         
         
-    
-    
-    
     
     
     

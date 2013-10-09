@@ -33,7 +33,7 @@ class FeatureExtraction(object):
     CORPUS_DIR = ["dev","train","test"]
     
     # event label
-    EVENT_LABEL = {"None":0,
+    EVENT_LABEL = {"null":0,
                    "Gene_expression":1,
                    "Transcription":2,
                    "Protein_catabolism":3,
@@ -305,6 +305,41 @@ class FeatureExtraction(object):
                           
         return feature_data      
     
+    def extract_evt(self, o_doc):
+        """
+        extract simple event (trigger-theme) relation 
+        """
+        i = 1
+        feature_data = []
+        for i in range(0, len(o_doc.sen)):            
+
+            o_sen = o_doc.sen[i]
+            tc_list = o_sen.trigger_candidate
+            p_list = o_sen.protein
+                        
+            for tc in tc_list:                               
+                for p in p_list:
+                                                           
+                    feature = self.get_feature_tp(o_sen, tc, p)                    
+                    info = {"doc":o_doc.doc_id, "sen":i, "t":tc, "a":p}
+                    
+                    label = -1
+                    if not o_doc.is_test:
+                        label = self.get_evt_label(o_sen, tc, p)  
+                        # statistical info
+                        if label == 0:
+                            self.sample_neg += 1
+                        else:
+                            self.sample_pos += 1                      
+                    
+                    feature_data.append([info,label,feature])
+                    
+                    
+                        
+        #self.write_feature("trigger-theme", o_doc.doc_id, feature_data)
+        
+        return feature_data
+    
     
     def get_feature_tp(self, o_sen, trig_wn, arg_wn):
         
@@ -385,6 +420,27 @@ class FeatureExtraction(object):
         
         return feature
         
+    def get_feature_evt(self, o_sen, trig_wn, arg_wn):
+        """
+        get features for simple event
+        """
+        feature = {}
+        
+        # add sentence feature
+        self.SF.extract_feature_evt(o_sen, trig_wn, arg_wn)
+        feature.update(self.SF.feature)
+        
+        # add dependency feature
+        self.DF.extract_feature_evt(o_sen, trig_wn, arg_wn)
+        feature.update(self.DF.feature)
+        
+        # add chunk feature
+        self.CF.extract_feature_evt(o_sen, trig_wn, arg_wn)
+        feature.update(self.CF.feature)
+        
+        return feature
+    
+    
         
     def get_tp_label(self, o_sen, trig_wn, arg_wn):
         """
@@ -446,12 +502,26 @@ class FeatureExtraction(object):
             
         return label
     
+    def get_evt_label(self,o_sen, trig_wn, arg_wn):
+        """
+        label for simple event [Gene_expression, Transcription, Protein_catabolism, Phosphorylation, Localization]
+        """
+        label = 0
+        
+        if o_sen.rel.check_relation(trig_wn, arg_wn, "Theme", "P"):
+            label = self.EVENT_LABEL[o_sen.words[trig_wn]["type"]]
+            # only label for 1 to 5
+            if label > 5:
+                label = 0
+                
+        return label
+    
 if __name__ == "__main__":
     
     
     
     source = "E:/corpus/bionlp2011/project_data"
-    doc_id = "PMC-1920263-13-RESULTS-05"
+    doc_id = "PMID-10080948"
     #doc_id = "PMID-9351352"
     
     WD = WordDictionary(source)    
@@ -466,8 +536,8 @@ if __name__ == "__main__":
     o_doc = builder.build_doc_from_raw(doc, is_test=False)
     
     FE = FeatureExtraction(source, WD, TD)
-    feature = FE.extract_t2(o_doc)
+    feature = FE.extract_evt(o_doc)
     for f in feature[0:50]:
-        print f[0]
+        print f[0], f[1]
         print f[2]
     

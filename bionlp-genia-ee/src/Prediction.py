@@ -105,8 +105,8 @@ class Prediction(object):
         'tc' => trigger-theme-cause relation to predict regulation event with theme and cause (binary)
         't2' => trigger-theme1-theme2 relation to predict theme2 in binding (binary)
         """
-        if step not in ['tt','tp','tc','t2']:
-            raise ValueError("only support step for tt, tp, tc and t2")
+        if step not in ['tt','tp','tc','t2','evt']:
+            raise ValueError("only support step for tt, tp, tc, t2 and evt")
         
         X = []
         Y = []
@@ -129,6 +129,8 @@ class Prediction(object):
                 samples = self.extraction.extract_tc(o_doc)
             elif step == 't2':
                 samples = self.extraction.extract_t2(o_doc)
+            elif step == 'evt':
+                samples = self.extraction.extract_evt(o_doc)
             
             for sample in samples:
                 X.append(sample[2])
@@ -261,7 +263,25 @@ class Prediction(object):
         svm.load()
         
         return svm.predict(X), Y, info
+    
+    def predict_evt(self):
+        """
+        return simple event prediction of given docid_list
+        """
+        if self.docs == {}:
+            raise ValueError("docs have not been created. call set_prediction_docs first!")
+        # get list of file
+        #doc_ids = self.get_docid_list(docid_list_fname)
         
+        # get features and target
+        X, Y, info = self.get_feature('evt')
+        
+        # init svm classifier
+        svm = SVM(self._model_path, "evt", "linear", grid_search = True, class_weight = 'auto')
+        svm.load()
+        
+        return svm.predict(X), Y, info
+    
     def predict(self, docid_list_fname, write_result = True):
         
         # create document object for prediction
@@ -294,6 +314,23 @@ class Prediction(object):
         print '-----------------------'
         Ypred, _, info = self.predict_t2(grid_search = True)
         self.update_doc_relation('theme2', info, Ypred)
+        
+        # write a2
+        if write_result:
+            self.write_result()
+        
+    def predict2(self, docid_list_fname, write_result = True):
+        # create document object for prediction
+        print '\ncreate document object for prediction'
+        print '-------------------------------------'
+        self.set_prediction_docs(docid_list_fname)
+        
+        # predict trigger-protein relation
+        print '\npredict trigger-protein simple relation'
+        print '---------------------------------------'
+        Ypred, _, info = self.predict_evt()
+        # update document
+        self.update_doc_info(info, Ypred, "Theme", "P")
         
         # write a2
         if write_result:

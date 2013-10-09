@@ -39,6 +39,15 @@ def learn_train(src, dir_name):
     learning.learn_tc(docs, grid_search = True)
     learning.learn_t2(docs, grid_search = True)
 
+def learn_train2(src, dir_name):
+    dict_type = 'train'
+    docs = 'train'
+    
+    learning = Learning(src, dir_name, dict_type)
+    
+    learning.learn_evt(docs)        
+
+
 def predict_dev(src, dir_name):
     dict_type = 'train'
     docs = 'dev'
@@ -75,6 +84,24 @@ def predict_dev(src, dir_name):
     """ ----- make a prediction for dev corpus  ----- """
     prediction = Prediction(src, dir_name, dict_type)    
     prediction.predict(docs)
+    
+def predict_dev2(src, dir_name):
+    dict_type = 'train'
+    docs = 'dev'
+    
+    """ ----- print validation score for each step ----- """
+    validation = Prediction(src, dir_name, dict_type)
+    
+    # validation score for simple event    
+    validation.set_prediction_docs(docs, is_test = False)
+    Ypred,Ytest,_ = validation.predict_evt()
+    print "Gene_expression Transcription Protein_catabolism Phosphorylation Localization"
+    print_matrix(Ytest, Ypred, [1,2,3,4,5])
+    
+    """ ----- make a prediction for dev corpus  ----- """
+    prediction2 = Prediction(src, dir_name, dict_type)    
+    prediction2.predict2(docs)
+
 
 
 def print_matrix(Ytest, Ypred, labels = None):
@@ -91,15 +118,19 @@ if __name__ == '__main__':
     
     source = "E:/corpus/bionlp2011/project_data"
 
-    dir_name_eval = "ml-test-model-007"    
-    dir_name_final = "ml-model-007"
+    dir_name_eval = "ml2-test-model-009"    
+    dir_name_final = "ml2-model-009"
     
     # evaluation
-    learn_train(source, dir_name_eval)
-    predict_dev(source, dir_name_eval)
+    #learn_train(source, dir_name_eval)
+    #predict_dev(source, dir_name_eval)
+    
+    # evaluation v2
+    #learn_train2(source, dir_name_eval)
+    predict_dev2(source, dir_name_eval)
     
     # final prediction
-    learn_dev_train(source, dir_name_final)
-    predict_test(source, dir_name_final)
+    #learn_dev_train(source, dir_name_final)
+    #predict_test(source, dir_name_final)
     
     

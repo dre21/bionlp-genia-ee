@@ -64,8 +64,7 @@ class ChunkFeature(Feature):
         """ capture feature of events expressed in a clause layer """
         # distance between chunk
         self.add(prefix + 'dist', o_chunk.distance(trig_wn, arg_wn))
-               
-        
+                  
     def extract_feature_tp(self, o_sen, trig_wn, arg_wn):
         """
         extract chunk feature between trig_wn and arg_wn in o_sen
@@ -74,8 +73,7 @@ class ChunkFeature(Feature):
         self.feature = {}
         
         self._extract_common_feature(o_sen, trig_wn, arg_wn)
-        
-        
+                
     def extract_feature_tt(self, o_sen, trig_wn, arg_wn):
         """
         extract chunk feature between trig_wn and arg_wn in o_sen
@@ -84,8 +82,7 @@ class ChunkFeature(Feature):
         self.feature = {}
         
         self._extract_common_feature(o_sen, trig_wn, arg_wn)
-        
-        
+            
     def extract_feature_tac(self, o_sen, trig_wn, theme_wn, cause_wn):
         """
         extract chunk feature for trigger-theme-cause relation
@@ -97,8 +94,7 @@ class ChunkFeature(Feature):
         self._extract_common_feature(o_sen, trig_wn, theme_wn, prefix='a_')
         self._extract_common_feature(o_sen, trig_wn, cause_wn, prefix='c_')
         self._extract_common_feature(o_sen, theme_wn, cause_wn, prefix='ac')
-        
-        
+               
     def extract_feature_t2(self, o_sen, trig_wn, theme1_wn, theme2_wn):
         """
         extract chunk feature for trigger-theme1-theme2 relation
@@ -110,6 +106,40 @@ class ChunkFeature(Feature):
         self._extract_common_feature(o_sen, trig_wn, theme1_wn, prefix='t1_')
         self._extract_common_feature(o_sen, trig_wn, theme2_wn, prefix='t2_')
         self._extract_common_feature(o_sen, theme1_wn, theme2_wn, prefix='t12_')
+        
+    def extract_feature_evt(self, o_sen, trig_wn, arg_wn):
+        """ 
+        extract chunk feature for simple event
+        """
+        o_chunk = o_sen.chunk
+        o_dep = o_sen.dep
+        
+        """ capture feature of events expressed in a chunk layer """
+        # is in the same chunk
+        if o_chunk.same_chunk(trig_wn, arg_wn):            
+            self.add('1chk',True)
+            self.add(o_chunk.get_type(trig_wn), True)
+            self.add('dist',0)
+                                            
+        else:
+            """ capture feature of events expressed in a phrase layer """
+            # check any preposition chunk in between trigger and argument    
+            dpath_trg_arg = o_dep.get_shortest_path(trig_wn, arg_wn)
+            if len(dpath_trg_arg) > 2:
+                edges = o_dep.get_edges_name(dpath_trg_arg)
+                if edges[0] == 'prep':
+                    self.add('has_prep', True)
+                    prep = o_sen.words[dpath_trg_arg[1]]['string']
+                    self.add('prep_'+prep, True)
+             
+            """ capture feature of events expressed in a clause layer """
+            # distance between chunk using dependency
+            upath = o_dep.get_shortest_path(trig_wn, arg_wn, "undirected")
+            chunk_nums = []
+            for node in upath:
+                chunk_nums.append(o_chunk.chunk_map[node])                
+            self.add('dist', len(set(chunk_nums))-1)
+        
         
         
         

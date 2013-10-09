@@ -109,8 +109,7 @@ class SentenceFeature(Feature):
         self.add('score_7', self.get_score(o_sen.words[trig_wn], 'Regulation'))
         self.add('score_8', self.get_score(o_sen.words[trig_wn], 'Positive_regulation'))
         self.add('score_9', self.get_score(o_sen.words[trig_wn], 'Negative_regulation'))
-        
-    
+            
     def extract_feature_tt(self, o_sen, trig_wn, arg_wn):
         """
         extract sentence feature 
@@ -165,7 +164,6 @@ class SentenceFeature(Feature):
         # distance between theme and cause
         self.add('dis_ac',abs(theme_wn - cause_wn))
         
-        
     def extract_feature_t2(self, o_sen, trig_wn, theme1_wn, theme2_wn):
         """
         extract sentence feature for trigger-theme1-theme2 relation
@@ -188,7 +186,34 @@ class SentenceFeature(Feature):
         # distance between themes
         self.add('dis_t-t',abs(theme2_wn - theme1_wn))
         
+    def extract_feature_evt(self, o_sen, trig_wn, arg_wn): 
+        """
+        extract feature for simple relation
+        """ 
+        nword = o_sen.nwords
         
+        # argument before trigger
+        self.add("a_bef_t", arg_wn < trig_wn)
+        
+        # is trigger-theme adjacent
+        self.add('adj', abs(arg_wn - trig_wn) == 1)
+            
+        # extract word feature for trigger
+        self.extract_word_feature(o_sen.words[trig_wn], "t")
+      
+        # extract word feature for words around trigger candidate
+        if trig_wn - 1 >= 0:
+            self.extract_word_feature(o_sen.words[trig_wn-1], "tw-1")
+        if trig_wn + 1 < nword:
+            self.extract_word_feature(o_sen.words[trig_wn+1], "tw+1")
+            
+        # extract word feature for words around protein
+        if arg_wn - 1 >= 0:
+            self.extract_word_feature(o_sen.words[arg_wn-1], "pw-1")
+        if arg_wn + 1 < nword:
+            self.extract_word_feature(o_sen.words[arg_wn+1], "pw+1")
+      
+      
         
     
     def get_score(self, word, event_type):

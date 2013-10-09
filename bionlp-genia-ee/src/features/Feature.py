@@ -32,7 +32,7 @@ class Feature(object):
                 
         # word stem
         stem = 'PRO' if  word["type"] == "Protein" else word['string']                    
-        self.add(prefix + '_stem_'+ stem, True)
+        self.add(prefix + '_str_'+ stem, True)
         
         # string after pruning '-' and '/'
         #string = 'PRO' if  word["type"] == "Protein" else word['string']
