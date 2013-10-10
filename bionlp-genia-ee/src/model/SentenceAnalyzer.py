@@ -95,7 +95,7 @@ class SentenceAnalyzer(object):
             remove = True                   
             
         # Rule 3, filter by score
-        elif word['score'] < 0.02:
+        elif word['score'] < 0.01:
             remove = True
             
         return remove

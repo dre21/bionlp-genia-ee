@@ -100,7 +100,7 @@ class FeatureExtraction(object):
     def filter_evt_feature(self, feature):
         retval = False
                             
-        if feature.get('chk_dist',99) > 5:
+        if feature.get('chk_dist',99) > 4:
             retval = True
        
         return retval  
