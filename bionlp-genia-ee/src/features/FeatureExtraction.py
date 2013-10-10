@@ -96,6 +96,14 @@ class FeatureExtraction(object):
         #    retval = True
         
         return retval  
+
+    def filter_evt_feature(self, feature):
+        retval = False
+                            
+        if feature.get('chk_dist',99) > 5:
+            retval = True
+       
+        return retval  
         
     def extract_tp(self, o_doc):
         """
@@ -308,9 +316,9 @@ class FeatureExtraction(object):
     def extract_evt(self, o_doc):
         """
         extract simple event (trigger-theme) relation 
-        """
-        i = 1
+        """        
         feature_data = []
+        
         for i in range(0, len(o_doc.sen)):            
 
             o_sen = o_doc.sen[i]
@@ -320,7 +328,7 @@ class FeatureExtraction(object):
             for tc in tc_list:                               
                 for p in p_list:
                                                            
-                    feature = self.get_feature_tp(o_sen, tc, p)                    
+                    feature = self.get_feature_evt(o_sen, tc, p)                    
                     info = {"doc":o_doc.doc_id, "sen":i, "t":tc, "a":p}
                     
                     label = -1
@@ -333,7 +341,7 @@ class FeatureExtraction(object):
                             self.sample_pos += 1                      
                     
                     # filter feature                    
-                    if not self.filter_feature(feature):
+                    if not self.filter_evt_feature(feature):
                         feature_data.append([info,label,feature])
                     
                     

@@ -17,8 +17,7 @@ class ChunkFeature(Feature):
         """
         Constructor
         """
-        self.prefix = prefix
-        
+        super(ChunkFeature, self).__init__(prefix)                
            
     def get_prep_word(self, o_sen, trig_wn, arg_wn):
         """
@@ -111,6 +110,9 @@ class ChunkFeature(Feature):
         """ 
         extract chunk feature for simple event
         """
+        # reset feature
+        self.feature = {}
+        
         o_chunk = o_sen.chunk
         o_dep = o_sen.dep
         

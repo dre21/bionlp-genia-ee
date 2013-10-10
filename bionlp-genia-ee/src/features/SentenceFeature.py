@@ -190,6 +190,9 @@ class SentenceFeature(Feature):
         """
         extract feature for simple relation
         """ 
+        # reset feature
+        self.feature = {}
+        
         nword = o_sen.nwords
         
         # argument before trigger
@@ -213,8 +216,20 @@ class SentenceFeature(Feature):
         if arg_wn + 1 < nword:
             self.extract_word_feature(o_sen.words[arg_wn+1], "pw+1")
       
-      
-        
+        # number of protein between trigger and argument
+        n_prot = 0
+        for p in o_sen.protein:
+            if self.in_between(p, trig_wn, arg_wn):
+                n_prot += 1
+        self.add('n_prot', n_prot)
+       
+        # probability of trigger on each event
+        self.add('score_1', self.get_score(o_sen.words[trig_wn], 'Gene_expression'))
+        self.add('score_2', self.get_score(o_sen.words[trig_wn], 'Transcription'))
+        self.add('score_3', self.get_score(o_sen.words[trig_wn], 'Protein_catabolism'))
+        self.add('score_4', self.get_score(o_sen.words[trig_wn], 'Phosphorylation'))
+        self.add('score_5', self.get_score(o_sen.words[trig_wn], 'Localization'))        
+                    
     
     def get_score(self, word, event_type):
         """

@@ -168,9 +168,11 @@ class DependencyFeature(Feature):
         """
         extract dependency feature for simple event
         """        
+        # reset feature
+        self.feature = {}
+        
         o_dep = o_sen.dep
-                
-                
+                                
         # extract word feature for parent of trigger
         trig_parent = o_dep.get_parent(trig_wn)
         if trig_parent >= 0:
@@ -180,6 +182,18 @@ class DependencyFeature(Feature):
         arg_parent = o_dep.get_parent(arg_wn)
         if arg_parent >= 0:
             self.extract_word_feature(o_sen.words[arg_parent], "a_parent")
+        
+        # extract word feature for child of trigger
+        children = o_dep.get_child(trig_wn)
+        if children != []:
+            for child in children:
+                self.extract_word_feature(o_sen.words[child], "t_child", score = False)
+                
+        # extract word feature for child of argument
+        children = o_dep.get_child(arg_wn)
+        if children != []:
+            for child in children:
+                self.extract_word_feature(o_sen.words[child], "a_child", score = False)
         
         # type of dependency
         dpath_trg_arg = o_dep.get_shortest_path(trig_wn, arg_wn)
