@@ -126,13 +126,15 @@ class ChunkFeature(Feature):
         else:
             """ capture feature of events expressed in a phrase layer """
             # check any preposition chunk in between trigger and argument    
-            dpath_trg_arg = o_dep.get_shortest_path(trig_wn, arg_wn)
-            if len(dpath_trg_arg) > 2:
-                edges = o_dep.get_edges_name(dpath_trg_arg)
-                if edges[0] == 'prep':
-                    self.add('has_prep', True)
-                    prep = o_sen.words[dpath_trg_arg[1]]['string']
-                    self.add('prep_'+prep, True)
+            if trig_wn < arg_wn:
+                preps = self.get_prep_word(o_sen, trig_wn, arg_wn)
+                if len(preps) == 1:
+                    # prep must be next chunk of trigger
+                    trig_cn = o_sen.chunk.chunk_map[trig_wn]
+                    prep_cn = o_sen.chunk.chunk_map[preps[0][1]]
+                    if trig_cn + 1 == prep_cn:
+                        self.add('has_prep', True)
+                        self.add('prep_'+preps[0][0], True)            
              
             """ capture feature of events expressed in a clause layer """
             # distance between chunk using dependency
