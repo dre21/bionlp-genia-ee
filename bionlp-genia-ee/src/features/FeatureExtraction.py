@@ -44,6 +44,9 @@ class FeatureExtraction(object):
                    "Positive_regulation":8,
                    "Negative_regulation":9}
     
+    # simple event
+    SIMPLE_EVENT = ['Gene_expression', 'Transcription', 'Protein_catabolism', 'Phosphorylation', 'Localization']
+    
     # regulation list
     REGULATION_EVENT = ['Regulation','Positive_regulation','Negative_regulation']
 
@@ -69,6 +72,8 @@ class FeatureExtraction(object):
         # statistic
         self.sample_pos = 0
         self.sample_neg = 0
+    
+    """  HELPER FUNCTION  """
     
     def reset_statistic(self):
         self.sample_pos = 0
@@ -104,7 +109,22 @@ class FeatureExtraction(object):
             retval = True
        
         return retval  
-        
+    
+    def get_evt_trigger(self, o_sen):
+        """
+        return list of trigger for simple event
+        """
+        evt_trigger = []
+        triggers = o_sen.rel.get_tp_triger()
+        for tn in triggers:
+            word = o_sen.words[tn]
+            if word['type'] in self.SIMPLE_EVENT:
+                evt_trigger.append(tn)
+        return evt_trigger
+    
+    
+    """  EVENT EXTRACTION  """
+    
     def extract_tp(self, o_doc):
         """
         extract Trigger-Protein theme pair
@@ -343,13 +363,31 @@ class FeatureExtraction(object):
                     # filter feature                    
                     if not self.filter_evt_feature(feature):
                         feature_data.append([info,label,feature])
-                    
-                    
-                        
-        #self.write_feature("trigger-theme", o_doc.doc_id, feature_data)
-        
+                                        
         return feature_data
     
+    def extract_bnd(self, o_doc):
+        """
+        extract binding event with one or two argument
+        """
+        feature_data = []
+        
+        for i in range(0, len(o_doc.sen)): 
+            
+            o_sen = o_doc.sen[i]
+            
+            evt_trig = self.get_evt_trigger(o_sen)
+            # binding trigger candidate are tc without simple evt 
+            tc_list = [tc for tc in o_sen.trigger_candidate if tc not in evt_trig]
+            # binding arguments are protein which have not been been used by simple evt
+            p_list = [p for p in o_sen.protein if p not in o_sen.rel.get_theme(evt_trig)]
+            
+            for tc in tc_list:
+                for arg1 in p_list:
+                    for arg2 in p_list:
+            
+            
+    """  FEATURE FOR EVENTS  """
     
     def get_feature_tp(self, o_sen, trig_wn, arg_wn):
         
@@ -451,6 +489,7 @@ class FeatureExtraction(object):
         return feature
     
     
+    """  LABEL FOR EVENTS  """
         
     def get_tp_label(self, o_sen, trig_wn, arg_wn):
         """
@@ -525,6 +564,7 @@ class FeatureExtraction(object):
                 label = 0
                 
         return label
+
     
 if __name__ == "__main__":
     
