@@ -156,6 +156,21 @@ class Prediction(object):
             
         print "finish built docs in:", dt.now() - dt_start
 
+    def update_doc(self, list_info, list_target, arg1_name, arg2_name = ''):
+        """
+        add relation and trigger in the document
+        """
+        for i in range(0,len(list_info)):
+            target = list_target[i]
+            if target < 1: continue
+            info = list_info[i]
+            doc_id = info["doc"]
+            if info.get('a2',-1) < 0:
+                # only argument 1
+                self.docs[doc_id].add_relation(info['sen'], self.EVENT_NAME[target], info['t'], info['a'], arg1_name)
+            else:
+                self.docs[doc_id].add_relation(info['sen'], self.EVENT_NAME[target], info['t'], info['a'], arg1_name, info['a2'], arg2_name)
+
     def update_doc_info(self, list_info, list_target, arg_name, arg_type):
         """
         update trigger and relation of document
@@ -330,7 +345,7 @@ class Prediction(object):
         print '---------------------------------------'
         Ypred, _, info = self.predict_evt()
         # update document
-        self.update_doc_info(info, Ypred, "Theme", "P")
+        self.update_doc(info, Ypred, "Theme", "P")
         
         # write a2
         if write_result:

@@ -71,6 +71,39 @@ class Sentence(object):
                 string += self.words[i]["string"] + " "
         return string.rstrip()
 
+    def add_relation(self, trig_type, trig_wn, arg1_wn, arg1_name, arg2_wn, arg2_name):
+        """
+        add relation and update word type with event name
+        """
+        # sanity check, whether word numbers are in range
+        if trig_wn >= self.nwords or arg1_wn >= self.nwords or arg2_wn >= self.nwords:
+            raise ValueError("Word number out of range")        
+        
+        # add into trigger list
+        if trig_wn not in self.trigger:
+            self.trigger.append(trig_wn)
+        
+        # update word type
+        current_word_type = self.words[trig_wn]["type"]
+        if current_word_type == 'null' or current_word_type == trig_type:
+            self.words[trig_wn]["type"] = trig_type
+        else:
+            # TODO: log this event
+            print 'reassigned word type ' + trig_type + ' to ' + current_word_type + '(' +self.words[trig_wn]['string'] + ')'
+            #raise ValueError('Cannot update word type to ' +trig_type+ '! It has been assigned to ' +current_word_type)
+        
+        # get arg type
+        arg1_type = 'P' if self.words[arg1_wn]['type'] == 'Protein' else 'E'
+        arg1_tuple = (arg1_wn, arg1_name, arg1_type)
+        arg2_tuple = ()
+        
+        if arg2_wn >= 0:
+            arg2_type = 'P' if self.words[arg2_wn]['type'] == 'Protein' else 'E'
+            arg2_tuple = (arg2_wn, arg2_name, arg2_type)
+        
+        self.rel.add_relation(trig_wn, arg1_tuple, arg2_tuple)
+
+    '''
     def update(self, trig_wn, trig_type, arg_wn, arg_name, arg_type):
         # sanity check, whether word numbers are in range
         if trig_wn >= self.nwords or arg_wn >= self.nwords:
@@ -112,7 +145,9 @@ class Sentence(object):
         
         # add theme2 entry
         self.rel.add_relation(trig_wn, theme2_wn, 'Theme2', 'P')
-        
+    
+    '''
+    
     def test(self):
         
         print "start offset:", self.start_offset

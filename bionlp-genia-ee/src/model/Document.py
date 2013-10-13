@@ -50,7 +50,17 @@ class Document(object):
         elif rel_type == 'theme2':
             self.sen[sen_num].update_theme2(trig_wn, arg_wn)
         else:
-            raise ValueError("")        
+            raise ValueError("")   
+        
+    def add_relation(self, sen_num, trig_type, trig_wn, arg1_wn, arg1_name, arg2_wn = -1, arg2_name = ''):
+        """
+        add relation and update word type
+        """
+        # sanity check
+        if arg2_wn >= 0 and arg2_name == '':
+            # error if arg2 name is not present
+            raise ValueError('arg2 name is empty')
+        self.sen[sen_num].add_relation(trig_type, trig_wn, arg1_wn, arg1_name, arg2_wn, arg2_name)
                     
         
 class DocumentBuilder(object):

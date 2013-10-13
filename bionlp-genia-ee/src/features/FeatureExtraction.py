@@ -366,6 +366,7 @@ class FeatureExtraction(object):
                                         
         return feature_data
     
+    '''
     def extract_bnd(self, o_doc):
         """
         extract binding event with one or two argument
@@ -385,7 +386,7 @@ class FeatureExtraction(object):
             for tc in tc_list:
                 for arg1 in p_list:
                     for arg2 in p_list:
-            
+    '''
             
     """  FEATURE FOR EVENTS  """
     
@@ -557,7 +558,7 @@ class FeatureExtraction(object):
         """
         label = 0
         
-        if o_sen.rel.check_relation(trig_wn, arg_wn, "Theme", "P"):
+        if o_sen.rel.check_simple_relation(trig_wn, arg_wn, "P"):
             label = self.EVENT_LABEL[o_sen.words[trig_wn]["type"]]
             # only label for 1 to 5
             if label > 5:
