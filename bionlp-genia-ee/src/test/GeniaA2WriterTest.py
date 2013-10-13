@@ -56,7 +56,7 @@ class GeniaA2WriterTest(object):
         self.a2writter.write(o_doc)
         
     def test3(self):
-        dir_name_eval = "test-model-013"    
+        dir_name_eval = "ml2-test-model-009"    
         doc_ids = ['PMID-1763325']
         dict_type = 'train'
         
@@ -72,4 +72,4 @@ class GeniaA2WriterTest(object):
 if __name__ == "__main__":
     
     test = GeniaA2WriterTest()
-    test.test3()
+    test.test1()

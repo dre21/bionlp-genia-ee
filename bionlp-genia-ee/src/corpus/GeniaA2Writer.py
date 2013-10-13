@@ -25,9 +25,9 @@ class GeniaA2Writer(object):
         # (27, 35, 'Theme', 'P'), (6, 5, 'Theme', 'E')
         #print "writing:", o_doc.doc_id
         
-        trigger_list, mapping_offset = self.build_trigger(o_doc)
+        trigger_list, mapping_offset = self.create_trigger(o_doc)
         
-        event_list = self.build_relation(o_doc, mapping_offset)
+        event_list = self.create_relation(o_doc, mapping_offset)
         
         path = self._path + '/' + o_doc.doc_id + self.A2_EXT
         
@@ -38,14 +38,12 @@ class GeniaA2Writer(object):
                 f.write(t[0] + '\t' + t[1] + ' ' + str(t[2]) + ' ' + str(t[3]) + '\t' + t[4] + '\n')
         
             # write event
-            for e in event_list:
-                f.write(e[0] + '\t' + e[1] + ':' + e[2] + ' Theme:' + e[3])
-                # write theme2
-                if e[4] != '':
-                    f.write(' Theme2:' + e[4])
-                # write cause
-                elif e[5] != '': 
-                    f.write(' Cause:' + e[5])
+            # event list: 1 [u'Negative_regulation', 'T60', 'Theme', 'E2', 'E', 'Cause', 'T4', 'P']
+            for eid, evt in event_list.iteritems():
+                f.write('E'+str(eid) + '\t' + evt[0] + ':' + evt[1] + ' Theme:' + evt[3])
+                # if there is second argument
+                if len(evt) > 5:
+                    f.write(' ' + evt[5] + ':' + evt[6])                
                 f.write('\n')
         
         '''
@@ -54,7 +52,7 @@ class GeniaA2Writer(object):
             print k,v
         '''
         
-    def build_trigger(self, o_doc):
+    def create_trigger(self, o_doc):
         prot_count = 0        
         temp_triggers = []
         trigger_list = []
@@ -86,6 +84,128 @@ class GeniaA2Writer(object):
             trig_num += 1
             
         return trigger_list, mapping_offset
+    
+    def create_relation(self, o_doc, mapping_offset):
+        all_events = {}
+        event_cnt = 1        
+        for sen in o_doc.sen:
+            events = {}                        
+            trig_evt_map = defaultdict(list)
+            
+            '''
+            print '\n----------------', sen.number, '----------------'
+            for k,v in sen.rel.data.iteritems():
+                print 'rel:', k,v
+            print '\n'
+            '''         
+            # duplicating argument
+            for _ in range(0,3):
+                duplicate = defaultdict(list)
+                for trig, args in sen.rel.data.iteritems():
+                    for arg in args:                    
+                        if len(arg) > 3:
+                            total_dup = 1
+                            if arg[2] == 'E': total_dup = total_dup * len(sen.rel.data[arg[0]])
+                            if arg[5] == 'E': total_dup = total_dup * len(sen.rel.data[arg[3]])
+                            
+                            if args.count(arg) != total_dup :
+                                for _ in range(1,total_dup):
+                                    duplicate[trig].append(arg)
+                        else:                        
+                            if arg[2] == 'E' and args.count(arg) != len(sen.rel.data[arg[0]]):
+                                for _ in range(1,len(sen.rel.data[arg[0]])):
+                                    duplicate[trig].append(arg)
+                        
+                # update relation with duplicate
+                for trig, args in duplicate.iteritems():
+                    sen.rel.data[trig] += args
+            
+            # relation items
+            # 8 : [(10,'Theme','P',12,'Theme','P'), (18,'Theme','P',20,'Theme','P')]
+            for trig, args in sen.rel.data.iteritems():
+                # get trigger id
+                t_word = sen.words[trig]
+                t_offset = t_word['start']
+                t_type = t_word['type']
+                                
+                # get all arguments group
+                for arg in args:
+                    # adding trigger to event dict
+                    events[event_cnt] = [t_type, mapping_offset[t_offset]]
+                    trig_evt_map[mapping_offset[t_offset]].append(event_cnt)
+                    
+                    # get argument 1                    
+                    a1_word = sen.words[arg[0]]
+                    a1_offset = a1_word['start']
+                    # adding arg1 name to event dict
+                    events[event_cnt].append(arg[1])
+                    # adding arg1 id to event dict
+                    events[event_cnt].append(mapping_offset[a1_offset])
+                    # adding arg1 type (P or E) to event dict
+                    events[event_cnt].append(arg[2])
+                                                            
+                    # get argument 2 if exist
+                    if len(arg) > 3:
+                        a2_word = sen.words[arg[3]]
+                        a2_offset = a2_word['start']
+                        # adding arg2 name to event dict
+                        events[event_cnt].append(arg[4])
+                        # adding arg2 id to event dict
+                        events[event_cnt].append(mapping_offset[a2_offset])
+                        # adding arg2 type (P or E) to event dict
+                        events[event_cnt].append(arg[5])
+                
+                    event_cnt += 1
+                    
+            # update trigger with event id
+            tcnt = {}
+            for k,v in trig_evt_map.iteritems():
+                tcnt[k] = len(v)
+            for e_id, evt in events.iteritems():
+                if len(evt) > 5:
+                    # both argument to replace
+                    if  evt[4] == 'E' and evt[7] == 'E':
+                        tid1 = evt[3]
+                        tid2 = evt[6]
+                        offset1 = tcnt[tid1] - 1
+                        offset2 = tcnt[tid2] - 1
+                        tcnt[tid1] -= 1
+                        if tcnt[tid1] == 0: 
+                            tcnt[tid1] = len(trig_evt_map[tid1])
+                            tcnt[tid2] -= 1
+                        evt[3] = 'E' + str(trig_evt_map[tid1][offset1])
+                        evt[6] = 'E' + str(trig_evt_map[tid2][offset2])
+                        
+                    # event with only argument1 to replace
+                    elif evt[4] == 'E':
+                        tid = evt[3]
+                        offset = tcnt[tid] - 1
+                        tcnt[tid] -= 1
+                        if tcnt[tid] == 0: tcnt[tid] = len(trig_evt_map[tid])
+                        evt[3] = 'E' + str(trig_evt_map[tid][offset])
+                    # event with only argument2 to replace
+                    elif evt[7] == 'E':
+                        tid = evt[6]
+                        offset = tcnt[tid] - 1
+                        tcnt[tid] -= 1
+                        if tcnt[tid] == 0: tcnt[tid] = len(trig_evt_map[tid])
+                        evt[6] = 'E' + str(trig_evt_map[tid][offset])
+                else:
+                    # event with only 1 argument
+                    if evt[4] == 'E':
+                        tid = evt[3]
+                        offset = tcnt[tid] - 1
+                        tcnt[tid] -= 1
+                        evt[3] = 'E' + str(trig_evt_map[tid][offset])
+            
+                 
+            #for k,v in trig_evt_map.iteritems():
+            #    print k,v
+            #for k,v in events.iteritems():
+            #    print k,v
+            all_events.update(events)
+        return all_events
+            
         
     def build_relation(self, o_doc, mapping_offset):
         
@@ -235,3 +355,7 @@ class GeniaA2Writer(object):
                 event_list.append((evt_id,evt_type,trig_id,theme1_id,theme2_id,cause_id))
                  
         return event_list
+    
+    
+    
+    
