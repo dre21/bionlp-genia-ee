@@ -90,7 +90,7 @@ class DocumentBuilderTest(object):
             # relation representation
             print "relation:"
             if o_sen.rel != None:
-                print o_sen.rel.data 
+                print o_sen.rel.data.items()
     
     
 if __name__ == "__main__":
