@@ -100,7 +100,7 @@ def predict_dev2(src, dir_name):
     
     """ ----- make a prediction for dev corpus  ----- """
     prediction2 = Prediction(src, dir_name, dict_type)    
-    prediction2.predict2(docs)
+    prediction2.predict2(docs, True)
 
 
 
@@ -118,8 +118,8 @@ if __name__ == '__main__':
     
     source = "E:/corpus/bionlp2011/project_data"
 
-    dir_name_eval = "ml2-test-model-011-1"    
-    dir_name_final = "ml2-model-011-1"
+    dir_name_eval = "ml2-test-model-012-f1"    
+    dir_name_final = "ml2-model-012-f1"
     
     # evaluation
     #learn_train(source, dir_name_eval)
