@@ -97,8 +97,8 @@ class Learning(object):
         'tc' => trigger-theme-cause relation to predict regulation event with theme and cause (binary)
         't2' => trigger-theme1-theme2 relation to predict theme2 in binding (binary)
         """
-        if step not in ['tt','tp','tc','t2','evt']:
-            raise ValueError("only support step for tt, tp, tc, t2 and evt")
+        if step not in ['tt','tp','tc','t2','evt', 'bnd']:
+            raise ValueError("only support step for tt, tp, tc, t2 and evt, bnd")
         
         X = []
         Y = []
@@ -122,6 +122,8 @@ class Learning(object):
                 samples = self.extraction.extract_t2(o_doc)
             elif step == 'evt':
                 samples =  self.extraction.extract_evt(o_doc)
+            elif step == 'bnd':
+                samples =  self.extraction.extract_bnd(o_doc)
             
             for sample in samples:
                 X.append(sample[2])
@@ -203,7 +205,7 @@ class Learning(object):
         svm.learn(X, Y) 
         
     def learn_evt(self, docid_list_fname):
-        print 'learning trigger - protein simple relation'
+        print '\nlearning trigger - protein simple relation'
         print '------------------------------------------'
         # get list of file
         doc_ids = self.get_docid_list(docid_list_fname)
@@ -213,6 +215,22 @@ class Learning(object):
                         
         # init svm classifier
         svm = SVM(self.path, 'evt','linear', grid_search = True, class_weight = 'auto')        
+        svm.create()
+        
+        # fit training data
+        svm.learn(X, Y)
+        
+    def learn_bnd(self, docid_list_fname):
+        print '\nlearning binding event'
+        print '------------------------------------------'
+        # get list of file
+        doc_ids = self.get_docid_list(docid_list_fname)
+        
+        # get features and target
+        X, Y = self.get_feature(doc_ids, 'bnd')
+                        
+        # init svm classifier
+        svm = SVM(self.path, 'bnd','linear', grid_search = True, class_weight = 'auto')        
         svm.create()
         
         # fit training data

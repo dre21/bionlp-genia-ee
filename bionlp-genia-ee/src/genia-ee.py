@@ -45,7 +45,8 @@ def learn_train2(src, dir_name):
     
     learning = Learning(src, dir_name, dict_type)
     
-    learning.learn_evt(docs)        
+    learning.learn_evt(docs)
+    learning.learn_bnd(docs)              
 
 
 def predict_dev(src, dir_name):
@@ -98,6 +99,13 @@ def predict_dev2(src, dir_name):
     print "Gene_expression Transcription Protein_catabolism Phosphorylation Localization"
     print_matrix(Ytest, Ypred, [1,2,3,4,5])
     
+    # validation score for simple event    
+    validation.set_prediction_docs(docs, is_test = False)
+    Ypred,Ytest,_ = validation.predict_bnd()
+    print "Binding"
+    print_matrix(Ytest, Ypred, [1])
+    
+    
     """ ----- make a prediction for dev corpus  ----- """
     prediction2 = Prediction(src, dir_name, dict_type)    
     prediction2.predict2(docs, True)
@@ -118,8 +126,8 @@ if __name__ == '__main__':
     
     source = "E:/corpus/bionlp2011/project_data"
 
-    dir_name_eval = "ml2-test-model-012-f1"    
-    dir_name_final = "ml2-model-012-f1"
+    dir_name_eval = "ml2-test-model-012"    
+    dir_name_final = "ml2-model-012"
     
     # evaluation
     #learn_train(source, dir_name_eval)
