@@ -10,7 +10,9 @@ class Feature(object):
     parent class for all features: Dependency, Sentence, Chunk, etc
     it provides common function
     """
-
+    
+    EVENTS = ['Gene_expression', 'Transcription', 'Protein_catabolism', 'Phosphorylation', 'Localization',
+              'Binding', 'Regulation','Positive_regulation','Negative_regulation']
 
     def __init__(self, prefix):
         """
