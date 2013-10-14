@@ -118,6 +118,10 @@ class Relation(object):
         arg_name: "Theme", "Theme2", "Cause"
         arg_type: "P", or "E"
         """
+        if arg2_tuple != ():
+            if arg1_tuple in self.data[trigger_wn]:
+                self.data[trigger_wn].remove(arg1_tuple)
+        
         args_tuple = arg1_tuple + arg2_tuple
         
         # check duplicate        
@@ -139,7 +143,37 @@ class Relation(object):
             if cond1 and cond2:
                 return True
         return retval
+    
+    def check_theme2_relation(self, trigger_wn, arg1_wn, arg2_wn):
+        """
+        for binding with theme2
+        """
+        retval = False
+        relations = self.data.get(trigger_wn,[])
+        for rel in relations:
+            # rel = (10,'Theme','P',12,'Theme','P')
+            # argument 1 and 2will always a 'theme'
+            if len(rel) < 4: continue
+            cond1 = arg1_wn == rel[0]
+            cond2 = arg2_wn == rel[3]            
+            if cond1 and cond2:
+                return True
+        return retval
 
+    def get_arguments(self, trigger_wn):
+        """
+        return list of arguments for a given trigger_wn
+        """
+        if type(trigger_wn) != list:
+            trigger_wn = [trigger_wn]
+            
+        args = []   
+        for t in trigger_wn:  
+            for arg in self.data[t]:
+                args.append(arg[0])
+                if len(arg) > 3:
+                    args.append(arg[3])
+        return args
     '''    
     def get_tp_triger(self):
         """
