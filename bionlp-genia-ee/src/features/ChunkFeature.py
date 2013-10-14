@@ -19,15 +19,15 @@ class ChunkFeature(Feature):
         """
         super(ChunkFeature, self).__init__(prefix)                
            
-    def get_prep_word(self, o_sen, trig_wn, arg_wn):
+    def get_prep_word(self, o_sen, wn1, wn2):
         """
         return tuple of prepositions (string,word_number)                
         """
         o_chunk = o_sen.chunk
         preps_word = []
-        trig_chk_num = o_chunk.chunk_map[trig_wn]
-        arg_chk_num = o_chunk.chunk_map[arg_wn]
-        for chk_num in range(trig_chk_num+1, arg_chk_num):
+        wn1_chk_num = o_chunk.chunk_map[wn1]
+        wn2_chk_num = o_chunk.chunk_map[wn2]
+        for chk_num in range(wn1_chk_num+1, wn2_chk_num):
             prep = o_chunk.prep_chunk.get(chk_num,None)
             if prep != None:
                 preps_word.append(prep)                
@@ -42,27 +42,34 @@ class ChunkFeature(Feature):
         o_chunk = o_sen.chunk
         o_dep = o_sen.dep
         
-                
         """ capture feature of events expressed in a chunk layer """
         # is in the same chunk
         if o_chunk.same_chunk(trig_wn, arg_wn):            
-            self.add(prefix + '1chk',True)
-            self.add(prefix + o_chunk.get_type(trig_wn), True)
+            self.add(prefix+'l_chk',True)
+            self.add(prefix+o_chunk.get_type(trig_wn), True)
+            self.add(prefix+'dist',0)
                                             
-        
-        """ capture feature of events expressed in a phrase layer """
-        # check any preposition chunk in between trigger and argument    
-        dpath_trg_arg = o_dep.get_shortest_path(trig_wn, arg_wn)
-        if len(dpath_trg_arg) > 2:
-            edges = o_dep.get_edges_name(dpath_trg_arg)
-            if edges[0] == 'prep':
-                self.add(prefix+'has_prep', True)
-                prep = o_sen.words[dpath_trg_arg[1]]['string']
-                self.add(prefix+'prep_'+prep, True)
-         
-        """ capture feature of events expressed in a clause layer """
-        # distance between chunk
-        self.add(prefix + 'dist', o_chunk.distance(trig_wn, arg_wn))
+        else:
+            """ capture feature of events expressed in a phrase or clause layer """
+            # check any preposition chunk in between trigger and argument    
+            if trig_wn < arg_wn:
+                preps = self.get_prep_word(o_sen, trig_wn, arg_wn)
+                if len(preps) == 1:
+                    # prep must be next chunk of trigger
+                    trig_cn = o_sen.chunk.chunk_map[trig_wn]
+                    prep_cn = o_sen.chunk.chunk_map[preps[0][1]]
+                    if trig_cn + 1 == prep_cn:
+                        self.add(prefix+'l_prep', True)
+                        self.add(prefix+'prep_'+preps[0][0], True)
+                    else:
+                        self.add(prefix+'l_clause', True)
+                         
+            # distance between chunk using dependency
+            upath = o_dep.get_shortest_path(trig_wn, arg_wn, "undirected")
+            chunk_nums = []
+            for node in upath:
+                chunk_nums.append(o_chunk.chunk_map[node])                
+            self.add(prefix+'dist', len(set(chunk_nums))-1)
                   
     def extract_feature_tp(self, o_sen, trig_wn, arg_wn):
         """
@@ -145,6 +152,29 @@ class ChunkFeature(Feature):
             self.add('dist', len(set(chunk_nums))-1)
         
         
+    def extract_feature_bnd(self, o_sen, trig_wn, arg1_wn, arg2_wn = -1):
+        """
+        extract dependency feature for binding event
+        """        
+        # reset feature
+        self.feature = {}
         
+        o_chunk = o_sen.chunk
         
+        self._extract_common_feature(o_sen, trig_wn, arg1_wn, 'th1')
+        if arg2_wn != -1:
+            
+            self._extract_common_feature(o_sen, trig_wn, arg2_wn, 'th2')
+        
+            # arg 1 and 2 in same chunk
+            self.add('arg_1chk', o_chunk.same_chunk(arg1_wn, arg2_wn))
+            
+            # preposition between arguments
+            preps = self.get_prep_word(o_sen, arg1_wn, arg2_wn)
+            for prep in preps:
+                self.add('prep_'+prep[0], True)
+            
+            
+            
+            
         

@@ -203,7 +203,7 @@ class SentenceFeature(Feature):
             
         # extract word feature for trigger
         self.extract_word_feature(o_sen.words[trig_wn], "t")
-      
+                
         # extract word feature for words around trigger candidate
         if trig_wn - 1 >= 0:
             self.extract_word_feature(o_sen.words[trig_wn-1], "tw-1")
@@ -222,7 +222,7 @@ class SentenceFeature(Feature):
             if self.in_between(p, trig_wn, arg_wn):
                 n_prot += 1
         self.add('n_prot', n_prot)
-       
+
         # probability of trigger on each event
         self.add('score_1', self.get_score(o_sen.words[trig_wn], 'Gene_expression'))
         self.add('score_2', self.get_score(o_sen.words[trig_wn], 'Transcription'))
@@ -230,6 +230,26 @@ class SentenceFeature(Feature):
         self.add('score_4', self.get_score(o_sen.words[trig_wn], 'Phosphorylation'))
         self.add('score_5', self.get_score(o_sen.words[trig_wn], 'Localization'))        
                     
+    def extract_feature_bnd(self, o_sen, trig_wn, arg1_wn, arg2_wn):
+        """
+        extract feature for binding relation
+        """ 
+        # reset feature
+        self.feature = {}
+        
+        # extract word feature for trigger
+        self.extract_word_feature(o_sen.words[trig_wn], "t")
+        
+        # probability of trigger on each event
+        t_word = o_sen.words[trig_wn]
+        self.add('score_b', self.get_score(t_word, 'Binding'))
+        
+        # average score for other event
+        score = 0
+        for e in self.EVENTS:
+            if e == 'Binding': continue
+            score += self.get_score(t_word, e)
+        self.add('score_o', score * 1.0 / 8)
     
     def get_score(self, word, event_type):
         """

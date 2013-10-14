@@ -366,7 +366,7 @@ class FeatureExtraction(object):
                                         
         return feature_data
     
-    '''
+    
     def extract_bnd(self, o_doc):
         """
         extract binding event with one or two argument
@@ -374,20 +374,69 @@ class FeatureExtraction(object):
         feature_data = []
         
         for i in range(0, len(o_doc.sen)): 
-            
+            #print '---------------------------------------------------------'
             o_sen = o_doc.sen[i]
             
-            evt_trig = self.get_evt_trigger(o_sen)
+            evt_trig = []
+            for t in o_sen.trigger:
+                if o_sen.words[t]['type'] in self.SIMPLE_EVENT:
+                    evt_trig.append(t)
+                        
             # binding trigger candidate are tc without simple evt 
             tc_list = [tc for tc in o_sen.trigger_candidate if tc not in evt_trig]
             # binding arguments are protein which have not been been used by simple evt
-            p_list = [p for p in o_sen.protein if p not in o_sen.rel.get_theme(evt_trig)]
+            p_list = [p for p in o_sen.protein if p not in o_sen.rel.get_arguments(evt_trig)]
+            
+            #print 'svt:', evt_trig
+            #print 'tc:', tc_list
+            #print 'prot:', p_list
             
             for tc in tc_list:
-                for arg1 in p_list:
-                    for arg2 in p_list:
-    '''
-            
+                for p1 in p_list:
+                                        
+                    
+                    # get feature binding with 1 argument
+                    feature = self.get_feature_bnd(o_sen, tc, p1)
+                    info = {"doc":o_doc.doc_id, "sen":i, "t":tc, "a":p1}
+                    # label
+                    label = -1
+                    if not o_doc.is_test:
+                        label = self.get_bnd_label(o_sen, tc, p1)  
+                        # statistical info
+                        if label == 0:
+                            self.sample_neg += 1
+                        else:
+                            self.sample_pos += 1
+                    # filter feature                    
+                    #if not self.filter_svt_feature(feature):
+                    feature_data.append([info,label,feature])
+                    #print '1 arg:', i, tc, p1, '=>', label
+                        
+                    for p2 in p_list:
+                        # skip, there is no example of p2 < p1
+                        if p2 <= p1: continue
+                        
+                        # get feature binding with 2 arguments
+                        feature = self.get_feature_bnd(o_sen, tc, p1, p2)
+                        info = {'doc':o_doc.doc_id, 'sen':i, 't':tc, 'a':p1, 'a2':p2}
+                        # label
+                        label = -1
+                        if not o_doc.is_test:
+                            label = self.get_bnd_label(o_sen, tc, p1, p2)  
+                            # statistical info
+                            if label == 0:
+                                self.sample_neg += 1
+                            else:
+                                self.sample_pos += 1
+                        # filter feature                    
+                        #if not self.filter_bnd_feature(feature):
+                        feature_data.append([info,label,feature])
+                        
+                        #print '2 arg:', i, tc, p1, p2, '=>', label
+                            
+        return feature_data
+    
+    
     """  FEATURE FOR EVENTS  """
     
     def get_feature_tp(self, o_sen, trig_wn, arg_wn):
@@ -489,6 +538,25 @@ class FeatureExtraction(object):
         
         return feature
     
+    def get_feature_bnd(self, o_sen, trig_wn, arg1_wn, arg2_wn = -1):        
+        """
+        get features for binding event
+        """
+        feature = {}
+        
+        # add sentence feature
+        self.SF.extract_feature_bnd(o_sen, trig_wn, arg1_wn, arg2_wn)
+        feature.update(self.SF.feature)
+        
+        # add dependency feature
+        self.DF.extract_feature_bnd(o_sen, trig_wn, arg1_wn, arg2_wn)
+        feature.update(self.DF.feature)
+        
+        # add chunk feature
+        self.CF.extract_feature_bnd(o_sen, trig_wn, arg1_wn, arg2_wn)
+        feature.update(self.CF.feature)
+        
+        return feature
     
     """  LABEL FOR EVENTS  """
         
@@ -565,6 +633,22 @@ class FeatureExtraction(object):
                 label = 0
                 
         return label
+    
+    def get_bnd_label(self,o_sen, trig_wn, arg1_wn, arg2_wn = -1):
+        """
+        label for binding event
+        """
+        if o_sen.words[trig_wn]["type"] != 'Binding': return 0        
+                       
+        label = 0
+        if arg2_wn == -1:
+            if o_sen.rel.check_simple_relation(trig_wn, arg1_wn, "P"):
+                label = 1            
+        else:
+            if o_sen.rel.check_theme2_relation(trig_wn, arg1_wn, arg2_wn):
+                label = 1
+           
+        return label
 
     
 if __name__ == "__main__":
@@ -572,7 +656,7 @@ if __name__ == "__main__":
     
     
     source = "E:/corpus/bionlp2011/project_data"
-    doc_id = "PMID-10080948"
+    doc_id = "PMC-2806624-03-RESULTS-02"
     #doc_id = "PMID-9351352"
     
     WD = WordDictionary(source)    
@@ -587,7 +671,7 @@ if __name__ == "__main__":
     o_doc = builder.build_doc_from_raw(doc, is_test=False)
     
     FE = FeatureExtraction(source, WD, TD)
-    feature = FE.extract_evt(o_doc)
+    feature = FE.extract_bnd(o_doc)
     for f in feature[0:50]:
         print f[0], f[1]
         print f[2]
