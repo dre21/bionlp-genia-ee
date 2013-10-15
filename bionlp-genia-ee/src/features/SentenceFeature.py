@@ -250,6 +250,35 @@ class SentenceFeature(Feature):
             if e == 'Binding': continue
             score += self.get_score(t_word, e)
         self.add('score_o', score * 1.0 / 8)
+        
+    def extract_feature_reg(self, o_sen, trig_wn, arg1_wn, arg2_wn):
+        """
+        extract feature for regulation relation
+        """ 
+        # reset feature
+        self.feature = {}
+        
+        # extract word feature for trigger, theme and cause
+        self.extract_word_feature(o_sen.words[trig_wn], "tr")        
+        self.extract_word_feature(o_sen.words[arg1_wn], "th")        
+        self.extract_word_feature(o_sen.words[arg2_wn], "ca")
+        
+        # type of theme and cause
+        self.add("a_type", o_sen.words[arg1_wn]["type"])               
+        self.add("c_type", o_sen.words[arg2_wn]["type"])
+        
+        # probability of trigger on each event
+        t_word = o_sen.words[trig_wn]
+        self.add('scr7', self.get_score(t_word, 'Regulation'))
+        self.add('scr8', self.get_score(t_word, 'Positive_regulation'))
+        self.add('scr9', self.get_score(t_word, 'Negative_regulation'))
+        
+        # average score for other event
+        score = 0
+        for e in self.EVENTS[0:6]:
+            score += self.get_score(t_word, e)
+        self.add('scr0', score * 1.0 / 6)
+        
     
     def get_score(self, word, event_type):
         """

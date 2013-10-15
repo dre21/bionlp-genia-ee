@@ -42,7 +42,7 @@ class Feature(object):
         #self.add(prefix + '_str_'+ stem, True)
                 
         # trigger probability score
-        if score:
+        if score and word["type"] != "Protein":
             self.add(prefix + '_tscore', word['score'])
             
             

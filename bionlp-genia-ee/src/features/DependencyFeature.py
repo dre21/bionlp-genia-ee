@@ -238,8 +238,19 @@ class DependencyFeature(Feature):
         if arg2_wn != -1:
             self._extract_feature_bnd_1arg(o_sen, trig_wn, arg2_wn, 'th2')
     
-        
     
+    def extract_feature_reg(self, o_sen, trig_wn, arg1_wn, arg2_wn):
+        """
+        extract feature for regulation relation
+        """ 
+        # reset feature
+        self.feature = {}
+        
+        self._extract_feature_reg_1arg(o_sen, trig_wn, arg1_wn, 'th')
+        if arg2_wn != -1:
+            self._extract_feature_reg_1arg(o_sen, trig_wn, arg2_wn, 'ca')
+        
+        
     def _extract_feature_bnd_1arg(self, o_sen, trig_wn, arg_wn, prefix):
         
         o_dep = o_sen.dep
@@ -270,6 +281,37 @@ class DependencyFeature(Feature):
             if t in tc: n_tc+=1
         self.add(prefix+'n_tc', n_tc)
         
+    
+    def _extract_feature_reg_1arg(self, o_sen, trig_wn, arg_wn, prefix):
+        
+        o_dep = o_sen.dep
+        
+        # type of dependency
+        dpath_trg_arg = self.simplify_dep(o_dep.get_shortest_path(trig_wn, arg_wn))
+        dpath_arg_trig = self.simplify_dep(o_dep.get_shortest_path(arg_wn, trig_wn))
+        upath = self.simplify_dep(o_dep.get_shortest_path(trig_wn, arg_wn, "undirected"))
+        
+        if dpath_trg_arg != []:
+            # set type
+            self.add(prefix+"type1", True)
+            # directed edges from trigger to protein
+            self.add(prefix+'t1-'+self.list_to_string(o_dep.get_edges_name(dpath_trg_arg)), True)
+        elif dpath_arg_trig != []:
+            self.add(prefix+"type2", True)
+            # directed edges from protein to trigger 
+            self.add(prefix+'t2-'+self.list_to_string(o_dep.get_edges_name(dpath_arg_trig)), True)
+        else:
+            self.add(prefix+"type3", True)
+            # undirected edges from trigger to protein
+            self.add(prefix+'t3-'+self.list_to_string(o_dep.get_edges_name(upath)), True)
+    
+        # number of trigger candidate between trigger and theme
+        tc = o_sen.trigger_candidate
+        n_tc = 0 
+        for t in upath[1:-1]:
+            if t in tc: n_tc+=1
+        self.add(prefix+'n_tc', n_tc)    
+    
         
     def simplify_dep(self, edges):
         """

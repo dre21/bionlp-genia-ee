@@ -97,8 +97,8 @@ class Learning(object):
         'tc' => trigger-theme-cause relation to predict regulation event with theme and cause (binary)
         't2' => trigger-theme1-theme2 relation to predict theme2 in binding (binary)
         """
-        if step not in ['tt','tp','tc','t2','evt', 'bnd']:
-            raise ValueError("only support step for tt, tp, tc, t2 and evt, bnd")
+        if step not in ['tt','tp','tc','t2','evt', 'bnd', 'reg']:
+            raise ValueError("only support step for tt, tp, tc, t2 and evt, bnd, reg")
         
         X = []
         Y = []
@@ -124,6 +124,8 @@ class Learning(object):
                 samples =  self.extraction.extract_evt(o_doc)
             elif step == 'bnd':
                 samples =  self.extraction.extract_bnd(o_doc)
+            elif step == 'reg':
+                samples =  self.extraction.extract_reg(o_doc)
             
             for sample in samples:
                 X.append(sample[2])
@@ -231,6 +233,22 @@ class Learning(object):
                         
         # init svm classifier
         svm = SVM(self.path, 'bnd','linear', grid_search = True, class_weight = 'auto')        
+        svm.create()
+        
+        # fit training data
+        svm.learn(X, Y)
+        
+    def learn_reg(self, docid_list_fname):
+        print '\nlearning regulation event'
+        print '------------------------------------------'
+        # get list of file
+        doc_ids = self.get_docid_list(docid_list_fname)
+        
+        # get features and target
+        X, Y = self.get_feature(doc_ids, 'reg')
+                        
+        # init svm classifier
+        svm = SVM(self.path, 'reg','linear', grid_search = True, class_weight = 'auto')        
         svm.create()
         
         # fit training data

@@ -105,7 +105,7 @@ class Prediction(object):
         'tc' => trigger-theme-cause relation to predict regulation event with theme and cause (binary)
         't2' => trigger-theme1-theme2 relation to predict theme2 in binding (binary)
         """
-        if step not in ['tt','tp','tc','t2','evt','bnd']:
+        if step not in ['tt','tp','tc','t2','evt','bnd','reg']:
             raise ValueError("only support step for tt, tp, tc, t2 and evt")
         
         X = []
@@ -133,6 +133,8 @@ class Prediction(object):
                 samples = self.extraction.extract_evt(o_doc)
             elif step == 'bnd':
                 samples = self.extraction.extract_bnd(o_doc)
+            elif step == 'reg':
+                samples = self.extraction.extract_reg(o_doc)
             
             for sample in samples:
                 X.append(sample[2])
@@ -319,6 +321,26 @@ class Prediction(object):
         
         return svm.predict(X), Y, info
     
+    def predict_reg(self):
+        """
+        return regulation event prediction of given docid_list
+        """
+        if self.docs == {}:
+            raise ValueError("docs have not been created. call set_prediction_docs first!")
+        
+        print '\npredict regulation relation'
+        print '---------------------------------------'
+        
+        # get features and target
+        X, Y, info = self.get_feature('reg')
+        
+        # init svm classifier
+        svm = SVM(self._model_path, "reg", "linear", grid_search = True, class_weight = 'auto')
+        svm.load()
+        
+        return svm.predict(X), Y, info
+    
+    
     def predict(self, docid_list_fname, write_result = True):
         
         # create document object for prediction
@@ -363,18 +385,20 @@ class Prediction(object):
         self.set_prediction_docs(docid_list_fname)
         
         # predict trigger-protein relation
-        print '\npredict trigger-protein simple relation'
-        print '---------------------------------------'
         Ypred, _, info = self.predict_evt()
         # update document
         self.update_doc(info, Ypred, "Theme")        
         
         # predict binding relation
-        print '\npredict binding relation'
-        print '---------------------------------------'
         Ypred, _, info = self.predict_bnd()
         # update document
         self.update_doc(info, self._update_label(Ypred, 1, 6), "Theme", "Theme2")
+        
+        
+        # predict regulation relation        
+        Ypred, _, info = self.predict_reg()
+        # update document
+        self.update_doc(info, Ypred, "Theme", "Cause")
         
         
         # write a2

@@ -437,6 +437,83 @@ class FeatureExtraction(object):
         return feature_data
     
     
+    def extract_reg(self, o_doc):
+        """
+        extract binding event with one or two argument
+        """
+        feature_data = []
+        
+        for i in range(0, len(o_doc.sen)): 
+            #print '---------------------------------------------------------'
+            o_sen = o_doc.sen[i]
+            
+            evt_trig = []
+            for t in o_sen.trigger:
+                if o_sen.words[t]['type'] in self.SIMPLE_EVENT + ['Binding']:
+                    evt_trig.append(t)
+                        
+            # regulation trigger candidate are tc without simple and binding event
+            # forbid to assign a word into more than 1 event
+            tc_list = [tc for tc in o_sen.trigger_candidate if tc not in evt_trig]
+            # regulation arguments are:
+            # 1) protein which have not been been used by simple and binding evt
+            # 2) triggers
+            arg_list = [p for p in o_sen.protein if p not in o_sen.rel.get_arguments(evt_trig)]
+            arg_list += o_sen.trigger
+            
+            #print 'svt:', evt_trig
+            #print 'tc:', tc_list
+            #print 'args:', arg_list
+            
+            for tc in tc_list:
+                for arg1 in arg_list:
+                    
+                    # skip self loop
+                    if tc == arg1: continue
+                    
+                    # get feature regulation with 1 argument
+                    feature = self.get_feature_reg(o_sen, tc, arg1)
+                    info = {"doc":o_doc.doc_id, "sen":i, "t":tc, "a":arg1}
+                    # label
+                    label = -1
+                    if not o_doc.is_test:
+                        label = self.get_label_reg(o_sen, tc, arg1)  
+                        # statistical info
+                        if label == 0:
+                            self.sample_neg += 1
+                        else:
+                            self.sample_pos += 1
+                    # filter feature                    
+                    #if not self.filter_svt_feature(feature):
+                    feature_data.append([info,label,feature])
+                    #print '1 arg:', i, tc, p1, '=>', label
+                    
+                    for arg2 in arg_list:
+                        
+                        # skip condition
+                        if arg1 == arg2: continue
+                        
+                        # get feature regulation with 1 argument
+                        feature = self.get_feature_reg(o_sen, tc, arg1, arg2)
+                        info = {'doc':o_doc.doc_id, 'sen':i, 't':tc, 'a':arg1, 'a2':arg2}
+                        # label
+                        label = -1
+                        if not o_doc.is_test:
+                            label = self.get_label_reg(o_sen, tc, arg1, arg2)  
+                            # statistical info
+                            if label == 0:
+                                self.sample_neg += 1
+                            else:
+                                self.sample_pos += 1
+                        # filter feature                    
+                        #if not self.filter_svt_feature(feature):
+                        feature_data.append([info,label,feature])
+                        #print '1 arg:', i, tc, p1, '=>', label
+                        
+        
+        return feature_data
+    
+    
     """  FEATURE FOR EVENTS  """
     
     def get_feature_tp(self, o_sen, trig_wn, arg_wn):
@@ -558,6 +635,27 @@ class FeatureExtraction(object):
         
         return feature
     
+    def get_feature_reg(self, o_sen, trig_wn, arg1_wn, arg2_wn = -1):        
+        """
+        get features for regulation event
+        """
+        feature = {}
+        
+        # add sentence feature
+        self.SF.extract_feature_reg(o_sen, trig_wn, arg1_wn, arg2_wn)
+        feature.update(self.SF.feature)
+        
+        # add dependency feature
+        self.DF.extract_feature_reg(o_sen, trig_wn, arg1_wn, arg2_wn)
+        feature.update(self.DF.feature)
+        
+        # add chunk feature
+        self.CF.extract_feature_reg(o_sen, trig_wn, arg1_wn, arg2_wn)
+        feature.update(self.CF.feature)
+        
+        return feature
+    
+    
     """  LABEL FOR EVENTS  """
         
     def get_tp_label(self, o_sen, trig_wn, arg_wn):
@@ -645,8 +743,25 @@ class FeatureExtraction(object):
             if o_sen.rel.check_simple_relation(trig_wn, arg1_wn, "P"):
                 label = 1            
         else:
-            if o_sen.rel.check_theme2_relation(trig_wn, arg1_wn, arg2_wn):
+            if o_sen.rel.check_arg2_relation(trig_wn, arg1_wn, arg2_wn, 'Theme2'):
                 label = 1
+           
+        return label
+    
+    
+    def get_label_reg(self,o_sen, trig_wn, arg1_wn, arg2_wn = -1):
+        """
+        label for regulation event
+        """
+        if o_sen.words[trig_wn]["type"] not in self.REGULATION_EVENT: return 0        
+                       
+        label = 0
+        if arg2_wn == -1:
+            if o_sen.rel.check_simple_relation(trig_wn, arg1_wn, arg_type = ''):
+                label = self.EVENT_LABEL[o_sen.words[trig_wn]["type"]]            
+        else:
+            if o_sen.rel.check_arg2_relation(trig_wn, arg1_wn, arg2_wn, 'Cause'):
+                label = self.EVENT_LABEL[o_sen.words[trig_wn]["type"]]        
            
         return label
 
@@ -656,7 +771,7 @@ if __name__ == "__main__":
     
     
     source = "E:/corpus/bionlp2011/project_data"
-    doc_id = "PMC-2806624-03-RESULTS-02"
+    doc_id = "PMC-1134658-06-Results-05"
     #doc_id = "PMID-9351352"
     
     WD = WordDictionary(source)    
@@ -671,8 +786,8 @@ if __name__ == "__main__":
     o_doc = builder.build_doc_from_raw(doc, is_test=False)
     
     FE = FeatureExtraction(source, WD, TD)
-    feature = FE.extract_bnd(o_doc)
+    feature = FE.extract_reg(o_doc)
     for f in feature[0:50]:
         print f[0], f[1]
-        print f[2]
+        #print f[2]
     

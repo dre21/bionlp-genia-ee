@@ -138,15 +138,16 @@ class Relation(object):
         for rel in relations:
             # rel = (10,'Theme','P')
             # argument1 will always a 'theme'
-            cond1 = arg_wn == rel[0]
-            cond2 = arg_type == rel[2]            
+            cond1 = arg_wn == rel[0]            
+            cond2 = arg_type == rel[2] if  arg_type != '' else True
+                            
             if cond1 and cond2:
                 return True
         return retval
     
-    def check_theme2_relation(self, trigger_wn, arg1_wn, arg2_wn):
+    def check_arg2_relation(self, trigger_wn, arg1_wn, arg2_wn, arg2_name):
         """
-        for binding with theme2
+        for relation with argument 2 (either binding with theme 2 or regulation with cause)
         """
         retval = False
         relations = self.data.get(trigger_wn,[])
@@ -155,8 +156,9 @@ class Relation(object):
             # argument 1 and 2will always a 'theme'
             if len(rel) < 4: continue
             cond1 = arg1_wn == rel[0]
-            cond2 = arg2_wn == rel[3]            
-            if cond1 and cond2:
+            cond2 = arg2_wn == rel[3]     
+            cond3 = arg2_name == rel[4]
+            if cond1 and cond2 and cond3:
                 return True
         return retval
 

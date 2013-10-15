@@ -120,36 +120,7 @@ class ChunkFeature(Feature):
         # reset feature
         self.feature = {}
         
-        o_chunk = o_sen.chunk
-        o_dep = o_sen.dep
-        
-        """ capture feature of events expressed in a chunk layer """
-        # is in the same chunk
-        if o_chunk.same_chunk(trig_wn, arg_wn):            
-            self.add('1chk',True)
-            self.add(o_chunk.get_type(trig_wn), True)
-            self.add('dist',0)
-                                            
-        else:
-            """ capture feature of events expressed in a phrase layer """
-            # check any preposition chunk in between trigger and argument    
-            if trig_wn < arg_wn:
-                preps = self.get_prep_word(o_sen, trig_wn, arg_wn)
-                if len(preps) == 1:
-                    # prep must be next chunk of trigger
-                    trig_cn = o_sen.chunk.chunk_map[trig_wn]
-                    prep_cn = o_sen.chunk.chunk_map[preps[0][1]]
-                    if trig_cn + 1 == prep_cn:
-                        self.add('has_prep', True)
-                        self.add('prep_'+preps[0][0], True)            
-             
-            """ capture feature of events expressed in a clause layer """
-            # distance between chunk using dependency
-            upath = o_dep.get_shortest_path(trig_wn, arg_wn, "undirected")
-            chunk_nums = []
-            for node in upath:
-                chunk_nums.append(o_chunk.chunk_map[node])                
-            self.add('dist', len(set(chunk_nums))-1)
+        self._extract_common_feature(o_sen, trig_wn, arg_wn)
         
         
     def extract_feature_bnd(self, o_sen, trig_wn, arg1_wn, arg2_wn = -1):
@@ -161,7 +132,7 @@ class ChunkFeature(Feature):
         
         o_chunk = o_sen.chunk
         
-        self._extract_common_feature(o_sen, trig_wn, arg1_wn, 'th1')
+        self._extract_common_feature(o_sen, trig_wn, arg1_wn)
         if arg2_wn != -1:
             
             self._extract_common_feature(o_sen, trig_wn, arg2_wn, 'th2')
@@ -175,6 +146,19 @@ class ChunkFeature(Feature):
                 self.add('prep_'+prep[0], True)
             
             
+    def extract_feature_reg(self, o_sen, trig_wn, arg1_wn, arg2_wn):
+        """
+        extract feature for regulation relation
+        """ 
+        # reset feature
+        self.feature = {}
+        
+        self._extract_common_feature(o_sen, trig_wn, arg1_wn)
+        if arg2_wn != -1:            
+            self._extract_common_feature(o_sen, trig_wn, arg2_wn, 'th2')
             
-            
+            # preposition between arguments
+            preps = self.get_prep_word(o_sen, arg1_wn, arg2_wn)
+            for prep in preps:
+                self.add('prep_'+prep[0], True)
         
