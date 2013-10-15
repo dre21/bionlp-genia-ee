@@ -23,8 +23,7 @@ class GeniaA2Writer(object):
     def write(self, o_doc):
         # relation 
         # (27, 35, 'Theme', 'P'), (6, 5, 'Theme', 'E')
-        #print "writing:", o_doc.doc_id
-        
+        #print "writing:", o_doc.doc_id        
         trigger_list, mapping_offset = self.create_trigger(o_doc)
         
         event_list = self.create_relation(o_doc, mapping_offset)
@@ -32,7 +31,7 @@ class GeniaA2Writer(object):
         path = self._path + '/' + o_doc.doc_id + self.A2_EXT
         
         
-        with open(path,'w') as f:            
+        with open(path,'wb') as f:            
             # write trigger
             for t in trigger_list:
                 f.write(t[0] + '\t' + t[1] + ' ' + str(t[2]) + ' ' + str(t[3]) + '\t' + t[4] + '\n')
@@ -128,8 +127,10 @@ class GeniaA2Writer(object):
                 t_offset = t_word['start']
                 t_type = t_word['type']
                                 
-                # get all arguments group
-                for arg in args:
+                # get all arguments group                
+                sorted_args = sorted(args, key=lambda x: len(x))
+                #print args, sorted_args
+                for arg in sorted_args:
                     # adding trigger to event dict
                     events[event_cnt] = [t_type, mapping_offset[t_offset]]
                     trig_evt_map[mapping_offset[t_offset]].append(event_cnt)
@@ -161,44 +162,105 @@ class GeniaA2Writer(object):
             tcnt = {}
             for k,v in trig_evt_map.iteritems():
                 tcnt[k] = len(v)
-            for e_id, evt in events.iteritems():
+                #print k, len(v)
+           
+            used_event = []
+            for e_id, evt in events.iteritems():          
+                #print e_id,evt      
                 if len(evt) > 5:
                     # both argument to replace
                     if  evt[4] == 'E' and evt[7] == 'E':
                         tid1 = evt[3]
                         tid2 = evt[6]
                         offset1 = tcnt[tid1] - 1
-                        offset2 = tcnt[tid2] - 1
-                        tcnt[tid1] -= 1
-                        if tcnt[tid1] == 0: 
-                            tcnt[tid1] = len(trig_evt_map[tid1])
-                            tcnt[tid2] -= 1
-                        evt[3] = 'E' + str(trig_evt_map[tid1][offset1])
-                        evt[6] = 'E' + str(trig_evt_map[tid2][offset2])
+                        offset2 = tcnt[tid2] - 1                        
+                        #print 'tid1-offset',tid1, offset1
+                        #print 'tid2-offset',tid2, offset2
+                        tmp_evt = list(evt)
+                        tmp_evt[3] = 'E' + str(trig_evt_map[tid1][offset1])
+                        tmp_evt[6] = 'E' + str(trig_evt_map[tid2][offset2])
+                        #print 'tmp:', tmp_evt 
+                        #print 'used:',used_event
+                        if tmp_evt in used_event:
+                            #print 'in used'
+                            tcnt[tid1] -= 1
+                            if tcnt[tid1] == 0: 
+                                tcnt[tid1] = len(trig_evt_map[tid1])
+                                tcnt[tid2] -= 1
+                                if tcnt[tid2] == 0: tcnt[tid2] = len(trig_evt_map[tid2])
+                            tid1 = evt[3]
+                            tid2 = evt[6]
+                            offset1 = tcnt[tid1] - 1
+                            offset2 = tcnt[tid2] - 1                        
+                            #print 'tid1-offset',tid1, offset1
+                            #print 'tid2-offset',tid2, offset2
+                            evt[3] = 'E' + str(trig_evt_map[tid1][offset1])
+                            evt[6] = 'E' + str(trig_evt_map[tid2][offset2])
+                        else:
+                            #print 'not used'
+                            evt[3] = 'E' + str(trig_evt_map[tid1][offset1])
+                            evt[6] = 'E' + str(trig_evt_map[tid2][offset2])
+                        used_event.append(evt)
                         
                     # event with only argument1 to replace
                     elif evt[4] == 'E':
                         tid = evt[3]
-                        offset = tcnt[tid] - 1
-                        tcnt[tid] -= 1
-                        if tcnt[tid] == 0: tcnt[tid] = len(trig_evt_map[tid])
-                        evt[3] = 'E' + str(trig_evt_map[tid][offset])
+                        offset = tcnt[tid] - 1                        
+                        #print 'tid-offset',tid, offset
+                        tmp_evt = list(evt)
+                        tmp_evt[3] = 'E' + str(trig_evt_map[tid][offset])
+                        #print 'tmp:', tmp_evt, 
+                        #print 'used:',used_event
+                        if tmp_evt in used_event:
+                            tcnt[tid] -= 1
+                            if tcnt[tid] == 0: tcnt[tid] = len(trig_evt_map[tid])
+                            tid = evt[3]
+                            offset = tcnt[tid] - 1                        
+                            #print 'tid-offset',tid, offset
+                            evt[3] = 'E' + str(trig_evt_map[tid][offset])
+                        else:
+                            evt[3] = 'E' + str(trig_evt_map[tid][offset])
+                        used_event.append(evt)
                     # event with only argument2 to replace
                     elif evt[7] == 'E':
                         tid = evt[6]
-                        offset = tcnt[tid] - 1
-                        tcnt[tid] -= 1
-                        if tcnt[tid] == 0: tcnt[tid] = len(trig_evt_map[tid])
-                        evt[6] = 'E' + str(trig_evt_map[tid][offset])
+                        offset = tcnt[tid] - 1                        
+                        #print 'tid-offset',tid, offset
+                        tmp_evt = list(evt)
+                        tmp_evt[6] = 'E' + str(trig_evt_map[tid][offset])
+                        #print 'tmp:', tmp_evt, 
+                        #print 'used:',used_event
+                        if tmp_evt in used_event:
+                            tcnt[tid] -= 1
+                            if tcnt[tid] == 0: tcnt[tid] = len(trig_evt_map[tid])
+                            tid = evt[6]
+                            offset = tcnt[tid] - 1                        
+                            #print 'tid-offset',tid, offset
+                            evt[6] = 'E' + str(trig_evt_map[tid][offset])
+                        else:
+                            evt[6] = 'E' + str(trig_evt_map[tid][offset])
+                        used_event.append(evt)
                 else:
                     # event with only 1 argument
                     if evt[4] == 'E':
                         tid = evt[3]
-                        offset = tcnt[tid] - 1
-                        tcnt[tid] -= 1
-                        evt[3] = 'E' + str(trig_evt_map[tid][offset])
-            
-                 
+                        offset = tcnt[tid] - 1                        
+                        #print 'tid-offset',tid, offset
+                        tmp_evt = list(evt)
+                        tmp_evt[3] = 'E' + str(trig_evt_map[tid][offset])
+                        #print 'tmp:', tmp_evt, 
+                        #print 'used:',used_event
+                        if tmp_evt in used_event:
+                            tcnt[tid] -= 1
+                            if tcnt[tid] == 0: tcnt[tid] = len(trig_evt_map[tid])
+                            tid = evt[3]
+                            offset = tcnt[tid] - 1                        
+                            #print 'tid-offset',tid, offset
+                            evt[3] = 'E' + str(trig_evt_map[tid][offset])
+                        else:
+                            evt[3] = 'E' + str(trig_evt_map[tid][offset])
+                        used_event.append(evt)
+                             
             #for k,v in trig_evt_map.iteritems():
             #    print k,v
             #for k,v in events.iteritems():
