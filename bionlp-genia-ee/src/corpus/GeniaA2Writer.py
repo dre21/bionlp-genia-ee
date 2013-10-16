@@ -32,7 +32,7 @@ class GeniaA2Writer(object):
         path = self._path + '/' + o_doc.doc_id + self.A2_EXT
         
         
-        with open(path,'w') as f:            
+        with open(path,'wb') as f:            
             # write trigger
             for t in trigger_list:
                 f.write(t[0] + '\t' + t[1] + ' ' + str(t[2]) + ' ' + str(t[3]) + '\t' + t[4] + '\n')
