@@ -114,6 +114,9 @@ class Relation(object):
         arg_name: "Theme", "Binding2", "Cause"
         arg_type: "P", or "E"
         """
+        # do not save self loop relation, during training
+        if trigger_wn == arg_wn: return
+        
         rel_tuple = (trigger_wn, arg_wn, arg_name, arg_type)
         # check duplicate
         if rel_tuple not in self.data:
