@@ -11,6 +11,8 @@ class Feature(object):
     it provides common function
     """
 
+    EVENTS = ['Gene_expression', 'Transcription', 'Protein_catabolism', 'Phosphorylation', 'Localization',
+              'Binding', 'Regulation','Positive_regulation','Negative_regulation']
 
     def __init__(self, prefix):
         """
@@ -24,6 +26,11 @@ class Feature(object):
     def add(self, feat_name, value):
         self.feature[self.prefix +'_'+feat_name] = value
         
+    def get_string_pattern(self, position):
+        string = ''
+        for _, node in sorted(position.iteritems()):
+            string += node + '-' 
+        return string.rstrip('-')
         
     def extract_word_feature(self, word, prefix, score = True):
         
@@ -42,5 +49,8 @@ class Feature(object):
         # trigger probability score
         if score:
             self.add(prefix + '_tscore', word['score'])
+        
+        self.add(prefix + 'tc', word['score'] > 0.02)
             
+        
             
