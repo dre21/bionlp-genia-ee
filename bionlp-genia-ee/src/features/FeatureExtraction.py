@@ -50,7 +50,7 @@ class FeatureExtraction(object):
     # filter out feature criteria
     FF_MAX_DEP_DIST = 5
     
-    FF_MAX_CHK_DIST = 10
+    FF_MAX_CHK_DIST = 4
     
     FF_MAX_WORD_DIST = 15
     
