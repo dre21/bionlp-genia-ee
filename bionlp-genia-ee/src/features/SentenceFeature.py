@@ -123,8 +123,13 @@ class SentenceFeature(Feature):
         # reset feature
         self.feature = {}
         
+        t_word = o_sen.words[trig_wn]
+        
         # extract common feature
         self._extract_common_feature(o_sen, trig_wn, arg_wn)
+        
+        # trigger base stem
+        self.add('base', t_word['stem'].lower().replace('-',''))
         
         # is adjacent
         self.add("adj", abs(trig_wn - arg_wn) == 1)
@@ -137,7 +142,6 @@ class SentenceFeature(Feature):
         self.add('arg_prob', self.get_score(o_sen.words[trig_wn], arg_type))
                 
         # probability of trigger on each event
-        t_word = o_sen.words[trig_wn]
         self.add('score_7', self.get_score(t_word, 'Regulation'))
         self.add('score_8', self.get_score(t_word, 'Positive_regulation'))
         self.add('score_9', self.get_score(t_word, 'Negative_regulation'))
