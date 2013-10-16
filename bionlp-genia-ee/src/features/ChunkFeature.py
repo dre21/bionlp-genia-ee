@@ -105,9 +105,26 @@ class ChunkFeature(Feature):
         # reset feature
         self.feature = {}
         
+        o_chk = o_sen.chunk
+        
         # extract common feature
         self._extract_common_feature(o_sen, trig_wn, theme_wn)
         self._extract_common_feature(o_sen, trig_wn, cause_wn, prefix='c_')
+        
+        # arg1 and arg2 in same chunk?
+        args_same_chk = o_chk.same_chunk(theme_wn, cause_wn)
+        
+        # distance between chunk
+        if args_same_chk:
+            self.add('arg_1chk', True)
+            self.add('arg_dist', 0)
+        else:
+            upath = o_sen.dep.get_shortest_path(theme_wn, cause_wn, "undirected")
+            chunk_nums = []
+            for node in upath:
+                chunk_nums.append(o_chk.chunk_map[node])
+            self.add('arg_dist', len(set(chunk_nums)) - 1)
+        
         #self._extract_common_feature(o_sen, theme_wn, cause_wn, prefix='ac')
         
         
