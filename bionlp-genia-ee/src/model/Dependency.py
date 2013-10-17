@@ -133,7 +133,25 @@ class Dependency(object):
             edges.append(edge)
         
         return edges
-                    
+    
+    def get_upath_root(self, upath):
+        """
+        return a root from undirected path
+        """
+        if len(upath) < 2: return -1
+        
+        root = [n for n in upath if n in self.graph.keys()]
+        nonroot = []
+        for n in upath:                     
+            nonroot += self.graph[n]
+           
+        root = list(set([r for r in root if r not in nonroot]))
+        
+        if len(root) != 1:
+            print upath, root, nonroot
+            raise ValueError('root not single')        
+        return root[0]
+                  
     def test(self):
         print "root", self.root
         

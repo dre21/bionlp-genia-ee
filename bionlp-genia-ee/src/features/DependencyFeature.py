@@ -38,10 +38,7 @@ class DependencyFeature(Feature):
         for t in upath[1:-1]:
             if t in tc: n_tc+=1
         self.add('n_tc', n_tc)
-        
-        # edges name from trigger to argument
-        edges = o_dep.get_edges_name(upath)
-        self.add(prefix+self.list_to_string(edges), True) 
+ 
         
         # direct path from trigger to prot
         dpath_trg_arg = o_dep.get_shortest_path(trig_wn, arg_wn)
@@ -62,26 +59,27 @@ class DependencyFeature(Feature):
             
         # extract word feature for parent of trigger
         parent = o_dep.get_parent(trig_wn)
-        if parent > 0:
-            self.extract_word_feature(o_sen.words[parent], prefix+"t_parent")
+        if parent >= 0:
+            self.extract_word_feature(o_sen.words[parent], prefix+"t_parent", score = False)
+            self.add('tpe_'+self.list_to_string(o_dep.get_edges_name([trig_wn,parent])), True)
             
         # extract word feature for parent of argument
         parent = o_dep.get_parent(arg_wn)
-        if parent > 0:
-            self.extract_word_feature(o_sen.words[parent], prefix+"a_parent")
-        
+        if parent >= 0:
+            self.extract_word_feature(o_sen.words[parent], prefix+"a_parent", score = False)
+            self.add('ape_'+self.list_to_string(o_dep.get_edges_name([arg_wn,parent])), True)
         
         # extract word feature for child of trigger
         children = o_dep.get_child(trig_wn)
         if children != []:
             for child in children:
-                self.extract_word_feature(o_sen.words[child], prefix+"t_child")
+                self.extract_word_feature(o_sen.words[child], prefix+"t_child", score = False)
                 
         # extract word feature for child of argument
         children = o_dep.get_child(arg_wn)
         if children != []:
             for child in children:
-                self.extract_word_feature(o_sen.words[child], prefix+"a_child")
+                self.extract_word_feature(o_sen.words[child], prefix+"a_child", score = False)
                 
     def extract_feature_tp(self, o_sen, trig_wn, arg_wn):
         """
@@ -119,14 +117,18 @@ class DependencyFeature(Feature):
         self._extract_common_feature(o_sen, trig_wn, cause_wn, prefix='c_')
                 
         # average length from trigger to theme and cause        
-        upath1 = o_dep.get_shortest_path(trig_wn, theme_wn, "undirected")
-        upath2 = o_dep.get_shortest_path(trig_wn, cause_wn, "undirected")
-        avg = (len(upath1) + len(upath2) - 2) * 1.0 / 2
-        self.add("avg_dist", avg)
+        #upath1 = o_dep.get_shortest_path(trig_wn, theme_wn, "undirected")
+        #upath2 = o_dep.get_shortest_path(trig_wn, cause_wn, "undirected")
+        #avg = (len(upath1) + len(upath2) - 2) * 1.0 / 2
+        #self.add("avg_dist", avg)
                                             
         # cause theme distance
         upath = o_dep.get_shortest_path(theme_wn, cause_wn, "undirected")
         self.add('tc_dist', len(upath)-1)
+        
+        # is trig_wn a root between theme and cause
+        upath_root = o_dep.get_upath_root(upath)
+        self.add('tr_root', upath_root == trig_wn)
                                                             
         # direct path from theme to cause    
         dpath = o_dep.get_shortest_path(theme_wn, cause_wn)
@@ -139,7 +141,12 @@ class DependencyFeature(Feature):
             self.add("path_ca", True)
         
         
-        
+        # number of trigger between theme and cause
+        tc = o_sen.trigger
+        nt = 0 
+        for t in upath[1:-1]:
+            if t in tc: nt+=1
+        self.add('nt', nt)
         
         # number of protein between theme and cause
         #prots = o_sen.protein
@@ -168,12 +175,12 @@ class DependencyFeature(Feature):
         
         # average length from trigger to theme1-theme2
         # use key "word_dist" to be worked with filter
-        upath1 = o_dep.get_shortest_path(trig_wn, theme1_wn, "undirected")
-        upath2 = o_dep.get_shortest_path(trig_wn, theme2_wn, "undirected")
-        avg = (len(upath1) + len(upath2) - 2) * 1.0 / 2
-        self.add("avg_dist", avg)
+        #upath1 = o_dep.get_shortest_path(trig_wn, theme1_wn, "undirected")
+        #upath2 = o_dep.get_shortest_path(trig_wn, theme2_wn, "undirected")
+        #avg = (len(upath1) + len(upath2) - 2) * 1.0 / 2
+        #self.add("avg_dist", avg)
         
-        # cause distance between theme
+        # distance between theme
         upath = o_dep.get_shortest_path(theme1_wn, theme2_wn, "undirected")
         self.add('t2_dist', len(upath)-1)
         

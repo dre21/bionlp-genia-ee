@@ -229,8 +229,7 @@ class FeatureExtraction(object):
                         if ac == cc: continue
                         # if ac and cc already have connection each other
                         if o_sen.rel.check_relation(cc, tc, "Theme", "E"): continue
-                        
-                                                
+                                                                                               
                         
                         feature = self.get_feature_tac(o_sen, tc, ac, cc)                    
                         info = {'doc':o_doc.doc_id, 'sen':i, 't':tc, 'a':ac, 'c':cc}
@@ -271,21 +270,26 @@ class FeatureExtraction(object):
             tc_list = list(o_sen.trigger_candidate)
             for wn in o_sen.trigger_candidate:
                 if o_sen.words[wn]["type"] != 'Binding':                    
-                    tc_list.remove(wn)
-                    
-            # get arguments for all binding event
-            ac_list = o_sen.rel.get_theme(tc_list)
+                    tc_list.remove(wn)                                
             
             for tc in tc_list:
+                
+                # get arguments for of current tc
+                ac_list = o_sen.rel.get_theme(tc)
+                
                 for ac1 in ac_list:
                     for ac2 in ac_list:
 
+                        # theme 1 != theme 2
                         if ac1 == ac2: continue
+                        # position of theme 1 always at left side of theme 2        
+                        if ac2 < ac1: continue
+                        
                         # binding relation trigger-theme must be exist
-                        if not o_sen.rel.check_pair(tc, ac1): continue                        
-                        if str(tc)+'-'+str(ac2)+'-'+str(ac1) in pair: continue
+                        #if not o_sen.rel.check_pair(tc, ac1): continue                        
+                        #if str(tc)+'-'+str(ac2)+'-'+str(ac1) in pair: continue
                         # flip position                        
-                        pair.append(str(tc)+'-'+str(ac1)+'-'+str(ac2))
+                        #pair.append(str(tc)+'-'+str(ac1)+'-'+str(ac2))
                                                 
                         feature = self.get_feature_t2(o_sen, tc, ac1, ac2)                    
                         info = {'doc':o_doc.doc_id, 'sen':i, 't':tc, 'a1':ac1, 'a2':ac2}
@@ -436,12 +440,12 @@ class FeatureExtraction(object):
         binary label whether there is relation for trigger-theme1-theme2
         """ 
         label = 0
-        
+                
         cond1 = o_sen.rel.check_relation(trig_wn, arg1_wn, "Theme", "P")
         cond2 = o_sen.rel.check_relation(trig_wn, arg2_wn, "Theme2", "P")
-        cond3 = o_sen.rel.check_relation(trig_wn, arg1_wn, "Theme2", "P")
-        cond4 = o_sen.rel.check_relation(trig_wn, arg2_wn, "Theme", "P")
-        if (cond1 and cond2) or (cond3 and cond4):
+        #cond3 = o_sen.rel.check_relation(trig_wn, arg1_wn, "Theme2", "P")
+        #cond4 = o_sen.rel.check_relation(trig_wn, arg2_wn, "Theme", "P")
+        if cond1 and cond2:
             label = 1
             
         return label
@@ -451,7 +455,7 @@ if __name__ == "__main__":
     
     
     source = "E:/corpus/bionlp2011/project_data"
-    doc_id = "PMC-1920263-13-RESULTS-05"
+    doc_id = "PMC-2065877-06-Results-05"
     #doc_id = "PMID-9351352"
     
     WD = WordDictionary(source)    
@@ -466,8 +470,8 @@ if __name__ == "__main__":
     o_doc = builder.build_doc_from_raw(doc, is_test=False)
     
     FE = FeatureExtraction(source, WD, TD)
-    feature = FE.extract_t2(o_doc)
+    feature = FE.extract_tc(o_doc)
     for f in feature[0:50]:
-        print f[0]
+        print f[0], f[1]
         print f[2]
     

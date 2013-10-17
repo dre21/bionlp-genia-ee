@@ -50,7 +50,7 @@ class Feature(object):
         if score:
             self.add(prefix + '_tscore', word['score'])
         
-        self.add(prefix + 'tc', word['score'] > 0.02)
+        #self.add(prefix + 'tc', word['score'] > 0.02)
             
         
             
