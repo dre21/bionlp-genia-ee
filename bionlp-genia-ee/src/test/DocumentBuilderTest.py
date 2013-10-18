@@ -63,6 +63,10 @@ class DocumentBuilderTest(object):
             o_sen = o_doc.sen[i]
             print "sen:", i
             print "-------------------------------"
+            j= 0
+            for w in o_sen.words:
+                print j, w['start'], w['string'], w['pos_tag'], w['type'], w['score']
+                j+=1
             # list of word number which is marked as trigger candidate
             print "trigger candidate:"
             print o_sen.trigger_candidate            
@@ -74,6 +78,7 @@ class DocumentBuilderTest(object):
             print o_sen.trigger            
             # dependency
             print "dependency"
+            print 'root', o_sen.dep.root
             print o_sen.dep.graph
             print o_sen.dep.pair            
             # chunk
@@ -92,4 +97,4 @@ class DocumentBuilderTest(object):
 if __name__ == "__main__":
     
     test = DocumentBuilderTest()
-    test.run()
+    test.test1()
