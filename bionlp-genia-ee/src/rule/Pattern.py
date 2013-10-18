@@ -66,18 +66,21 @@ class Pattern(object):
     
     def get_prep_word(self, o_sen, trig_wn, arg_wn):
         """
-        return tuple of prepositions (string,word_number)                
+        return tuple of prepositions (string,word_number)  
+        preposition is a PP chunk before a chunk with arg_wn              
         """
-        o_chunk = o_sen.chunk
-        preps_word = []
-        trig_chk_num = o_chunk.chunk_map[trig_wn]
-        arg_chk_num = o_chunk.chunk_map[arg_wn]
-        for chk_num in range(trig_chk_num+1, arg_chk_num):
-            prep = o_chunk.prep_chunk.get(chk_num,None)
-            if prep != None:
-                preps_word.append(prep)                
+        prep = ('',-1)
+        if arg_wn < trig_wn: return prep
         
-        return preps_word
+        o_chunk = o_sen.chunk
+        
+        trig_chk = o_chunk.chunk_map[trig_wn]
+        arg_chk = o_chunk.chunk_map[arg_wn]
+        if trig_chk != arg_chk:
+            prep = o_chunk.prep_chunk.get(arg_chk-1,prep)
+        
+        return prep
+                
     
     def get_pattern_1arg(self, o_sen, t_wn, arg1):
         """
@@ -90,17 +93,16 @@ class Pattern(object):
         
         if self.is_chunk(o_sen, t_wn, arg1):            
             layer = 'chunk'    
+        else:
+            prep = self.get_prep_word(o_sen, t_wn, arg1)
+            # prep is tuple (string,word_number)  
+            if prep[0] != '':                 
+                layer = 'phrase'                                        
+                prep_string = prep[0] 
+                position[prep[1]] = 'prep1'           
             
-        elif self.is_phrase(o_sen, t_wn, arg1):                        
-            layer = 'phrase'            
-            # get preposition, if more than 1 get the nearest prep to argument
-            preps = self.get_prep_word(o_sen,t_wn, arg1)
-            prep_string = preps[-1][0] 
-            prep_wn = preps[-1][1]
-            position[prep_wn] = 'prep1'
-        # no clause layer with only 1 argument
-        #elif tword['pos_tag'][0:2] == 'VB':
-        #    layer = 'clause'
+            elif tword['pos_tag'][0:2] == 'VB':
+                layer = 'clause'
         
         # build template type
         pattern_string = self.get_pattern_str(position) if layer != '' else ''
@@ -118,29 +120,26 @@ class Pattern(object):
         position = {t_wn:'trig', arg1:'arg1', arg2:'arg2'}
         
         if self.is_chunk(o_sen, t_wn, arg1, arg2):            
-            layer = 'chunk'                
-        elif self.is_phrase(o_sen, t_wn, arg1, arg2):            
-            layer = 'phrase'            
-            # get preposition, if more than 1 get the nearest prep to argument
-            preps1 = []
-            preps2 = []
-            if arg1 > t_wn:
-                preps1 = self.get_prep_word(o_sen,t_wn, arg1)
-            if arg2 > t_wn:
-                preps2 = self.get_prep_word(o_sen, t_wn, arg2)
-            if preps1 != []:            
-                prep1_string = preps1[-1][0] 
-                prep1_wn = preps1[-1][1]
-                position[prep1_wn] = 'prep1'
-            if preps2 != [] and preps2 != preps1:    
-                prep2_string = preps2[-1][0] 
-                prep2_wn = preps2[-1][1]
-                position[prep2_wn] = 'prep2'
-            if prep1_string == '' and prep2_string == '':
-                #print o_sen.number, t_wn, arg1, arg2
-                raise ValueError('NO preprosition found')
-        elif tword['pos_tag'][0:2] == 'VB':
-            layer = 'clause'
+            layer = 'chunk'  
+        else:                                                                      
+            prep1 = self.get_prep_word(o_sen, t_wn, arg1)
+            prep2 = self.get_prep_word(o_sen, t_wn, arg2)
+            if prep1[0] != '' or prep2[0] != '':            
+                layer = 'phrase'
+                # update prep word                                
+                prep1_string = prep1[0] 
+                prep2_string = prep2[0]
+                # update  position                 
+                if prep1[1] == prep2[1]:
+                    # arg1 and arg2 sharing preposition
+                    # ex Interaction of Prot1 and Prot2
+                    position[prep1[1]] = 'prep12'
+                else:
+                    if prep1[1] >= 0: position[prep1[1]] = 'prep1'
+                    if prep2[1] >= 0: position[prep2[1]] = 'prep2'
+                                        
+            elif tword['pos_tag'][0:2] == 'VB':
+                layer = 'clause'
             
         # build template type
         pattern_string = self.get_pattern_str(position) if layer != '' else ''
