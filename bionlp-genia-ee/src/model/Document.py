@@ -137,6 +137,7 @@ class DocumentBuilder(object):
             o_sen.rel = Relation()
             if not o_doc.is_test:
                 o_sen.rel.build(o_sen.entity_map, doc["event"], doc["equiv"])
+                o_sen.rel.validate_relation()
             
             # add sentence object to document object
             o_doc.add_sentence(o_sen)                         

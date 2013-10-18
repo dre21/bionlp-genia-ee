@@ -98,6 +98,59 @@ class Relation(object):
                         
         self.data = list(set(self.data)) 
                
+    def validate_relation(self):
+        """
+        remove relation which are not satisfying following condition:
+        1. theme2 relation must pair with theme
+        2. no relation to another non-exist event
+        3. cause relation must pair with theme
+        """        
+        
+        """ Validate rule 1 """
+        # get trigger with theme2
+        t2_rel = []
+        for rel in self.data:
+            if rel[2] == 'Theme2': t2_rel.append(rel)
+        # check theme 1 relation
+        for t2 in t2_rel:
+            found = False
+            for rel in self.data:
+                if rel[0] == t2[0] and rel[2] == 'Theme': 
+                    found = True
+                    break
+            if not found:
+                self.data.remove(t2) 
+                                        
+        """ Validate rule 2 """
+        # get trigger with cause
+        ev_rel = []
+        for rel in self.data:
+            if rel[3] == 'E': ev_rel.append(rel)
+        # check theme 1 relation with protein
+        for ev in ev_rel:
+            found = False
+            for rel in self.data:
+                if rel[0] == ev[0] and rel[2] == 'Theme' and rel[3] == 'P': 
+                    found = True
+                    break
+            if not found:
+                self.data.remove(ev)
+        
+        """ Validate rule 3 """
+        # get trigger with cause
+        ca_rel = []
+        for rel in self.data:
+            if rel[2] == 'Cause': ca_rel.append(rel)
+        # check theme 1 relation
+        for ca in ca_rel:
+            found = False
+            for rel in self.data:
+                if rel[0] == ca[0] and rel[2] == 'Theme': 
+                    found = True
+                    break
+            if not found:
+                self.data.remove(ca)
+               
     def get_equiv_protein(self, arg, equiv_list):
         proteins = [arg]
         for equiv in equiv_list:
@@ -114,6 +167,9 @@ class Relation(object):
         arg_name: "Theme", "Binding2", "Cause"
         arg_type: "P", or "E"
         """
+        # skip self loop
+        if trigger_wn == arg_wn: return
+        
         rel_tuple = (trigger_wn, arg_wn, arg_name, arg_type)
         # check duplicate
         if rel_tuple not in self.data:
