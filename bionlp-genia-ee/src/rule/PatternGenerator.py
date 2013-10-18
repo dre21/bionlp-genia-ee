@@ -6,11 +6,9 @@ Created on Oct 1, 2013
 
 import os, json, pickle
 from collections import Counter, defaultdict
-
 from model.Dictionary import WordDictionary, TriggerDictionary
 from model.Document import DocumentBuilder
-from rule.Pattern import TemplatePattern as pattern
-
+from rule.Pattern import TemplatePattern as template, Pattern 
 class PatternGenerator(object):
     '''
     classdocs
@@ -30,6 +28,12 @@ class PatternGenerator(object):
                            'arg1-trg-arg2' : 35}
     
     RULE_DIR = 'rule'
+    
+    FNAME_PATTERN = 'template.pkl'
+    
+    FNAME_FREQUENCY = 'frequency.pkl'
+    
+    FNAME_STAT_DATA = 'pattern_data.csv'
 
     def __init__(self, source):
         '''
@@ -37,30 +41,32 @@ class PatternGenerator(object):
         '''
         self.src = source
         
-        self.pattern = defaultdict(pattern)
+        self.template = defaultdict(template)
         
         # pattern frequency
         self.frequency = Counter()
         
-        # pattern counter
+        self.pattern = Pattern()
+        
+        # template counter
         self.cnt_pattern_chunk = Counter()
         self.cnt_pattern_clause = Counter()
         self.cnt_pattern_phrase = Counter()
     
     def save(self, cdir):
-        # save pattern
-        with open(os.path.join(self.src,self.RULE_DIR,cdir+'_pattern.pkl'),'wb') as f:
-            pickle.dump(self.pattern, f)
+        # save template
+        with open(os.path.join(self.src, self.RULE_DIR,cdir+'_'+self.FNAME_PATTERN), 'wb') as f:
+            pickle.dump(self.template, f)
         
         # save frequency
-        with open(os.path.join(self.src,self.RULE_DIR,cdir+'_frequency.pkl'),'wb') as f:
+        with open(os.path.join(self.src, self.RULE_DIR,cdir+'_'+self.FNAME_FREQUENCY), 'wb') as f:
             pickle.dump(self.frequency, f)
         
     def load(self, cdir):                 
-        with open(os.path.join(self.src,self.RULE_DIR,cdir+'_pattern.pkl'),'rb') as f:
-            self.pattern = pickle.load(f)
+        with open(os.path.join(self.src, self.RULE_DIR,cdir+'_'+self.FNAME_PATTERN), 'rb') as f:
+            self.template = pickle.load(f)
             
-        with open(os.path.join(self.src,self.RULE_DIR,cdir+'_frequency.pkl'),'rb') as f:
+        with open(os.path.join(self.src, self.RULE_DIR,cdir+'_'+self.FNAME_FREQUENCY), 'rb') as f:
             self.frequency = pickle.load(f)
     
     def _build_doc(self, builder, doc_id, is_test = False):                
@@ -72,11 +78,13 @@ class PatternGenerator(object):
         # document builder
         builder = DocumentBuilder(self.src, word_dict, trigger_dict)
         
-        # file name to write data
-        fname = 'data_'+cdir+'.csv'
+        # delete statistic data
+        path = os.path.join(self.src, self.RULE_DIR, cdir+'_'+self.FNAME_STAT_DATA)
+        if os.path.exists(path):
+            os.unlink(path)
         
         doc_ids = self.get_doc_list(cdir)
-        print 'generating pattern ....'
+        print 'generating template ....'
         for doc_id in doc_ids:
             o_doc = self._build_doc(builder, doc_id)            
             for i in range(0, len(o_doc.sen)):            
@@ -89,24 +97,89 @@ class PatternGenerator(object):
                 if rel.data == []: continue
                 
                 for t_wn in trigger_list:
+                    
+                    # skip if trigger is not in trigger candidate
+                    if t_wn not in o_sen.trigger_candidate: continue
                     # ge list of theme arguments
                     args1 = self.get_arg1(rel, t_wn)
                     args2 = self.get_arg2(rel, t_wn)
                                         
                     
                     for arg1 in args1:
+                        # trigger with only 1 argument
                         if args2 == []:
+                            # skip self loop
                             if t_wn == arg1:
                                 print o_doc.doc_id, i , t_wn, arg1
                             else:
-                                self.extract_trig_arg(fname, o_doc.doc_id, o_sen, t_wn, arg1)                                
+                                self.extract_rule_1arg(cdir, o_doc.doc_id, o_sen, t_wn, arg1)                                                        
                         else:
+                            # trigger with 2 arguments
                             for arg2 in args2:                                
                                 if t_wn == arg2 or arg2 == arg1 or t_wn == arg1 :
                                     print o_doc.doc_id, i , t_wn, arg1, arg2
                                 else:
-                                    self.extract_trig_arg(fname, o_doc.doc_id, o_sen, t_wn, arg1, arg2)                                                                           
+                                    self.extract_rule_2arg(cdir, o_doc.doc_id, o_sen, t_wn, arg1, arg2)                                                                           
             
+    def extract_rule_1arg(self, cdir, doc_id, o_sen, t_wn, arg1):
+        
+        t_word = o_sen.words[t_wn]
+        t_arg1 = o_sen.words[arg1]
+                
+        pattern, layer, prep_string = self.pattern.get_pattern_1arg(o_sen, t_wn, arg1)  
+        
+        if pattern != '':      
+            # get distance
+            dist = self.pattern.get_distance_chkdep(o_sen, t_wn, arg1)
+            # build key
+            key = ':'.join([t_word['string'],t_word['pos_tag'], pattern, layer])                         
+            # update template entry
+            self.template[key].set(dist,t_arg1['type'],prep_string)
+            
+            """ statistic """
+            # increase frequency 
+            self.frequency[layer+':'+pattern] += 1
+            # increase counter
+            self._add_counter(layer, pattern)
+            # statistic information
+            str_list = [doc_id, str(o_sen.number), str(t_wn), str(arg1), '', t_word['string'],t_word['pos_tag']]
+            str_list += [t_arg1['type'], '', pattern, layer, str(dist), '0', prep_string, '']        
+            self._write_tsv(cdir, str_list)
+        
+    def extract_rule_2arg(self, cdir, doc_id, o_sen, t_wn, arg1, arg2):
+    
+        t_word = o_sen.words[t_wn]
+        t_arg1 = o_sen.words[arg1]
+        t_arg2 = o_sen.words[arg2]
+        
+        pattern, layer, prep1_string, prep2_string = self.pattern.get_pattern_2arg(o_sen, t_wn, arg1, arg2)     
+        
+        if pattern != '':   
+            # get distance
+            dist1 = self.pattern.get_distance_chkdep(o_sen, t_wn, arg1)        
+            dist2 = self.pattern.get_distance_chkdep(o_sen, t_wn, arg2)                
+            # build key
+            key = ':'.join([t_word['string'],t_word['pos_tag'], pattern, layer])                         
+            # update template entry
+            self.template[key].set(dist1,t_arg1['type'],prep1_string,dist2,t_arg2['type'],prep2_string)
+                    
+            """ statistic """
+            # increase frequency 
+            self.frequency[layer+':'+pattern] += 1
+            # increase counter
+            self._add_counter(layer, pattern)
+            # statistic information
+            str_list = [doc_id, str(o_sen.number), str(t_wn), str(arg1), str(arg2), t_word['string'],t_word['pos_tag']]
+            str_list += [t_arg1['type'], t_arg2['type'], pattern, layer, str(dist1), str(dist2), prep1_string, prep2_string]        
+            self._write_tsv(cdir, str_list)
+        
+        #if template == 'arg1-prep2-trig-arg2':
+        #    print doc_id, o_sen.number, t_wn, arg1, arg2, prep2_string, prep2_wn
+        #    raise ValueError()
+            
+    
+        
+       
     def extract_trig_arg(self, fname, doc_id, o_sen, t_wn, arg1, arg2 = -1):
         
         o_chunk = o_sen.chunk        
@@ -130,7 +203,7 @@ class PatternGenerator(object):
         prep1 = ''
         prep2 = ''
         
-        # make a pattern
+        # make a template
         pattern = {}
         pattern[t_wn] = 'trg'     
         pattern[arg1] = 'arg1'
@@ -144,7 +217,7 @@ class PatternGenerator(object):
             # preposition
             preps2 = [p for p in self.get_prep_word(o_sen,t_wn, arg2) if p not in preps1]
             
-            # pattern
+            # template
             pattern[arg2] = 'arg2'
         
         # chunk layer
@@ -164,7 +237,7 @@ class PatternGenerator(object):
         else:
             container = 'clause'
         
-        # build pattern type
+        # build template type
         pattern_type = ''
         for _,v in sorted(pattern.iteritems()):
             pattern_type += v +'-'        
@@ -176,10 +249,10 @@ class PatternGenerator(object):
         # increase frequency 
         self.frequency[key] += 1
         
-        # update pattern entry
-        self.pattern[key].set(dist1,arg1_type,prep1,dist2,arg2_type,prep2)
+        # update template entry
+        self.template[key].set(dist1,arg1_type,prep1,dist2,arg2_type,prep2)
         
-        # increase pattern counter
+        # increase template counter
         if container == 'chunk':
             self.cnt_pattern_chunk[pattern_type] += 1
         elif container == 'phrase':
@@ -193,23 +266,11 @@ class PatternGenerator(object):
         self._write_tsv(fname, str_list)
         
     
-    def get_prep_word(self, o_sen, trig_wn, arg_wn):
-        """
-        return tuple of prepositions (string,word_number)                
-        """
-        o_chunk = o_sen.chunk
-        preps_word = []
-        trig_chk_num = o_chunk.chunk_map[trig_wn]
-        arg_chk_num = o_chunk.chunk_map[arg_wn]
-        for chk_num in range(trig_chk_num+1, arg_chk_num):
-            prep = o_chunk.prep_chunk.get(chk_num,None)
-            if prep != None:
-                preps_word.append(prep)                
-        
-        return preps_word
+    
     
     def get_arg1(self, rel, t_wn):
         args = []
+        # relation data (8,10,'Theme','E')
         for r in rel.data:
             if r[0] == t_wn and r[2] == 'Theme':
                 args.append(r[1])
@@ -217,6 +278,7 @@ class PatternGenerator(object):
 
     def get_arg2(self, rel, t_wn):
         args = []
+        # relation data (8,10,'Theme','E')
         rel_type = ['Theme2', 'Cause']
         for r in rel.data:
             if r[0] == t_wn and r[2] in rel_type:
@@ -228,9 +290,18 @@ class PatternGenerator(object):
             doc_ids = json.loads(f.read())
             return doc_ids
     
-    def _write_tsv(self, fname, list_string):
-        with open(os.path.join(self.src,self.RULE_DIR,fname),'a') as f:
+    def _write_tsv(self, cdir, list_string):
+        path = os.path.join(self.src, self.RULE_DIR, cdir+'_'+self.FNAME_STAT_DATA)
+        with open(path,'a') as f:
             f.write('\t'.join(list_string) + '\n')
+        
+    def _add_counter(self, layer, pattern):
+        if layer == 'chunk':
+            self.cnt_pattern_chunk[pattern] += 1
+        elif layer == 'phrase':
+            self.cnt_pattern_phrase[pattern] += 1
+        else:
+            self.cnt_pattern_clause[pattern] += 1
         
 if __name__ == '__main__':
     import operator
@@ -248,7 +319,7 @@ if __name__ == '__main__':
     
     #PG.load('mix')
     
-    # pattern type for each layer  
+    # template type for each layer  
     print '\n\nPattern type for CHUNK layer'
     for k,v in sorted(PG.cnt_pattern_chunk.iteritems(), key=operator.itemgetter(1)):
         print k, v
@@ -260,9 +331,9 @@ if __name__ == '__main__':
     print '\n\nPattern type for CLAUSE layer'
     for k,v in sorted(PG.cnt_pattern_clause.iteritems(), key=operator.itemgetter(1)):
         print k, v
-    
+    '''
     for e in PG.frequency.most_common(3):        
         print e[0], e[1]
-        PG.pattern[e[0]].prints()
-        
+        PG.template[e[0]].prints()
+    ''' 
     
