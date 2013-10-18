@@ -105,7 +105,7 @@ class Relation(object):
         2. no relation to another non-exist event
         3. cause relation must pair with theme
         """        
-        
+        removed_rel = []
         """ Validate rule 1 """
         # get trigger with theme2
         t2_rel = []
@@ -119,10 +119,15 @@ class Relation(object):
                     found = True
                     break
             if not found:
+                #print 'remove', t2
+                removed_rel.append(t2)
                 self.data.remove(t2) 
                                         
         """ Validate rule 2 """
-        # get trigger with cause
+        # get trigger with event as argument
+        # TODO: 
+        # skip this first, 
+        '''
         ev_rel = []
         for rel in self.data:
             if rel[3] == 'E': ev_rel.append(rel)
@@ -130,11 +135,13 @@ class Relation(object):
         for ev in ev_rel:
             found = False
             for rel in self.data:
-                if rel[0] == ev[0] and rel[2] == 'Theme' and rel[3] == 'P': 
+                if rel[0] == ev[1] and rel[2] == 'Theme' and rel[3] == 'P': 
                     found = True
                     break
             if not found:
+                removed_rel.append(ev)
                 self.data.remove(ev)
+        '''
         
         """ Validate rule 3 """
         # get trigger with cause
@@ -149,7 +156,10 @@ class Relation(object):
                     found = True
                     break
             if not found:
+                removed_rel.append(ca)
                 self.data.remove(ca)
+                
+        return removed_rel
                
     def get_equiv_protein(self, arg, equiv_list):
         proteins = [arg]
