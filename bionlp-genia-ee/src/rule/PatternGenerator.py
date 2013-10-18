@@ -52,6 +52,7 @@ class PatternGenerator(object):
         self.cnt_pattern_chunk = Counter()
         self.cnt_pattern_clause = Counter()
         self.cnt_pattern_phrase = Counter()
+        self.cnt_pattern_non = Counter()
     
     def save(self, cdir):
         # save template
@@ -86,6 +87,7 @@ class PatternGenerator(object):
         doc_ids = self.get_doc_list(cdir)
         print 'generating template ....'
         for doc_id in doc_ids:
+            print doc_id
             o_doc = self._build_doc(builder, doc_id)            
             for i in range(0, len(o_doc.sen)):            
             
@@ -145,6 +147,8 @@ class PatternGenerator(object):
             str_list = [doc_id, str(o_sen.number), str(t_wn), str(arg1), '', t_word['string'],t_word['pos_tag']]
             str_list += [t_arg1['type'], '', pattern, layer, str(dist), '0', prep_string, '']        
             self._write_tsv(cdir, str_list)
+        else:
+            self.cnt_pattern_non['1arg'] += 1
         
     def extract_rule_2arg(self, cdir, doc_id, o_sen, t_wn, arg1, arg2):
     
@@ -172,11 +176,14 @@ class PatternGenerator(object):
             str_list = [doc_id, str(o_sen.number), str(t_wn), str(arg1), str(arg2), t_word['string'],t_word['pos_tag']]
             str_list += [t_arg1['type'], t_arg2['type'], pattern, layer, str(dist1), str(dist2), prep1_string, prep2_string]        
             self._write_tsv(cdir, str_list)
-        
-        #if template == 'arg1-prep2-trig-arg2':
-        #    print doc_id, o_sen.number, t_wn, arg1, arg2, prep2_string, prep2_wn
-        #    raise ValueError()
             
+            '''
+            if pattern == 'arg2-prep1-trig-arg1':
+                print '========================================='
+                print doc_id, o_sen.number, t_wn, arg1, arg2
+            '''
+        else:
+            self.cnt_pattern_non['2arg'] += 1
     
         
        
@@ -330,6 +337,10 @@ if __name__ == '__main__':
         
     print '\n\nPattern type for CLAUSE layer'
     for k,v in sorted(PG.cnt_pattern_clause.iteritems(), key=operator.itemgetter(1)):
+        print k, v
+        
+    print '\n\nPattern that cannot be captured'
+    for k,v in PG.cnt_pattern_non.iteritems():
         print k, v
     '''
     for e in PG.frequency.most_common(3):        
