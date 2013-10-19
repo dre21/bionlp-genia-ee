@@ -6,6 +6,7 @@ Created on Sep 13, 2013
 
 from model.Dictionary import TriggerDictionary, WordDictionary
 from model.Document import DocumentBuilder
+from rule.Extraction import Extraction
 
 class DocumentBuilderTest(object):
     '''
@@ -13,20 +14,19 @@ class DocumentBuilderTest(object):
     '''
 
 
-    def __init__(self):
+    def __init__(self, dic_corpus):
         '''
         Constructor
         '''
-        source = "E:/corpus/bionlp2011/project_data/"
-        doc_id = "PMID-2160380"
+        self.source = "E:/corpus/bionlp2011/project_data/"        
         
-        WD = WordDictionary(source)    
-        WD.load("train")
+        self.WD = WordDictionary(self.source)    
+        self.WD.load(dic_corpus)
                
-        TD = TriggerDictionary(source)
-        TD.load("train")
+        self.TD = TriggerDictionary(self.source)
+        self.TD.load(dic_corpus)
         
-        self.builder = DocumentBuilder(source, WD, TD)
+        self.builder = DocumentBuilder(self.source, self.WD, self.TD)
         
     def run(self):
         self.test1()
@@ -34,7 +34,7 @@ class DocumentBuilderTest(object):
         self.test3()
     
     def test1(self):
-        doc_id = "PMID-2160380"
+        doc_id = "PMC-2806624-03-RESULTS-02"
         o_doc = self.builder.build(doc_id, is_test = False)
         
         print "Test 1: document from test corpus\n================================================="
@@ -52,6 +52,19 @@ class DocumentBuilderTest(object):
         o_doc = self.builder.build(doc_id)
         
         print "\n\nTest 3: document from dev corpus\n================================================="
+        self.print_info(o_doc)
+        
+    def test4(self):
+        learning_corpus = 'mix'
+        extraction_corpus = 'dev'
+        extraction = Extraction(self.source, learning_corpus, extraction_corpus)
+        
+        doc_id = 'PMC-2806624-03-RESULTS-02'
+        o_doc = self.builder.build(doc_id, is_test = True)        
+        extraction.extract_doc(o_doc, self.TD)
+        
+        print "Test 4: document from extraction rules"
+        print "================================================="
         self.print_info(o_doc)
     
     def print_info(self, o_doc):
@@ -95,6 +108,6 @@ class DocumentBuilderTest(object):
     
     
 if __name__ == "__main__":
-    
-    test = DocumentBuilderTest()
-    test.test1()
+    dic_corpus = 'train'
+    test = DocumentBuilderTest(dic_corpus)
+    test.test4()
