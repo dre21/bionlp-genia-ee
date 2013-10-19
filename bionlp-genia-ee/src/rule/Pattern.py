@@ -155,10 +155,7 @@ class TemplatePattern(object):
     def __init__(self):
         '''
         Constructor
-        '''    
-        self.pos = ''
-        self.template = []
-            
+        '''                 
         # preposition
         self.prep1 = []
         self.prep2 = []
@@ -223,52 +220,32 @@ class TemplatePattern(object):
 
 class ExtractionPattern(object):
     
-    def __init__(self, tc, t_string, pos_tag, arg1, arg2 = -1):
+    def __init__(self, template, key, tc, arg1, prep1 = '', arg2 = -1, prep2 = ''):
+        
+        self.template = template
+        self.key = key
+        
+        keys = key.split(':')
+        self.layer = keys[3]
+        self.pattern = keys[2]
         
         self.tc = tc
         self.arg1 = arg1
         self.arg2 = arg2
         
-        self.t_string = t_string.lower()
-        self.pos = pos_tag
+        self.prep1 = prep1
+        self.prep2 = prep2
         
-        self.container = ''
-        self.pattern_type = ''
-        
-        self.freq = 0
-        
-        # preposition
-        self.prep1 = ''
-        self.prep2 = ''
-        
-        # distance
-        self.dist1 = -1
-        self.dist2 = -1
-        
-        # argument type
-        self.arg1_type = 'null'
-        self.arg2_type = 'null'
-        
-    def has_arg2(self):
-        return self.dist2 != -1
+    def get_frequency(self):
+        return self.template.freq
     
-    def get_key(self):
-        return ':'.join([self.t_string,self.pos, self.pattern_type, self.container])
+    def get_pair(self):
+        """
+        return tuple of tc, arg1, and arg3
+        """
+        return (self.tc, self.arg1, self.arg2)
     
     def prints(self):
-        print '================================================'
-        print 'key:', self.get_key()
-        print self.container, '=>', self.pattern_type     
-        print 'freq:', self.freq   
-        print 'trigger:', self.tc, self.t_string, self.pos
-        print '-------'
-        print self.arg1 ,'-', self.arg1_type
-        print 'dist1:', self.dist1
-        print 'prep1:',self.prep1
-        if self.arg2!= -1:
-            print '-------'
-            print self.arg2 ,'-', self.arg2_type
-            print 'dist2:', self.dist2
-            print 'prep2:',self.prep2
+        print self.tc, self.arg1, self.prep1, self.arg2, self.prep2, ':', self.template.freq
         
     

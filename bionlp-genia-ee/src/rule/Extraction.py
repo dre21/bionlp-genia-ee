@@ -45,12 +45,14 @@ class Extraction(object):
     
     # directory for saving output a2 file
     OUT_DIR = "/result"
-        
-    FILTER_FREQUENCY_MIN = 2
-    
+                
     FILTER_DISTANCE_MAX = 10
+    
+    FILTER_TEMPLATE_FREQ_MIN = 3
+    
+    FILTER_PATTERN_FREQ_MIN = 20
 
-    def __init__(self, source, learning_corpus, extraction_corpus, dir_name):
+    def __init__(self, source, learning_corpus, extraction_corpus, dir_name = ''):
         '''
         Constructor
         '''        
@@ -62,9 +64,13 @@ class Extraction(object):
                                 
         # init template generator
         self.PG = PatternGenerator(source)
+        self.PG.load(self.learning_corpus)
         
-        # init a2 writer        
-        self.a2 = A2Writter(self.get_out_path(dir_name))
+        # init a2 writer                
+        if dir_name != '':
+            self.a2 = A2Writter(self.get_out_path(dir_name))
+        else:
+            self.a2 = None
         
         self.pattern = Pattern()
     
@@ -83,101 +89,239 @@ class Extraction(object):
         doc = builder.read_raw(doc_id)
         return builder.build_doc_from_raw(doc, is_test)
     
-    def get_prep_word(self, o_sen, trig_wn, arg_wn):
-        """
-        return tuple of prepositions (string,word_number)                
-        """
-        o_chunk = o_sen.chunk
-        preps_word = []
-        trig_chk_num = o_chunk.chunk_map[trig_wn]
-        arg_chk_num = o_chunk.chunk_map[arg_wn]
-        for chk_num in range(trig_chk_num+1, arg_chk_num):
-            prep = o_chunk.prep_chunk.get(chk_num,None)
-            if prep != None:
-                preps_word.append(prep)                
-        
-        return preps_word
-    
     def extract(self, word_dict, trigger_dict, doc_ids = []):
-        
+    
         # document builder
         builder = DocumentBuilder(self.src, word_dict, trigger_dict)
-        
-        # load template data
-        self.PG.load(self.learning_corpus)
-        
+             
         if doc_ids == []:
             doc_ids = self.get_doc_list(self.extraction_corpus)
             
         print 'extracting document ....'
-        for doc_id in doc_ids:
-            print doc_id
-            o_doc = self._build_doc(builder, doc_id)            
+        for doc_id in doc_ids:            
+            o_doc = self._build_doc(builder, doc_id)
+            self.extract_doc(o_doc, trigger_dict)
             
-            for i in range(0, len(o_doc.sen)):                                
-                print '\nsen:', i
-                print '----------------------------------------'
-                # sentence object
-                o_sen = o_doc.sen[i]
-                # skip sentence without protein
-                if o_sen.protein == []: continue
-                
-                # patterns which are extracted from a sentence
-                extraction_pattern = []         
-                
-                # trigger candidate and arguments
-                tc_list = o_sen.trigger_candidate            
-                arg1_list = tc_list + o_sen.protein
-                arg2_list = list(arg1_list)                                
-                
-                # setall tc label
-                for tc in tc_list:
-                    # set label for TC
-                    tc_type = self.get_label(o_sen.words[tc]['string'], trigger_dict)
-                    o_sen.words[tc]['type'] = tc_type
+    def extract_doc(self, o_doc, trigger_dict):
                     
-                # for every trigger candidate
-                for tc in tc_list:              
-                    tword = o_sen.words[tc]
-                    for arg1 in arg1_list:
-                        if tc == arg1: continue
-                        # trigger with only 1 argument           
-                        #print tc, arg1             
-                        template, key = self.get_template(o_sen, tc, arg1)
-                        if template != None:
-                            if self.get_pattern_frequency(key) > 20 and template.freq > 4:
-                                print tword['start'], tword['string'], tword['pos_tag'], tword['type'], tc, arg1, key, self.pattern.get_distance_chkdep(o_sen, tc, arg1)
-                                print template.freq, ':',template.pro1_count, template.evt1_count, max(template.dist1), template.prep1
-                                                
-                        for arg2 in arg2_list:                     
-                            #print tc, arg1, arg2           
-                            if tc == arg2 or arg2 == arg1 or tc == arg1 : continue
-                            template, key = self.get_template(o_sen, tc, arg1, arg2)
-                            if template != None:
-                                if self.get_pattern_frequency(key) > 20 and template.freq > 4:
-                                    print tword['start'], tword['string'], tword['pos_tag'], tword['type'],tc, arg1, arg2, key, self.pattern.get_distance_chkdep(o_sen, tc, arg1), self.pattern.get_distance_chkdep(o_sen, tc, arg2)
-                                    print template.freq, ':', template.pro1_count, template.evt1_count, max(template.dist1), template.prep1,  '-', template.pro2_count, template.evt2_count, max(template.dist2), template.prep2 
-                    
+        for i in range(0, len(o_doc.sen)):                                            
+            # sentence object
+            o_sen = o_doc.sen[i]
+            # skip sentence without protein
+            if o_sen.protein == []: continue
+            
+            # patterns which are extracted from a sentence
+            extraction_pattern = []         
+            
+            # trigger candidate and arguments
+            tc_list = o_sen.trigger_candidate            
+            arg1_list = tc_list + o_sen.protein
+            arg2_list = list(arg1_list)                                
+            
+            # set all tc label
+            for tc in tc_list:
+                # set label for TC
+                tc_type = self.get_label(o_sen.words[tc]['string'], trigger_dict)
+                o_sen.words[tc]['type'] = tc_type
                 
+            # for every trigger candidate
+            for tc in tc_list:              
+                tword = o_sen.words[tc]   
+                chunk_evt = defaultdict(list)
+                phrase_evt = defaultdict(list)
+                clause_evt = defaultdict(list)    
+                             
+                for arg1 in arg1_list:
+                    if tc == arg1: continue                        
+                    # for 1 argument trigger
+                    ep1 = self.get_extraction_pattern(o_sen, tc, arg1)
+                    if ep1 != None:
+                        if ep1.layer == 'chunk':
+                            chunk_evt[ep1.key].append(ep1)
+                        elif ep1.layer == 'phrase':
+                            phrase_evt[ep1.key].append(ep1)
+                        elif ep1.layer == 'clause':
+                            clause_evt[ep1.key].append(ep1)
+                                                    
+                    for arg2 in arg2_list:                                                 
+                        if tc == arg2 or arg2 == arg1 or tc == arg1 : continue
+                        # for 2 argument trigger
+                        ep2 = self.get_extraction_pattern(o_sen, tc, arg1, arg2)
+                        if ep2 != None:
+                            if ep2.layer == 'chunk':
+                                chunk_evt[ep2.key].append(ep2)
+                            elif ep2.layer == 'phrase':
+                                phrase_evt[ep2.key].append(ep2)
+                            elif ep2.layer == 'clause':
+                                clause_evt[ep2.key].append(ep2)
+                
+                #print 'predicting:',tword['string']
+                events = self.extract_event(o_sen, chunk_evt, phrase_evt, clause_evt)
+                if events != []:
+                    self.update_relation(o_sen, events)
+                #print '\n'    
+                    
+    def update_relation(self, o_sen, events):
+        for e in events:
+            trig_wn = e[0]
+            arg1_wn = e[1]            
+            arg2_wn = e[2]
+            trig_type = o_sen.words[trig_wn]['type']
+                        
+            # update trigger-argument1 relation
+            arg_type = 'P' if o_sen.words[arg1_wn]['type'] == 'Protein' else 'E'
+            o_sen.update(trig_wn, trig_type, arg1_wn, 'Theme', arg_type)
+            
+            # update trigger-argument2 relation
+            if arg2_wn >= 0:
+                if trig_type == 'Binding': 
+                    # update theme2 relation
+                    o_sen.update_theme2(trig_wn, arg2_wn)
+                else:
+                    # update cause relation            
+                    o_sen.update_cause(trig_wn, arg2_wn)
+            
+    
+    def extract_event(self, o_sen, chunk_evt, phrase_evt, clause_evt):
+        """
+        extract event for a sentence and layer
+        """
+        found = False
+        selected_key = ''
+        max_freq = 0
+        events = []
+        
+        # extract event in chunk layer        
+        if not found:            
+            for k, EPs in chunk_evt.iteritems():
+                freq = EPs[0].get_frequency()                
+                if freq > max_freq:
+                    max_freq = freq
+                    selected_key = k
+            
+            if selected_key != '':
+                for p in chunk_evt[selected_key]:
+                    events.append(p.get_pair())
+                    #p.prints()
+                found = True
+                selected_key = ''
+                max_freq = 0
+                                          
+        if not found:
+            for k, EPs in phrase_evt.iteritems():
+                freq = EPs[0].get_frequency()                
+                if freq > max_freq:
+                    max_freq = freq
+                    selected_key = k
+            
+            if selected_key != '':
+                for p in phrase_evt[selected_key]:
+                    events.append(p.get_pair())
+                    #p.prints() 
+                found = True
+                selected_key = ''
+                max_freq = 0
+    
+        if not found:
+            for k, EPs in clause_evt.iteritems():
+                freq = EPs[0].get_frequency()
+                if freq > max_freq:
+                    max_freq = freq
+                    selected_key = k
+            
+            if selected_key != '':
+                for p in clause_evt[selected_key]:
+                    events.append(p.get_pair())
+                    #p.prints()    
+                found = True
+                selected_key = ''
+                max_freq = 0
+    
+        return events
+    
+    def is_valid(self, o_sen, ep):
+        """
+        return true if extraction pattern 
+        """
+        retval = True
+        
+        # pattern frequency
+        if self.get_pattern_frequency(ep.key) < self.FILTER_PATTERN_FREQ_MIN:
+            retval = False
+        
+        # template frequenct
+        if ep.get_frequency < self.FILTER_TEMPLATE_FREQ_MIN:
+            retval = False
+            
+        # distance
+        if self.pattern.get_distance_chkdep(o_sen, ep.tc, ep.arg1) > self.FILTER_DISTANCE_MAX:
+            retval = False
+            
+        # distance 2
+        if ep.arg2 >= 0:
+            if self.pattern.get_distance_chkdep(o_sen, ep.tc, ep.arg2) > self.FILTER_DISTANCE_MAX:
+                retval = False
+            
+        return retval
+    
     def get_pattern_frequency(self, key):
         k = key.split(':')
         return self.PG.frequency[k[3]+':'+k[2]]
-        
-    
-    def get_template(self, o_sen, t_wn, arg1, arg2 = -1):
+            
+    def get_extraction_pattern(self, o_sen, t_wn, arg1, arg2 = -1):
         
         t_word = o_sen.words[t_wn]
+        a1_word = o_sen.words[arg1]
+        a2_word = o_sen.words[arg2]
+        pattern = ''
+        layer = ''
+        prep1 = ''
+        prep2 = ''
+        extraction_pattern = None
         
         if arg2 < 0:
-            pattern, layer, prep1 = self.pattern.get_pattern_1arg(o_sen, t_wn, arg1)
+            if not (t_word['type'] in self.EVENT_LABEL[0:6] and a1_word['type'] != 'Protein'):
+                pattern, layer, prep1 = self.pattern.get_pattern_1arg(o_sen, t_wn, arg1)
         else:
-            pattern, layer, prep1, prep2 = self.pattern.get_pattern_2arg(o_sen, t_wn, arg1, arg2)            
-        # build key
-        key = ':'.join([t_word['string'],t_word['pos_tag'], pattern, layer])
+            cond1 = t_word['type'] in self.EVENT_LABEL[5:]
+            cond2 = not (t_word['type'] == 'Binding' and (a2_word['type'] != 'Protein' or a2_word['type'] != 'Protein'))            
+            if cond1 and cond2:
+                pattern, layer, prep1, prep2 = self.pattern.get_pattern_2arg(o_sen, t_wn, arg1, arg2)                    
         
-        return self.PG.template.get(key,None), key
+        if pattern != '':
+            # build key
+            key = ':'.join([t_word['string'],t_word['pos_tag'], pattern, layer])
+            # get template        
+            template = self.PG.template.get(key,None)
+        
+            if template != None:
+                extraction_pattern = ExtractionPattern(template, key, t_wn, arg1, prep1, arg2, prep2)
+                    
+        return extraction_pattern
     
+    def get_label(self, string, TD):
+        """
+        get label for a given string
+        """
+        string_label = ''
+        evt_cnt = 0
+        for label in self.EVENT_LABEL:
+            label_cnt = TD.count(string, label)
+            if label_cnt > evt_cnt:
+                evt_cnt = label_cnt
+                string_label = label
+                
+        if string_label == '':
+            print string
+            raise ValueError('Label is not found')
+        return string_label
+    
+    
+    """ DEPRECATED """
     def pattern_1arg(self, o_sen, t_wn, arg1):
+        """
+        DEPRECATED
+        """
         prep_string = ''
         position = {t_wn:'trig', arg1:'arg1'}
         # word object
@@ -201,9 +345,11 @@ class Extraction(object):
         pattern = self.pattern.get_pattern_str(position)        
         # build key
         key = ':'.join([t_word['string'],t_word['pos_tag'], pattern, layer])   
-        
-       
+              
     def update_non_regulation(self, o_sen, pattern):
+        """
+        DEPRECATED
+        """
         ttype = o_sen.words[pattern.tc]['type']
         if ttype in self.EVENT_LABEL[6:]: return
         arg1_type = 'P' if pattern.arg1_type == 'Protein' else 'E'
@@ -224,6 +370,9 @@ class Extraction(object):
                     o_sen.update(pattern.tc, ttype, pattern.arg2, rel_name, arg2_type)
                     
     def update_regulation(self, o_sen, pattern):
+        """
+        DEPRECATED
+        """
         ttype = o_sen.words[pattern.tc]['type']
         if ttype in self.EVENT_LABEL[0:6]: return
         arg1_type = 'P' if pattern.arg1_type == 'Protein' else 'E'
@@ -245,6 +394,7 @@ class Extraction(object):
                 
     def _extract_pattern(self, o_sen, tc, arg1, arg2 = -1):
         """
+        DEPRECATED        
         extract template from a given tc, arg1 and arg2 in a sentence o_sen
         """
         # chunk object
@@ -303,9 +453,11 @@ class Extraction(object):
         e_pattern.pattern_type = pattern_type.rstrip('-')
                         
         return e_pattern
-        
-                
+             
     def filter_pattern(self, extraction_patterns):
+        """
+        DEPRECATED
+        """
         """
         remove template in extraction_patterns which are not fulfill the criteria
         retruns an extracted template list
@@ -374,26 +526,25 @@ class Extraction(object):
                     filtered_pattern.append(p)
                
         return filtered_pattern                
-        
+           
     def update_doc_tp(self,o_sen, t_wn, arg1, rel_name):
         pass
+    
+    def get_prep_word(self, o_sen, trig_wn, arg_wn):
+        """
+        return tuple of prepositions (string,word_number)                
+        """
+        o_chunk = o_sen.chunk
+        preps_word = []
+        trig_chk_num = o_chunk.chunk_map[trig_wn]
+        arg_chk_num = o_chunk.chunk_map[arg_wn]
+        for chk_num in range(trig_chk_num+1, arg_chk_num):
+            prep = o_chunk.prep_chunk.get(chk_num,None)
+            if prep != None:
+                preps_word.append(prep)                
         
-    def get_label(self, string, TD):
-        """
-        get label for a given string
-        """
-        string_label = ''
-        evt_cnt = 0
-        for label in self.EVENT_LABEL:
-            label_cnt = TD.count(string, label)
-            if label_cnt > evt_cnt:
-                evt_cnt = label_cnt
-                string_label = label
-                
-        if string_label == '':
-            print string
-            raise ValueError('Label is not found')
-        return string_label
+        return preps_word 
+    
                 
     
         
